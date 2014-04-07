@@ -5,11 +5,15 @@ ID_LEN = 32
 class Block(object):
 
 	def __init__(self,id):
-		util_id = bitarray(id)
-		id_len = ID_LEN- util_id.length()
+		util_id = id2bit(id)
+		id_len = ID_LEN- len(util_id)
 		self.data = id_len * bitarray('0')
 		self.data.extend(util_id)
 		
+	def id2bit(id):
+		bit_id="{0:b}".format(id)
+		return bit_id
+	
 
 	def setRandomBlockData(self, blockData):
 		self.data.extend(blockData)
