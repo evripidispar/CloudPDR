@@ -1,4 +1,4 @@
-
+import Block
 
 class Cell(object):
 
@@ -24,12 +24,6 @@ class Cell(object):
 
     def getDataSum(self):
         return self.dataSum
-
-    def getBlockData(self, block):
-        return 0
-
-    def index(self, block):
-        return 0
 
     def produceHashProdAdd(self, block):
         return 0
