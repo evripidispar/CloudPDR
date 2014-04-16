@@ -1,10 +1,11 @@
 import Block
+from CryptoUtil import 
 
 class Cell(object):
 
     def __init__(self):
         self.count = 0
-        self.dataSum = 0
+        self.dataSum = Block(0)
         self.hashProd = 0
 
     def setCount(count):
@@ -25,20 +26,22 @@ class Cell(object):
     def getDataSum(self):
         return self.dataSum
 
-    def produceHashProdAdd(self, block):
-        return 0
+    def produceHashProdAdd(self, block, secret):
+        f = generate_f(block, self.N, secret)
+        return f
 
     def produceHashProdRmv(self, block):
         return 0
 
-    def add(self, block) :
+    def add(self, block, secret, N):
         self.count += 1
-        self.dataSum += self.getBlockData(block)  #TODO: add blocks how?
-        self.hashProd = self.produceHashProdAdd(block)
+        self.dataSum.addBlockData(block)  
+        self.hashProd *= self.produceHashProdAdd(block, secret) #TODO: not sure this is the write way to go 
+        self.hashProd = pow(self.hashProd, 1, N)
         return
 
     def remove(self, block):
-
+        #TODO 
         #count handling
         if (self.count < 0):
             self.count +=1
@@ -62,7 +65,7 @@ class Cell(object):
     def subtract(self, otherCell):
         diffCell = Cell()
         c  = self.count - otherCell.getCount()
-        hp = self.modDivision(self.hashProd, otherCell.getHashProd)
+        hp = self.modDivision(self.hashProd, otherCell.getHashProd) #TODO: modDivision
         dS = self.dataSum - otherCell.getDataSum()
 
         diffCell.setCount(c)
