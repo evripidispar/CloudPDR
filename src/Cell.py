@@ -35,7 +35,7 @@ class Cell(object):
         self.hashProd = pow(self.hashProd, 1, N)
         return
 
-    def remove(self, block,  s):
+    def remove(self, block,  secret, N):
         #TODO 
         #count handling
         if (self.count < 0):
