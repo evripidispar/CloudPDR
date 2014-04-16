@@ -1,5 +1,5 @@
 import Block
-from CryptoUtil import 
+from CryptoUtil import number
 
 class Cell(object):
 
@@ -26,21 +26,16 @@ class Cell(object):
     def getDataSum(self):
         return self.dataSum
 
-    def produceHashProdAdd(self, block, secret):
-        f = generate_f(block, self.N, secret)
-        return f
-
-    def produceHashProdRmv(self, block):
-        return 0
 
     def add(self, block, secret, N):
         self.count += 1
         self.dataSum.addBlockData(block)  
+        f = generate_f(block, N, secret)
         self.hashProd *= self.produceHashProdAdd(block, secret) #TODO: not sure this is the write way to go 
         self.hashProd = pow(self.hashProd, 1, N)
         return
 
-    def remove(self, block):
+    def remove(self, block,  s):
         #TODO 
         #count handling
         if (self.count < 0):
@@ -48,8 +43,11 @@ class Cell(object):
         else:
             self.count -=1
 
-        self.dataSum -= self.getBlockData(block) #TODO: subtract blocks how?
-        self.hashProd = self.produceHashProdRmv(block)
+        self.dataSum.addBlockData(block)
+        f = generate_f(block, N, secret)
+        fInv = number.inverse(f,N) #TODO: Not sure this is true
+        self.hashProd *= fInv
+        self.hashProd = pow(self.hashProd, 1, N)
 
 
     def isPure(self):
@@ -63,10 +61,11 @@ class Cell(object):
         return False
 
     def subtract(self, otherCell):
+        #TODO
         diffCell = Cell()
         c  = self.count - otherCell.getCount()
         hp = self.modDivision(self.hashProd, otherCell.getHashProd) #TODO: modDivision
-        dS = self.dataSum - otherCell.getDataSum()
+        dS = self.dataSum - otherCell.getDataSum() #TODO 
 
         diffCell.setCount(c)
         diffCell.setDataSum(ds)
