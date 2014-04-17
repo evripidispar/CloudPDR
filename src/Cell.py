@@ -6,7 +6,7 @@ class Cell(object):
     def __init__(self):
         self.count = 0
         self.dataSum = Block(0)
-        self.hashProd = 0
+        self.hashProd = 1
 
     def setCount(count):
         self.count = count
@@ -50,7 +50,7 @@ class Cell(object):
         self.hashProd = pow(self.hashProd, 1, N)
 
 
-    def isPure(self):
+    def isPure(self): #Read Babis 1 or -1
         if self.count == 1: #TODO:  is this correct?
             return True
         return False
@@ -72,5 +72,10 @@ class Cell(object):
         diffCell.setHashProd(hp)
 
         return diffCell
+
+    def printSelf(self):
+        print "Count: "+ self.count 
+        print "DataSum: "+ self.dataSum
+        print "HashProd: "+ self.hashProd
 
 

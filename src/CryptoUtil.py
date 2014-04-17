@@ -4,14 +4,11 @@ from Crypto.Hash import HMAC
 
 
 def pickGeneratorG(N):
-
-
 	while True:
 		a = number.getRandomRange(0,N)
 
 		if a>n:
 			return None
-		
 		r0 = number.GCD(a,N)
 		if r0==1:
 			continue
@@ -22,7 +19,7 @@ def pickGeneratorG(N):
 			continue
 
 		r0 = a+1
-		r1 = nuber.GCD(r0,N)
+		r1 = number.GCD(r0,N)
 		if r1 == 1:
 			continue 
 	g = a**2

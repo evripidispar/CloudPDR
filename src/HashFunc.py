@@ -18,8 +18,8 @@
 
 def RSHash(key):
     a    = 378551
-    b    =  63689
-    hash =      0
+    b    = 63689
+    hash = 0
     for i in range(len(key)):
       hash = hash * a + ord(key[i])
       a = a * b
