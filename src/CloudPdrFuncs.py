@@ -25,17 +25,12 @@ def recover(ibfLost, lostIndeces, hashFunList):
 		lostIndeces.remove(blockIndex)
 
 	for cell in ibfLost:
-		#if cell.getCount() == False:
-		if ((cell.getCount() !=0) or (cell.getDataSum()!= Block(0)) or (cell.getHashProd()!=1)):
+		
+		if cell.getCount() != 0 or 
+				cell.getDataSum() != Block(0) or
+				 cell.getHashProd() !=1:
 			cell.printSelf()
 			return None
-		#In recover algorithm the paper has:
-		# if cell.getCount() != 0:
-		# 	return False
-		# if cell.getDataSum() != 0:
-		# 	return False
-		# if cell.getHashProd() != 1:
-		# 	return False
 
 	if len(lostIndeces) != 0:
 		return None
