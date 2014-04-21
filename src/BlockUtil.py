@@ -4,8 +4,6 @@ from Crypto.Random import random
 from Block import *
 from bitarray import bitarray
 
-
-
 def blockCreatorMemory(howMany, dataSize):
 	blocks = []
 	for i in range(0, howMany):
