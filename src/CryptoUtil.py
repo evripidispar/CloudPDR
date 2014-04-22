@@ -1,5 +1,4 @@
 from Crypto.Util import number
-from ConfigPDR import GENERATOR_NUM_BITS
 from Crypto.Hash import HMAC
 
 

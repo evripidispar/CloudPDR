@@ -39,6 +39,7 @@ def main():
     if args.totalBlocks < 2 * args.numBlocks:
         print "Total blocks should be bigger then numBlocks"
 
+    
     blocks = blockCreatorMemory(args.totalBlocks, args.dataSize)
     commonBlocks = pickCommonBlocks(args.numBlocks, args.numCommon)
     diff_a, diff_b = pickDiffBlocks(args.numBlocks, commonBlocks, args.totalBlocks)
@@ -49,6 +50,7 @@ def main():
     ibfB = Ibf(5, 500)
 
     for cBlock in commonBlocks:
+        print cBlock
         ibfA.insert(blocks[cBlock], cObj.secret, cObj.N)
         ibfB.insert(blocks[cBlock], cObj.secret, cObj.N)
 

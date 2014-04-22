@@ -23,10 +23,13 @@ class Ibf(object):
 
 	def insert(self, block, secret, N):
 		blockIndeces = self.getIndeces(block)
+		print blockIndeces
 		for i in blockIndeces:
 			if i not in self.cells.keys():
 				self.cells[i]=Cell()
-			self.cells[i].add(block, secret, N)
+				self.cells[i].dataSum.setBlockData(block)
+			else:
+				self.cells[i].add(block, secret, N)
 
 		
 	def delete(self, block):

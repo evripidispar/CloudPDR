@@ -6,17 +6,21 @@ class Block(object):
 	def __init__(self, id):
 		util_id = self.idToBinary(id)
 		id_len = ID_LEN - len(util_id)
-		self.data = id_len * bitarray('0')
+		self.data = bitarray(id_len*'0')
 		self.data.extend(util_id)
 
 	def idToBinary(self, id):
 		bit_id = "{0:b}".format(id)
 		return bit_id
 
+	def setBlockData(self, blockData):
+		self.data = blockData.data
+
 	def setRandomBlockData(self, blockData):
 		self.data.extend(blockData)
 
 	def addBlockData(self, otherBlock):
+		assert self.data.length() != otherBlock.data.length()
 		self.data = self.data ^ otherBlock.data
 
 	def getIndex(self):

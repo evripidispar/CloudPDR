@@ -1,11 +1,10 @@
-import Block
 from CryptoUtil import number
-
+from Block import *
 
 class Cell(object):
-	def __init__(self):
+	def __init__(self, id=0):
 		self.count = 0
-		self.dataSum = Block(0)
+		self.dataSum = Block(id)
 		self.hashProd = 1
 
 	def setCount(count):
