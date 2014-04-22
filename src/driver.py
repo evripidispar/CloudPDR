@@ -44,21 +44,22 @@ def main():
     commonBlocks = pickCommonBlocks(args.numBlocks, args.numCommon)
     diff_a, diff_b = pickDiffBlocks(args.numBlocks, commonBlocks, args.totalBlocks)
 
-    cObj = CloudPDRObj(1024)
+    cObj = CloudPDRObj(1024, "generator.txt")
 
-    ibfA = Ibf(5, 500)
-    ibfB = Ibf(5, 500)
+    ibfA = Ibf(5, 1000)
+    ibfB = Ibf(5, 1000)
 
     for cBlock in commonBlocks:
-        print cBlock
-        ibfA.insert(blocks[cBlock], cObj.secret, cObj.N)
-        ibfB.insert(blocks[cBlock], cObj.secret, cObj.N)
+        ibfA.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g)
+        ibfB.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g)
 
     for diffBlock in diff_a:
-        ibfA.insert(blocks[diffBlock], cObj.secret, cObj.N)
+        ibfA.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g)
 
     for diffBlock in diff_b:
-        ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N)
+        ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g)
+
+    
 
 
 if __name__ == "__main__":

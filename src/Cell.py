@@ -1,5 +1,6 @@
 from CryptoUtil import number
 from Block import *
+from CryptoUtil import *
 
 class Cell(object):
 	def __init__(self, id=0):
@@ -26,15 +27,15 @@ class Cell(object):
 		return self.dataSum
 
 
-	def add(self, block, secret, N):
+	def add(self, block, secret, N, g):
 		self.count += 1
 		self.dataSum.addBlockData(block)
-		f = generate_f(block, N, secret)
-		self.hashProd *= self.produceHashProdAdd(block, secret)  #TODO: not sure this is the write way to go
+		f = generate_f(block, N, secret, g)
+		self.hashProd *= f
 		self.hashProd = pow(self.hashProd, 1, N)
 		return
 
-	def remove(self, block, secret, N):
+	def remove(self, block, secret, N, g):
 		#TODO
 		#count handling
 		if (self.count < 0):
@@ -43,7 +44,7 @@ class Cell(object):
 			self.count -= 1
 
 		self.dataSum.addBlockData(block)
-		f = generate_f(block, N, secret)
+		f = generate_f(block, N, secret, g)
 		fInv = number.inverse(f, N)  #TODO: Not sure this is true
 		self.hashProd *= fInv
 		self.hashProd = pow(self.hashProd, 1, N)
