@@ -1,18 +1,19 @@
 from Crypto.Util import number 
 from Crypto.Hash import HMAC
+import os
 
 class CloudPDRObj(object):
 	
 	def __init__(self, Nbits, filename):	
 		self.N = number.getRandomInteger(Nbits)
 		self.secret = self.generateSecret(Nbits)
-		if filename == None:
+		if os.path.isfile("/Users/evripidispar/Documents/CloudPDR/src/generator.txt") == False:
 			self.g = self.pickGeneratorG()
-			fp = open(filename, "w")
-			fp.write(self.g)
+			fp = open(os.path.join(os.path.dirname(__file__),filename), "w")
+			fp.write(str(self.g))
 			fp.close()
 		else:
-			fp = open(filename, "r")
+			fp = open(os.path.join(os.path.dirname(__file__),filename), "r")
 			self.g = fp.read()
 			self.g = long(self.g)
 			

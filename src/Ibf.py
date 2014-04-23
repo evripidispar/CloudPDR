@@ -12,7 +12,7 @@ class Ibf(object):
 			DJBHash, DEKHash, BPHash, FNVHash, APHash]
 
 
-	def getIndeces(self,block):
+	def getIndeces(self, block):
 		indeces = []
 		blockIndex = block.getStringIndex()
 		for i in range(self.k):
@@ -37,18 +37,26 @@ class Ibf(object):
 				self.cells[i].remove(block, secret, N, g)
 
 
-	def subtract(self, otherIbf, secret, N):
+	def subtractIbf(self, otherIbf, secret, N, dataByteSize):
 		if self.m != otherIbf.m:
 			print "IBFs different sizes"
 			return None
 
-		index = 0
-		LOCAL = 0
-		OTHER = 1
+		#index = 0
+		#LOCAL = 0
+		#OTHER = 1
 		newIbf = Ibf(self.k, self.m)
-		for pair in zip(self.cells, otherIbf.cells):
-			newIbf.cells[index] = pair[LOCAL].subtract(pair[OTHER])
-			index+=1
+		for i in range(self.m):
+			if i not in self.cells.keys():
+				self.cells[i]=Cell(0, dataByteSize)
+			temp1=self.cells[i]
+			if i not in otherIbf.cells.keys():
+				otherIbf.cells[i]=Cell(0, dataByteSize)
+			temp2=otherIbf.cells[i]
+			newIbf.cells[i]= temp1.subtract(temp2, dataByteSize, N)
+			#for pair in zip(self.cells, otherIbf.cells):
+				#newIbf.cells[index] = pair[LOCAL].subtract(pair[OTHER])
+				#index+=1
 		return newIbf
 
 	def getPureCells(self):

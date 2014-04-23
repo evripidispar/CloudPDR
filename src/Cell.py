@@ -60,12 +60,17 @@ class Cell(object):
 			return True
 		return False
 
-	def subtract(self, otherCell):
+	def subtract(self, otherCell, dataByteSize, N):
 		#TODO
-		diffCell = Cell()
+		diffCell = Cell(0, dataByteSize)
 		c = self.count - otherCell.getCount()
-		hp = self.modDivision(self.hashProd, otherCell.getHashProd)  #TODO: modDivision
-		dS = self.dataSum - otherCell.getDataSum()  #TODO
+		dS=self.dataSum.addBlockData(otherCell.getDataSum())
+		#f = generate_f(block, N, secret, g)
+		fInv = number.inverse(otherCell.getHashProd(), N)  #TODO: Not sure this is true
+		hp1=self.hashProd * fInv
+		hp = pow(hp1, 1, N)
+		#hp = self.remove(self.hashProd, otherCell.getHashProd)  #TODO: modDivision
+		#dS = self.dataSum - otherCell.getDataSum()  #TODO
 
 		diffCell.setCount(c)
 		diffCell.setDataSum(dS)
