@@ -10,6 +10,7 @@ class Ibf(object):
 		self.HashFunc = [RSHash, JSHash, 
 			PJWHash, BKDRHash, SDBMHash, 
 			DJBHash, DEKHash, BPHash, FNVHash, APHash]
+		
 
 
 	def getIndeces(self, block):
@@ -21,18 +22,19 @@ class Ibf(object):
 		return indeces
 
 
+	def zero(self,  dataByteSize):
+		for cellIndex in xrange(self.m):
+			self.cells[cellIndex] = Cell(0, dataByteSize)
+
 	def insert(self, block, secret, N, g, dataByteSize):
 		blockIndeces = self.getIndeces(block)
 		for i in blockIndeces:
-			if i not in self.cells.keys():
-				self.cells[i]=Cell(0, dataByteSize)
 			self.cells[i].add(block, secret, N, g)
 
 		
 	def delete(self, block, secret, N, g):
 		blockIndeces =  self.getIndeces(block)
 		for i in blockIndeces:
-			#TODO: no idea what's up if the block is not inside the Cell
 			if self.cells[i].isEmpty() == False:
 				self.cells[i].remove(block, secret, N, g)
 
@@ -42,21 +44,9 @@ class Ibf(object):
 			print "IBFs different sizes"
 			return None
 
-		#index = 0
-		#LOCAL = 0
-		#OTHER = 1
 		newIbf = Ibf(self.k, self.m)
-		for i in range(self.m):
-			if i not in self.cells.keys():
-				self.cells[i]=Cell(0, dataByteSize)
-			temp1=self.cells[i]
-			if i not in otherIbf.cells.keys():
-				otherIbf.cells[i]=Cell(0, dataByteSize)
-			temp2=otherIbf.cells[i]
-			newIbf.cells[i]= temp1.subtract(temp2, dataByteSize, N)
-			#for pair in zip(self.cells, otherIbf.cells):
-				#newIbf.cells[index] = pair[LOCAL].subtract(pair[OTHER])
-				#index+=1
+		for cIndex in range(self.m):
+			newIbf.cells[cIndex]= self.cells[cIndex].subtract(otherIbf.cells[cIndex], dataByteSize, N)
 		return newIbf
 
 	def getPureCells(self):

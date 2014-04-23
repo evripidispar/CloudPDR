@@ -1,4 +1,4 @@
-from CryptoUtil import number
+from Crypto.Util import number
 from Block import *
 from CryptoUtil import *
 
@@ -7,6 +7,7 @@ class Cell(object):
 		self.count = 0
 		self.dataSum = Block(id, dataByteSize*8)
 		self.hashProd = 1
+		self.f = 0
 
 	def setCount(self, count):
 		self.count = count
@@ -31,6 +32,7 @@ class Cell(object):
 		self.count += 1
 		self.dataSum.addBlockData(block)
 		f = generate_f(block, N, secret, g)
+		self.f = f
 		self.hashProd *= f
 		self.hashProd = pow(self.hashProd, 1, N)
 		return
@@ -62,24 +64,38 @@ class Cell(object):
 
 	def subtract(self, otherCell, dataByteSize, N):
 		diffCell = Cell(0, dataByteSize)
-		c = self.count - otherCell.getCount()
-		dS=self.dataSum.addBlockData(otherCell.getDataSum())
-		#f = generate_f(block, N, secret, g)
-		fInv = number.inverse(otherCell.getHashProd(), N)  #TODO: Not sure this is true
-		hp1=self.hashProd * fInv
-		hp = pow(hp1, 1, N)
-		#hp = self.remove(self.hashProd, otherCell.getHashProd)  #TODO: modDivision
-		#dS = self.dataSum - otherCell.getDataSum()  #TODO
-
-		diffCell.setCount(c)
-		diffCell.setDataSum(dS)
-		diffCell.setHashProd(hp)
-
+		
+		#counter
+		diffCell.count = self.count - otherCell.getCount()
+		
+		#datasum
+		localDS = self.getDataSum().getWholeBlockBitArray()
+		otherDS = otherCell.getDataSum().getWholeBlockBitArray()
+		diffCell.setDataSum(localDS ^ otherDS)
+		
+		#hashProd
+		
+		if (number.GCD(otherCell.getHashProd(), N)!=1):
+			print "Problem"
+		otherFInv = number.inverse(otherCell.getHashProd(), N)
+		diffCell.hashProd = otherFInv * self.hashProd
+		print "Before", diffCell.hashProd
+		#diffCell.hashProd = pow(diffCell.hashProd, 1, N) 
+		
+		diffCell.hashProd = diffCell.hashProd % N 
+		
+		print "After", diffCell.hashProd
+		
+		if diffCell.hashProd != 1:
+			print "-----------"
+		else:
+			print "-----------"
+			
 		return diffCell
 
 	def printSelf(self):
-		print "Count: " + self.count
-		print "DataSum: " + self.dataSum
-		print "HashProd: " + self.hashProd
+		print "Count: " + str(self.count)
+		print "DataSum: " + str(self.dataSum)
+		print "HashProd: " + str(self.hashProd)
 
 

@@ -4,8 +4,12 @@ from Crypto.Hash import HMAC
 
 class CloudPDRObj(object):
 	
-	def __init__(self, Nbits, filename):	
-		self.N = number.getRandomInteger(Nbits)
+	def __init__(self, Nbits, filename):
+			
+		self.p =  number.getPrime(Nbits/2)
+		self.q =  number.getPrime(Nbits/2)
+		self.N = self.p * self.q
+		
 		self.secret = self.generateSecret(Nbits)
 		
 		try:

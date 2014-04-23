@@ -60,10 +60,14 @@ def main():
     commonBlocks = pickCommonBlocks(args.numBlocks, args.numCommon)
     diff_a, diff_b = pickDiffBlocks(args.numBlocks, commonBlocks, args.totalBlocks)
 
-    cObj = CloudPDRObj(1024, os.path.join(os.path.dirname(__file__),"generator.txt"))
+    cObj = CloudPDRObj(1024, args.genFile)
+   
 
-    ibfA = Ibf(4, 10)
-    ibfB = Ibf(4, 10)
+
+    ibfA = Ibf(args.hashNum, args.ibfLen)
+    ibfA.zero(args.dataSize)
+    ibfB = Ibf(args.hashNum, args.ibfLen)
+    ibfB.zero(args.dataSize)
 
     for cBlock in commonBlocks:
         ibfA.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
@@ -76,7 +80,11 @@ def main():
         ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g,  args.dataSize)
 
     
-
+    diffIbf = ibfA.subtractIbf(ibfB,  cObj.secret, cObj.N, args.dataSize)
+    for cellIndex in xrange(args.ibfLen):
+        diffIbf.cells[cellIndex].printSelf()
+    
+    
     
 
 

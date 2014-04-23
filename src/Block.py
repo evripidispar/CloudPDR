@@ -17,6 +17,7 @@ class Block(object):
 	def setBlockData(self, blockData):
 		self.data = blockData.data
 
+
 	def setRandomBlockData(self, blockData):
 		self.data.extend(blockData)
 
@@ -32,6 +33,9 @@ class Block(object):
 
 	def getData(self):
 		return self.data[ID_LEN:]
+
+	def getWholeBlockBitArray(self):
+		return self.data
 
 	def getDemicalIndex(self):
 		return int(self.getIndex, 2)

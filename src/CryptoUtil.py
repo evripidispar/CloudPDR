@@ -10,8 +10,10 @@ def pickPseudoRandomTheta(secret_key, index):
 def generate_f(block, N, secret_key, g):
 	index = block.getStringIndex()
 	a = pickPseudoRandomTheta(secret_key, index)
+	
+	
 	aLong = number.bytes_to_long(a)
 	bLong = number.bytes_to_long(block.data.tobytes())
+	
 	abExp = aLong*bLong
 	return pow(g, abExp, N)
-
