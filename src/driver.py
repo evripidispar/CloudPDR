@@ -27,6 +27,9 @@ def main():
     
     p.add_argument('-k', dest='hashNum', action='store', type=int,
                    default=5, help='Number of hash arguments')
+    
+    p.add_argument('-g', dest="genFile", action="store", 
+                 help="static generator file")
 
     args = p.parse_args()
 
@@ -73,48 +76,7 @@ def main():
         ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g,  args.dataSize)
 
     
-    pureCellsA = ibfA.getPureCells()
-    pureCellsB = ibfB.getPureCells()
-    
-    print "len of pureCells in A: ", len(pureCellsA)
-    print "len of pureCells in B: ", len(pureCellsB)
-    
-    
-    for i in commonBlocks:
-        s = ibfA.findBlock(blocks[i])
-        print "Block: ", i, "Found", s
-    
-    #for i in commonBlocks:
-    #    ibfA.delete(blocks[i], cObj.secret, cObj.N, cObj.g)
-    
-    print "-------"
-    
-    for i in commonBlocks:
-        s = ibfA.findBlock(blocks[i])
-        print "Block: ", i, "Found", s
-    
-    print "--------"
 
-    #for i in range(ibfA.m):
-     #   print "Count: ", ibfA.cells[i].count
-      #  print "datasum ", ibfA.cells[i].dataSum
-      #  print "hashprod", ibfA.cells[i].hashProd
-
-    for i in diff_a:
-        ibfA.delete(blocks[i], cObj.secret, cObj.N, cObj.g)
-
-    for i in diff_b:
-          ibfB.delete(blocks[i], cObj.secret, cObj.N, cObj.g)
-
-    ibfdiff=ibfA.subtractIbf(ibfB, cObj.secret, cObj.N, args.dataSize)
-
-    
-    for i in range(ibfdiff.m):
-        print "Count: ", ibfdiff.cells[i].count
-        print "datasum ", ibfdiff.cells[i].dataSum
-        print "hashprod", ibfdiff.cells[i].hashProd
-
-    
     
 
 

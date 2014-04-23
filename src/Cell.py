@@ -61,7 +61,6 @@ class Cell(object):
 		return False
 
 	def subtract(self, otherCell, dataByteSize, N):
-		#TODO
 		diffCell = Cell(0, dataByteSize)
 		c = self.count - otherCell.getCount()
 		dS=self.dataSum.addBlockData(otherCell.getDataSum())
