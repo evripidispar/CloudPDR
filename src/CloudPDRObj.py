@@ -6,8 +6,6 @@ class CloudPDRObj(object):
 	def __init__(self, Nbits, filename):	
 		self.N = number.getRandomInteger(Nbits)
 		self.secret = self.generateSecret(Nbits)
-		print self.N
-		print self.secret
 		if filename == None:
 			self.g = self.pickGeneratorG()
 			fp = open(filename, "w")

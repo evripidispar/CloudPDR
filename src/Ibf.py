@@ -21,22 +21,20 @@ class Ibf(object):
 		return indeces
 
 
-	def insert(self, block, secret, N, g):
+	def insert(self, block, secret, N, g, dataByteSize):
 		blockIndeces = self.getIndeces(block)
 		for i in blockIndeces:
 			if i not in self.cells.keys():
-				self.cells[i]=Cell()
-				self.cells[i].dataSum.setBlockData(block)
-			else:
-				self.cells[i].add(block, secret, N, g)
+				self.cells[i]=Cell(0, dataByteSize)
+			self.cells[i].add(block, secret, N, g)
 
 		
-	def delete(self, block, g):
+	def delete(self, block, secret, N, g):
 		blockIndeces =  self.getIndeces(block)
 		for i in blockIndeces:
 			#TODO: no idea what's up if the block is not inside the Cell
-			if self.cell[i].isEmpty == False:
-				self.cell[i].delete(block, secret, N, g)
+			if self.cells[i].isEmpty() == False:
+				self.cells[i].remove(block, secret, N, g)
 
 
 	def subtract(self, otherIbf, secret, N):
@@ -55,15 +53,15 @@ class Ibf(object):
 
 	def getPureCells(self):
 		pureCells = []
-		for cell in self.cells:
-			if cell.isPure():
-				pureCells.append(cell)
+		for key in self.cells.keys():
+			if self.cells[key].isPure():
+				pureCells.append(key)
 		return pureCells
 
 
 	def findBlock(self,block):
 		indeces = self.getIndeces(block)
-		for i in blockIndeces:
+		for i in indeces:
 			if self.cells[i].isEmpty():
 				return False
 		return True

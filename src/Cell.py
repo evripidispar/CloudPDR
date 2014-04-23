@@ -3,18 +3,18 @@ from Block import *
 from CryptoUtil import *
 
 class Cell(object):
-	def __init__(self, id=0):
+	def __init__(self, id, dataByteSize):
 		self.count = 0
-		self.dataSum = Block(id)
+		self.dataSum = Block(id, dataByteSize*8)
 		self.hashProd = 1
 
-	def setCount(count):
+	def setCount(self, count):
 		self.count = count
 
-	def setHashProd(hashProd):
+	def setHashProd(self, hashProd):
 		self.hashProd = hashProd
 
-	def setDataSum(dataSum):
+	def setDataSum(self, dataSum):
 		self.dataSum = dataSum
 
 	def getCount(self):
@@ -68,7 +68,7 @@ class Cell(object):
 		dS = self.dataSum - otherCell.getDataSum()  #TODO
 
 		diffCell.setCount(c)
-		diffCell.setDataSum(ds)
+		diffCell.setDataSum(dS)
 		diffCell.setHashProd(hp)
 
 		return diffCell

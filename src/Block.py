@@ -3,11 +3,12 @@ from ConfigPDR import ID_LEN
 
 
 class Block(object):
-	def __init__(self, id):
+	def __init__(self, id, dataBitSize):
 		util_id = self.idToBinary(id)
 		id_len = ID_LEN - len(util_id)
 		self.data = bitarray(id_len*'0')
 		self.data.extend(util_id)
+		self.data.extend(dataBitSize*'0')
 
 	def idToBinary(self, id):
 		bit_id = "{0:b}".format(id)

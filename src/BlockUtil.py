@@ -7,7 +7,7 @@ from bitarray import bitarray
 def blockCreatorMemory(howMany, dataSize):
 	blocks = []
 	for i in range(0, howMany):
-		newBlock = Block(i)
+		newBlock = Block(i, 0)
 		data = bitarray()
 		byteData = Random.get_random_bytes(dataSize)
 		data.frombytes(byteData)
