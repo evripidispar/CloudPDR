@@ -1,42 +1,39 @@
-import Ibf
 from HashFunc import *
+from Ibf import *
 
 hashFunList = [RSHash, JSHash, 
 			PJWHash, ELFHash, BKDRHash, SDBMHash, 
 			DJBHash, DEKHash, BPHash, FNVHash, APHash]
 
 
-#TODO: No idea why you want the list of hashFunctions as
-# an argument here
-# lostIndeces: a list with the lost indeces as strings 
 
-def recover(ibfLost, lostIndeces, hashFunList):
+# lostIndeces a list of decimal lost indices
 
+def recover(ibfLost, lostIndices, dataByteSize, secret, N, g):
 	L = []
 	lostPureCells = ibfLost.getPureCells()
 	for cell in lostPureCells:
-		blockIndex =  cell.getDataSum().getIndex()
-		if blockIndex not in lostIndeces:
+		blockIndex =  ibfLost.cells[cell].getDataSum().getDecimalIndex()
+		if blockIndex not in lostIndices:
 			return None
 		
-		L.append(cell.getDataSum())
-		ibfLost.delete(cell.getDataSum)
-
-		lostIndeces.remove(blockIndex)
-
-	for cell in ibfLost:
+		L.append(ibfLost.cells[cell].getDataSum())
+		ibfLost.delete(ibfLost.cells[cell].getDataSum(), secret, N, g)
+		lostIndices.remove(blockIndex)
 		
-		if cell.getCount() != 0 or 
-				cell.getDataSum() != Block(0) or
-				 cell.getHashProd() !=1:
-			cell.printSelf()
+		for cIndex in xrange(ibfLost.m):
+			if ibfLost.cells[cIndex].getCount() != 0 or \
+				ibfLost.cells[cIndex].getDataSum() != Block(0, dataByteSize*8) or \
+					 ibfLost.cells[cIndex].getHashProd() !=1:
+				ibfLost.cells[cIndex].printSelf()
+				return None
+		
+		if len(lostIndices) != 0:
 			return None
-
-	if len(lostIndeces) != 0:
-		return None
-
-
 	return L
- 			
+	
+	
+
+
 
 

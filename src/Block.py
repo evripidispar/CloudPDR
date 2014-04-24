@@ -37,7 +37,7 @@ class Block(object):
 	def getWholeBlockBitArray(self):
 		return self.data
 
-	def getDemicalIndex(self):
+	def getDecimalIndex(self):
 		return int(self.getStringIndex(), 2)
 	
 	def getStringIndex(self):

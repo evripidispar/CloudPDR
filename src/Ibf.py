@@ -13,13 +13,13 @@ class Ibf(object):
 		
 
 
-	def getIndeces(self, block):
-		indeces = []
+	def getIndices(self, block):
+		indices = []
 		blockIndex = block.getStringIndex()
 		for i in range(self.k):
 			hashIndexVal = self.HashFunc[i](blockIndex)
-			indeces.append(hashIndexVal % self.m)
-		return indeces
+			indices.append(hashIndexVal % self.m)
+		return indices
 
 
 	def zero(self,  dataByteSize):
@@ -27,14 +27,14 @@ class Ibf(object):
 			self.cells[cellIndex] = Cell(0, dataByteSize)
 
 	def insert(self, block, secret, N, g, dataByteSize):
-		blockIndeces = self.getIndeces(block)
-		for i in blockIndeces:
+		blockIndices = self.getIndices(block)
+		for i in blockIndices:
 			self.cells[i].add(block, secret, N, g)
 
 		
 	def delete(self, block, secret, N, g):
-		blockIndeces =  self.getIndeces(block)
-		for i in blockIndeces:
+		blockIndices =  self.getIndices(block)
+		for i in blockIndices:
 			if self.cells[i].isEmpty() == False:
 				self.cells[i].remove(block, secret, N, g)
 
@@ -58,8 +58,8 @@ class Ibf(object):
 
 
 	def findBlock(self,block):
-		indeces = self.getIndeces(block)
-		for i in indeces:
+		indices = self.getIndices(block)
+		for i in indices:
 			if self.cells[i].isEmpty():
 				return False
 		return True

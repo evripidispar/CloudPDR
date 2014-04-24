@@ -92,7 +92,7 @@ class Cell(object):
 		return diffCell
 
 	def printSelf(self):
-		print "Index:" + str(self.dataSum.getDemicalIndex())
+		print "Index:" + str(self.dataSum.getDecimalIndex())
 		print "Count: " + str(self.count)
 		print "HashProd: " + str(self.hashProd)
 		print "DataSum " + str(self.dataSum.getWholeBlockBitArray())
