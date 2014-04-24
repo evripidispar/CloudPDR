@@ -38,7 +38,7 @@ class Block(object):
 		return self.data
 
 	def getDemicalIndex(self):
-		return int(self.getIndex, 2)
+		return int(self.getStringIndex(), 2)
 	
 	def getStringIndex(self):
 		index = self.data[0:ID_LEN]

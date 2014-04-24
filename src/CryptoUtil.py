@@ -7,7 +7,7 @@ def pickPseudoRandomTheta(secret_key, index):
 	hmac.update(index)
 	return hmac.hexdigest()
 
-def generate_f(block, N, secret_key, g):
+def apply_f(block, N, secret_key, g):
 	index = block.getStringIndex()
 	a = pickPseudoRandomTheta(secret_key, index)
 	

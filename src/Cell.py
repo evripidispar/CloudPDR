@@ -31,7 +31,7 @@ class Cell(object):
 	def add(self, block, secret, N, g):
 		self.count += 1
 		self.dataSum.addBlockData(block)
-		f = generate_f(block, N, secret, g)
+		f = apply_f(block, N, secret, g)
 		self.f = f
 		self.hashProd *= f
 		self.hashProd = pow(self.hashProd, 1, N)
@@ -46,14 +46,13 @@ class Cell(object):
 			self.count -= 1
 
 		self.dataSum.addBlockData(block)
-		f = generate_f(block, N, secret, g)
+		f = apply_f(block, N, secret, g)
 		fInv = number.inverse(f, N)  #TODO: Not sure this is true
 		self.hashProd *= fInv
 		self.hashProd = pow(self.hashProd, 1, N)
 
-	def isPure(self):  #Read Babis 1 or -1
-
-		if self.count == 1:  #TODO:  is this correct?
+	def isPure(self):
+		if self.count == 1:  
 			return True
 		return False
 
@@ -63,20 +62,19 @@ class Cell(object):
 		return False
 
 	def subtract(self, otherCell, dataByteSize, N):
+		
 		diffCell = Cell(0, dataByteSize)
 		
 		#counter
 		diffCell.count = self.count - otherCell.getCount()
 		
 		#datasum
-		localDS = self.getDataSum().getWholeBlockBitArray()
-		otherDS = otherCell.getDataSum().getWholeBlockBitArray()
-		diffCell.setDataSum(localDS ^ otherDS)
+		diffCell.dataSum.addBlockData(self.getDataSum())
+		diffCell.dataSum.addBlockData(otherCell.getDataSum())
 		
-		#hashProd
+		#dataSum.addBlockData(localDS ^ otherDS)
 		
-		if (number.GCD(otherCell.getHashProd(), N)!=1):
-			print "Problem"
+		#hashProd	
 		otherFInv = number.inverse(otherCell.getHashProd(), N)
 		diffCell.hashProd = otherFInv * self.hashProd
 		print "Before", diffCell.hashProd
@@ -94,8 +92,9 @@ class Cell(object):
 		return diffCell
 
 	def printSelf(self):
+		print "Index:" + str(self.dataSum.getDemicalIndex())
 		print "Count: " + str(self.count)
-		print "DataSum: " + str(self.dataSum)
 		print "HashProd: " + str(self.hashProd)
+		print "DataSum " + str(self.dataSum.getWholeBlockBitArray())
 
 
