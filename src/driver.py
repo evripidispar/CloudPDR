@@ -78,6 +78,11 @@ def main():
     for diffBlock in diff_a:
         ibfA.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
 
+    lostindices=[]
+    #lostindices=diff_a
+    for i in diff_a:
+        lostindices.append(i)
+
     for diffBlock in diff_b:
         ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g,  args.dataSize)
 
@@ -90,8 +95,27 @@ def main():
     for cellIndex in xrange(args.ibfLen):
         diffIbf.cells[cellIndex].printSelf()
     
+    #lostindices=diff_a
+    L=CloudPdrFuncs.recover(diffIbf, diff_a, args.dataSize, cObj.secret, cObj.N, cObj.g)
+
+    if L==None:
+        print "malakas"
+
+    for block in L:
+        print block
+
     
-    CloudPdrFuncs.recover(diffIbf, diff_a, args.dataSize, cObj.secret, cObj.N, cObj.g)
+    print len(L)
+    print len(lostindices)
+
+    recovered=0
+    if(len(L)==len(lostindices)):
+        for i in lostindices:
+            if i in L:
+                recovered+=1
+                #print "SUCCESS"
+
+    print recovered
     
     
 

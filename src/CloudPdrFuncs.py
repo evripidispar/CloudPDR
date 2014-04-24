@@ -19,8 +19,9 @@ def recover(ibfLost, lostIndices, dataByteSize, secret, N, g):
 		blockIndex =  ibfLost.cells[cIndex].getDataSum().getDecimalIndex()
 		if blockIndex not in lostIndices:
 			return None
+
 		
-		L.append(ibfLost.cells[cIndex].getDataSum())
+		L.append(blockIndex)
 		ibfLost.delete(ibfLost.cells[cIndex].getDataSum(), secret, N, g, cIndex)
 		lostIndices.remove(blockIndex)
 		
