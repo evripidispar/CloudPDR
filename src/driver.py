@@ -99,7 +99,7 @@ def main():
     L=CloudPdrFuncs.recover(diffIbf, diff_a, args.dataSize, cObj.secret, cObj.N, cObj.g)
 
     if L==None:
-        print "malakas"
+        print "fail to recover"
 
     for block in L:
         print block
