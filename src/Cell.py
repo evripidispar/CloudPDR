@@ -9,6 +9,12 @@ class Cell(object):
 		self.hashProd = 1
 		self.f = 0
 
+
+	def zeroCell(self):
+		self.count=0
+		self.dataSum.data.setall(False)
+		self.hashProd =  1
+
 	def setCount(self, count):
 		self.count = count
 
@@ -44,13 +50,14 @@ class Cell(object):
 			self.count += 1
 		else:
 			self.count -= 1
-
-		self.dataSum.addBlockData(block)
-		f = apply_f(block, N, secret, g)
-		fInv = number.inverse(f, N)  #TODO: Not sure this is true
-		self.hashProd *= fInv
-		self.hashProd = pow(self.hashProd, 1, N)
-
+		
+		if block.isZeroDataSum()==False: #TODO
+			self.dataSum.addBlockData(block)
+			f = apply_f(block, N, secret, g)
+			fInv = number.inverse(f, N)  #TODO: Not sure this is true
+			self.hashProd *= fInv
+			self.hashProd = pow(self.hashProd, 1, N)
+			
 	def isPure(self):
 		if self.count == 1:  
 			return True
@@ -77,18 +84,8 @@ class Cell(object):
 		#hashProd	
 		otherFInv = number.inverse(otherCell.getHashProd(), N)
 		diffCell.hashProd = otherFInv * self.hashProd
-		print "Before", diffCell.hashProd
-		#diffCell.hashProd = pow(diffCell.hashProd, 1, N) 
+		diffCell.hashProd = pow(diffCell.hashProd, 1, N) 
 		
-		diffCell.hashProd = diffCell.hashProd % N 
-		
-		print "After", diffCell.hashProd
-		
-		if diffCell.hashProd != 1:
-			print "-----------"
-		else:
-			print "-----------"
-			
 		return diffCell
 
 	def printSelf(self):
@@ -96,5 +93,6 @@ class Cell(object):
 		print "Count: " + str(self.count)
 		print "HashProd: " + str(self.hashProd)
 		print "DataSum " + str(self.dataSum.getWholeBlockBitArray())
+		print "------"
 
 

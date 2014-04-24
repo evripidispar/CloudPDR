@@ -32,12 +32,18 @@ class Ibf(object):
 			self.cells[i].add(block, secret, N, g)
 
 		
-	def delete(self, block, secret, N, g):
+	def delete(self, block, secret, N, g, selfIndex=-1):
 		blockIndices =  self.getIndices(block)
 		for i in blockIndices:
+			if i == selfIndex:
+				continue
+				
 			if self.cells[i].isEmpty() == False:
 				self.cells[i].remove(block, secret, N, g)
-
+		
+		#TODO: super scary
+		if selfIndex != -1:
+			self.cells[selfIndex].zeroCell()
 
 	def subtractIbf(self, otherIbf, secret, N, dataByteSize):
 		if self.m != otherIbf.m:

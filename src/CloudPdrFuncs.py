@@ -12,24 +12,40 @@ hashFunList = [RSHash, JSHash,
 def recover(ibfLost, lostIndices, dataByteSize, secret, N, g):
 	L = []
 	lostPureCells = ibfLost.getPureCells()
-	for cell in lostPureCells:
-		blockIndex =  ibfLost.cells[cell].getDataSum().getDecimalIndex()
+	pureCellsNum = len(lostPureCells)
+	
+	while pureCellsNum > 0:
+		cIndex = lostPureCells.pop(0)
+		blockIndex =  ibfLost.cells[cIndex].getDataSum().getDecimalIndex()
 		if blockIndex not in lostIndices:
 			return None
 		
-		L.append(ibfLost.cells[cell].getDataSum())
-		ibfLost.delete(ibfLost.cells[cell].getDataSum(), secret, N, g)
+		L.append(ibfLost.cells[cIndex].getDataSum())
+		ibfLost.delete(ibfLost.cells[cIndex].getDataSum(), secret, N, g, cIndex)
 		lostIndices.remove(blockIndex)
 		
-		for cIndex in xrange(ibfLost.m):
-			if ibfLost.cells[cIndex].getCount() != 0 or \
-				ibfLost.cells[cIndex].getDataSum() != Block(0, dataByteSize*8) or \
-					 ibfLost.cells[cIndex].getHashProd() !=1:
-				ibfLost.cells[cIndex].printSelf()
-				return None
+		lostPureCells = ibfLost.getPureCells()
+		pureCellsNum = len(lostPureCells)
 		
-		if len(lostIndices) != 0:
+		
+	for cIndex in xrange(ibfLost.m):
+		if ibfLost.cells[cIndex].getCount() != 0:
+			print "Failed to recover", "Reason: ", "Count", cIndex
 			return None
+			
+			
+		if ibfLost.cells[cIndex].getDataSum().isZeroDataSum() == False:
+			print "Failed to recover", "Reason: ", "Datasum", cIndex
+			return None
+			
+		if  ibfLost.cells[cIndex].getHashProd() !=1:
+			print "Failed to recover", "Reason: ", "HashProd", cIndex
+			return None
+					
+		
+	if len(lostIndices) != 0:
+		return None
+	
 	return L
 	
 	

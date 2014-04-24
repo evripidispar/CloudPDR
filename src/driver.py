@@ -3,7 +3,8 @@ import sys
 from BlockUtil import *
 from Ibf import *
 from CloudPDRObj import *
-import os
+import CloudPdrFuncs
+
 
 
 def main():
@@ -39,6 +40,7 @@ def main():
 
     if args.numCommon <= 0:
         print "Number of common should be positive"
+        sys.exit(1)
 
     if args.numCommon > args.numBlocks:
         print  "NumCommon less than equal of numBlocks"
@@ -79,11 +81,17 @@ def main():
     for diffBlock in diff_b:
         ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g,  args.dataSize)
 
+
+    for diffBlock in diff_b:
+        ibfB.delete(blocks[diffBlock], cObj.secret, cObj.N, cObj.g)
+        
     
     diffIbf = ibfA.subtractIbf(ibfB,  cObj.secret, cObj.N, args.dataSize)
     for cellIndex in xrange(args.ibfLen):
         diffIbf.cells[cellIndex].printSelf()
     
+    
+    CloudPdrFuncs.recover(diffIbf, diff_a, args.dataSize, cObj.secret, cObj.N, cObj.g)
     
     
 

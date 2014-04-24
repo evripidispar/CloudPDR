@@ -9,6 +9,7 @@ class Block(object):
 		self.data = bitarray(id_len*'0')
 		self.data.extend(util_id)
 		self.data.extend(dataBitSize*'0')
+		self.dataBitsize = dataBitSize
 
 	def idToBinary(self, id):
 		bit_id = "{0:b}".format(id)
@@ -44,3 +45,10 @@ class Block(object):
 		index = self.data[0:ID_LEN]
 		indexStr = index.to01()
 		return indexStr
+	
+	def isZeroDataSum(self):
+		zero = bitarray((ID_LEN+self.dataBitsize)*'0')
+		if zero == self.data:
+			return True
+		return False
+	
