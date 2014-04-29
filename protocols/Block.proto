@@ -1,0 +1,9 @@
+message Block {
+	required string index = 1;
+	required bytes data = 2;
+}
+
+
+message BlockCollection {
+	repeated Block blocks=1;
+}

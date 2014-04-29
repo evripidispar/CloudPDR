@@ -1,18 +1,18 @@
 from bitarray import bitarray
-from ConfigPDR import ID_LEN
 
+BINDEX_LEN = 32
 
 class Block(object):
-	def __init__(self, id, dataBitSize):
-		util_id = self.idToBinary(id)
-		id_len = ID_LEN - len(util_id)
+	def __init__(self, blockId, dataBitSize):
+		util_id = self.idToBinary(blockId)
+		id_len = BINDEX_LEN - len(util_id)
 		self.data = bitarray(id_len*'0')
 		self.data.extend(util_id)
 		self.data.extend(dataBitSize*'0')
 		self.dataBitsize = dataBitSize
 
-	def idToBinary(self, id):
-		bit_id = "{0:b}".format(id)
+	def idToBinary(self, blockId):
+		bit_id = "{0:b}".format(blockId)
 		return bit_id
 
 	def setBlockData(self, blockData):
@@ -27,13 +27,13 @@ class Block(object):
 		self.data = self.data ^ otherBlock.data
 
 	def getIndex(self):
-		return self.data[0:ID_LEN]
+		return self.data[0:BINDEX_LEN]
 
 	def getIndexBytes(self):
-		return self.data[0:ID_LEN].tobytes()
+		return self.data[0:BINDEX_LEN].tobytes()
 
 	def getData(self):
-		return self.data[ID_LEN:]
+		return self.data[BINDEX_LEN:]
 
 	def getWholeBlockBitArray(self):
 		return self.data
@@ -42,12 +42,12 @@ class Block(object):
 		return int(self.getStringIndex(), 2)
 	
 	def getStringIndex(self):
-		index = self.data[0:ID_LEN]
+		index = self.data[0:BINDEX_LEN]
 		indexStr = index.to01()
 		return indexStr
 	
 	def isZeroDataSum(self):
-		zero = bitarray((ID_LEN+self.dataBitsize)*'0')
+		zero = bitarray((BINDEX_LEN+self.dataBitsize)*'0')
 		if zero == self.data:
 			return True
 		return False

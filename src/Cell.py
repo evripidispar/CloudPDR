@@ -1,6 +1,6 @@
 from Crypto.Util import number
 from Block import *
-from CryptoUtil import *
+from CryptoUtil import apply_f
 
 class Cell(object):
 	def __init__(self, id, dataByteSize):
