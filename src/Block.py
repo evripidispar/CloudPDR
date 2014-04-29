@@ -17,7 +17,9 @@ class Block(object):
 
 	def setBlockData(self, blockData):
 		self.data = blockData.data
-
+	
+	def lex(self):
+		print "20cm"
 
 	def setRandomBlockData(self, blockData):
 		self.data.extend(blockData)
