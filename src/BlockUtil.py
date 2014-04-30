@@ -23,7 +23,7 @@ def pickCommonBlocks(numOfBlocks, numOfCommon):
 def pickDiffBlocks(numOfBlocks, common, totalBlocks):
 	numDiff = numOfBlocks - len(common)
 	
-	blocks = xrange(totalBlocks)
+	blocks = range(totalBlocks)
 
 	for block_index in xrange(numOfBlocks):
 		if block_index in common:
