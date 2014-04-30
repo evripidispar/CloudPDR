@@ -2,6 +2,7 @@ from Crypto.Util import number
 from Crypto.Hash import HMAC
 
 
+
 class CloudPDRObj(object):
 	
 	def __init__(self, Nbits, filename):
@@ -16,6 +17,7 @@ class CloudPDRObj(object):
 			fp = open(filename, "r")
 			self.g = fp.read()
 			self.g = long(self.g)
+			fp.close()
 			
 		except IOError as ioe:
 			print "Generator file does not exist\n Creating new generator file:", ioe
@@ -25,7 +27,6 @@ class CloudPDRObj(object):
 			fp.close()		
 		
 			
-
 	def generateSecret(self,Nbits):
 		tmpRand = number.getRandomInteger(Nbits)
 		h = HMAC.new(str(self.N))

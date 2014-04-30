@@ -3,16 +3,18 @@ import Block_pb2
 import BlockUtil
 import argparse
 import datetime
+from Block import Block
 
-TEST = True
+TEST = False
 
 def createBlocks(blocksNum, blockSize):
     blocks = BlockUtil.blockCreatorMemory(blocksNum, blockSize)
     return blocks
 
-def createBlockProtoBufs(blocks):
+def createBlockProtoBufs(blocks, blockSize):
     print "Creating protocol buffers...."
     blockCollection = Block_pb2.BlockCollection()
+    blockCollection.blockBitSize = blockSize
     for b in blocks:
         pbufBlock = blockCollection.blocks.add()
         pbufBlock.index = b.getStringIndex()
@@ -39,6 +41,14 @@ def listBlocksInCollection(blockCollection):
     for blk in blockCollection.blocks:
         print int(blk.index, 2)
 
+def blockCollection2BlockObject(blockCollection):
+    b = []
+    bSize = blockCollection.blockBitSize
+    for blk in blockCollection.blocks:
+        bObj = Block(0,0)
+        bObj.buildBlockFromProtoBuf(blk.index, blk.data, bSize) 
+        b.append(bObj)
+    return b
 
 
 def main():
@@ -77,7 +87,7 @@ def main():
 
         start = datetime.datetime.now()
         blocks = createBlocks(args.numBlocks, args.dataSize)
-        blkCol = createBlockProtoBufs(blocks)
+        blkCol = createBlockProtoBufs(blocks, args.dataSize)
         writeBlockCollectionToFile(args.fpW, blkCol)
         end = datetime.datetime.now()
         

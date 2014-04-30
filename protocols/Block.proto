@@ -1,3 +1,5 @@
+package protocols;
+
 message Block {
 	required string index = 1;
 	required bytes data = 2;
@@ -5,5 +7,6 @@ message Block {
 
 
 message BlockCollection {
-	repeated Block blocks=1;
+	required int32 blockBitSize = 1;
+	repeated Block blocks=2;
 }

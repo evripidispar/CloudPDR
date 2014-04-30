@@ -11,6 +11,12 @@ class Block(object):
 		self.data.extend(dataBitSize*'0')
 		self.dataBitsize = dataBitSize
 
+	def buildBlockFromProtoBuf(self, index, data, dataBitSize):
+		self.data = bitarray()
+		self.data.extend(index)
+		self.data.extend(data)
+		self.dataBitsize = dataBitSize
+
 	def idToBinary(self, blockId):
 		bit_id = "{0:b}".format(blockId)
 		return bit_id

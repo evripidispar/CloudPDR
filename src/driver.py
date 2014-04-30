@@ -4,24 +4,20 @@ from BlockUtil import *
 from Ibf import *
 from CloudPDRObj import *
 import CloudPdrFuncs
-
-
+import BlockEngine
+from CloudPDRKey import CloudPDRKey
+from TagGenerator import TagGenerator
+from Crypto.Hash import SHA256
+from datetime import datetime
 
 def main():
+    
     p = argparse.ArgumentParser(description='Driver for IBF')
 
-    p.add_argument('--num', dest='numBlocks', action='store', type=int,
-                   default=2, help='Number of blocks in IBF')
-
-    p.add_argument('--common', dest='numCommon', action='store', type=int,
-                   default=2, help='Common blocks in IBF')
-
-    p.add_argument('--size', dest='dataSize', action='store', type=int,
-                   default=512, help='Block data size')
-
-    p.add_argument('--total', dest='totalBlocks', action='store', type=int,
-                   default=200, help='Number of blocks to create')
-
+    
+    p.add_argument('-b', dest='blkFp', action='store', default=None,
+                   help='Serialized block filename as generated from BlockEngine')
+    
     
     p.add_argument('-m', dest='ibfLen', action='store', type=int,
                    default=500, help='Length of the bloom filter')
@@ -29,93 +25,119 @@ def main():
     p.add_argument('-k', dest='hashNum', action='store', type=int,
                    default=5, help='Number of hash arguments')
     
-    p.add_argument('-g', dest="genFile", action="store", 
+    p.add_argument('-g', dest="genFile", action="store", default=None,
                  help="static generator file")
+
+    
+    p.add_argument('-n', dest='n', action='store', type=int,
+                   default=1024, help='RSA modulus size')
+    
 
     args = p.parse_args()
 
-    if args.numBlocks <= 0:
-        print "Number of blocks should be positive"
-        sys.exit(1)
-
-    if args.numCommon <= 0:
-        print "Number of common should be positive"
-        sys.exit(1)
-
-    if args.numCommon > args.numBlocks:
-        print  "NumCommon less than equal of numBlocks"
-        sys.exit(1)
-    if args.dataSize <= 0:
-        print "Data size should positive"
-        sys.exit(1)
-
-    if args.totalBlocks < 2 * args.numBlocks:
-        print "Total blocks should be bigger then numBlocks"
-        sys.exit(1)
     
     if args.hashNum > 10: 
         print "Number of hashFunctions should be less than 10"
         sys.exit(1)
         
+    if args.blkFp == None:
+        print 'Please specify a file that stores the block collection'
+        sys.exit(1)
     
-    blocks = blockCreatorMemory(args.totalBlocks, args.dataSize)
-    commonBlocks = pickCommonBlocks(args.numBlocks, args.numCommon)
-    diff_a, diff_b = pickDiffBlocks(args.numBlocks, commonBlocks, args.totalBlocks)
-
-    cObj = CloudPDRObj(1024, args.genFile)
-   
-
-
-    ibfA = Ibf(args.hashNum, args.ibfLen)
-    ibfA.zero(args.dataSize)
-    ibfB = Ibf(args.hashNum, args.ibfLen)
-    ibfB.zero(args.dataSize)
-
-    for cBlock in commonBlocks:
-        ibfA.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
-        ibfB.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
-
-    for diffBlock in diff_a:
-        ibfA.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
-
-    lostindices=[]
-    #lostindices=diff_a
-    for i in diff_a:
-        lostindices.append(i)
-
-    for diffBlock in diff_b:
-        ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g,  args.dataSize)
-
-
-    for diffBlock in diff_b:
-        ibfB.delete(blocks[diffBlock], cObj.secret, cObj.N, cObj.g)
+    if args.genFile == None:
+        print 'Please specify a generator file'
+        sys.exit(1)
         
     
-    diffIbf = ibfA.subtractIbf(ibfB,  cObj.secret, cObj.N, args.dataSize)
-    for cellIndex in xrange(args.ibfLen):
-        diffIbf.cells[cellIndex].printSelf()
+    # Read blocks from Serialized file
+    blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
+    blockObjects = BlockEngine.blockCollection2BlockObject(blocks)
     
-    #lostindices=diff_a
-    L=CloudPdrFuncs.recover(diffIbf, diff_a, args.dataSize, cObj.secret, cObj.N, cObj.g)
-
-    if L==None:
-        print "fail to recover"
-
-    for block in L:
-        print block
-
+    #Read the generator from File
+    fp = open(args.genFile, "r")
+    g = fp.read()
+    g = long(g)
+    fp.close() 
     
-    print len(L)
-    print len(lostindices)
-
-    recovered=0
-    if(len(L)==len(lostindices)):
-        for i in lostindices:
-            if i in L:
-                recovered+=1
-                #print "SUCCESS"
-
-    print recovered
+   
+    #Generate key class
+    pdrKey = CloudPDRKey(args.n, g)
+    secret = pdrKey.getSecretKeyFields()
+    
+    #Create the "h" object
+    h = SHA256.new()
+    
+    #Create a tag generator
+    tGen = TagGenerator(h)
+    
+    
+    wStartTime = datetime.now()
+    #Create Wi
+    W = tGen.getW(blockObjects, secret["u"])
+    wEndTime = datetime.now()
+    
+    #Create Tags
+    tagStartTime = datetime.now()
+    T = tGen.getTags(W, g, blockObjects, secret["d"], pdrKey.key.n)
+    tagEndTime = datetime.now()
+    print "W creation:" , wEndTime-wStartTime
+    print "Tag creation:" , tagEndTime-tagStartTime
+ 
+   
+#    commonBlocks = pickCommonBlocks(args.numBlocks, args.numCommon)
+#    diff_a, diff_b = pickDiffBlocks(args.numBlocks, commonBlocks, args.totalBlocks)
+#   
+#
+#     ibfA = Ibf(args.hashNum, args.ibfLen)
+#     ibfA.zero(args.dataSize)
+#     ibfB = Ibf(args.hashNum, args.ibfLen)
+#     ibfB.zero(args.dataSize)
+# 
+#     for cBlock in commonBlocks:
+#         ibfA.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
+#         ibfB.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
+# 
+#     for diffBlock in diff_a:
+#         ibfA.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
+# 
+#     lostindices=[]
+#     #lostindices=diff_a
+#     for i in diff_a:
+#         lostindices.append(i)
+# 
+#     for diffBlock in diff_b:
+#         ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g,  args.dataSize)
+# 
+# 
+#     for diffBlock in diff_b:
+#         ibfB.delete(blocks[diffBlock], cObj.secret, cObj.N, cObj.g)
+#         
+#     
+#     diffIbf = ibfA.subtractIbf(ibfB,  cObj.secret, cObj.N, args.dataSize)
+#     for cellIndex in xrange(args.ibfLen):
+#         diffIbf.cells[cellIndex].printSelf()
+#     
+#     #lostindices=diff_a
+#     L=CloudPdrFuncs.recover(diffIbf, diff_a, args.dataSize, cObj.secret, cObj.N, cObj.g)
+# 
+#     if L==None:
+#         print "fail to recover"
+# 
+#     for block in L:
+#         print block
+# 
+#     
+#     print len(L)
+#     print len(lostindices)
+# 
+#     recovered=0
+#     if(len(L)==len(lostindices)):
+#         for i in lostindices:
+#             if i in L:
+#                 recovered+=1
+#                 #print "SUCCESS"
+# 
+#     print recovered
     
     
 

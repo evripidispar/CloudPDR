@@ -34,13 +34,19 @@ class Cell(object):
 		return self.dataSum
 
 
-	def add(self, block, secret, N, g):
+	def add(self, block, secret, N, g, keepHashProdOne=False):
 		self.count += 1
 		self.dataSum.addBlockData(block)
-		f = apply_f(block, N, secret, g)
-		self.f = f
-		self.hashProd *= f
-		self.hashProd = pow(self.hashProd, 1, N)
+		
+		if keepHashProdOne == False:
+			f = apply_f(block, N, secret, g)
+			self.f = f
+			self.hashProd *= f
+			self.hashProd = pow(self.hashProd, 1, N)
+		else:
+			self.hashProd = 1
+			
+			
 		return
 
 	def remove(self, block, secret, N, g):
