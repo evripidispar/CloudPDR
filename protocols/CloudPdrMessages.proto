@@ -1,0 +1,60 @@
+
+
+message PublicKey {
+	required string n = 1;
+	required string g = 2;
+}
+
+
+
+message Block {
+	required string index = 1;
+	required bytes data = 2;
+}
+
+
+message BlockCollection {
+	required int32 blockBitSize = 1;
+	repeated Block blocks=2;
+}
+
+
+message TagCollection {
+	repeated string tags=1;
+}
+
+
+message Init {
+	required PublicKey pk = 1;
+	required BlockCollection bc = 2;
+	required TagCollection tc = 3;
+}
+
+message InitAck {
+	required bool ack=1;
+}
+
+message Challenge {
+	required string challenge=1;
+}
+
+
+message Proof {
+	required bool proof=1;
+}
+
+message CloudPdrMsg {
+
+	enum msgType {
+		INIT=0;
+		INIT_ACK=1;
+		CHALLENGE=2;
+		PROOF=3;
+	}
+	
+	required msgType type = 1;
+	optional Init init = 2;
+	optional InitAck ack = 3;
+	optional Challenge chlng=4;
+	optional Proof proof=5;	
+}

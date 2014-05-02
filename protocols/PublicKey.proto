@@ -1,7 +1,0 @@
-package protocols;
-
-message PublicKey {
-	required string n = 1;
-	required string g = 2;
-}
-	 

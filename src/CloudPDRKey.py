@@ -1,4 +1,4 @@
-import PublicKey_pb2
+import CloudPdrMessages_pb2
 from Crypto.PublicKey import RSA
 from Crypto.Util import number
 from Crypto.Hash import SHA256
@@ -20,7 +20,7 @@ class CloudPDRKey(object):
     def getProtoBufPubKeySerialized(self):
         
         if self.pubKeySerialized == None:
-            pubKey = PublicKey_pb2.PublicKey()
+            pubKey = CloudPdrMessages_pb2.PublicKey()
             pubKey.n = self.key.n
             pubKey.g = str(self.g)
             self.pubKeySerialized = pubKey.SerializeToString()

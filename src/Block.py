@@ -25,7 +25,6 @@ class Block(object):
 		self.data = blockData.data
 	
 	
-
 	def setRandomBlockData(self, blockData):
 		self.data.extend(blockData)
 

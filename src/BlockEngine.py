@@ -1,5 +1,5 @@
 import sys
-import Block_pb2
+import CloudPdrMessages_pb2
 import BlockUtil
 import argparse
 import datetime
@@ -13,7 +13,7 @@ def createBlocks(blocksNum, blockSize):
 
 def createBlockProtoBufs(blocks, blockSize):
     print "Creating protocol buffers...."
-    blockCollection = Block_pb2.BlockCollection()
+    blockCollection = CloudPdrMessages_pb2.BlockCollection()
     blockCollection.blockBitSize = blockSize
     for b in blocks:
         pbufBlock = blockCollection.blocks.add()
@@ -31,7 +31,7 @@ def writeBlockCollectionToFile(filename, blkCollection):
 
 def readBlockCollectionFromFile(filename):
     print "Reading Block collection from File"
-    blockCollection = Block_pb2.BlockCollection()
+    blockCollection = CloudPdrMessages_pb2.BlockCollection()
     fp = open(filename, "rb")
     blockCollection.ParseFromString(fp.read())
     fp.close()
