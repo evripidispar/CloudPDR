@@ -17,6 +17,7 @@ class CloudPDRProtocol(Protocol):
         print data
         self.transport.write("Good\n")    
         self.transport.loseConnection()
+        
 
 
 class CloudPDRFactory(Factory):
@@ -41,10 +42,6 @@ def main():
 
     reactor.listenTCP(args.port, CloudPDRFactory())
     reactor.run()
-
-    
- 
-
 
 
 if __name__ == "__main__":
