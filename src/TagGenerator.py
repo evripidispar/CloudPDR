@@ -1,4 +1,5 @@
 from Crypto.Util import number
+from CloudPdrMessages_pb2 import TagCollection
 
 class TagGenerator(object):
     '''
@@ -29,3 +30,9 @@ class TagGenerator(object):
             tags.append(res)
         return tags
         
+    
+    def createTagProtoBuf(self, tags):
+        tc = TagCollection()
+        for tag in tags:
+            tc.tags.append(str(tag))
+        return tc
