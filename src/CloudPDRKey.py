@@ -17,16 +17,21 @@ class CloudPDRKey(object):
         self.h = SHA256.new()
         self.mSize = mSize
             
+    
+    def getProtoBufPubKey(self):
+        pubKey = CloudPdrMessages_pb2.PublicKey()
+        pubKey.n = str(self.key.n)
+        pubKey.g = str(self.g)        
+        return pubKey
+    
     def getProtoBufPubKeySerialized(self):
         
         if self.pubKeySerialized == None:
-            pubKey = CloudPdrMessages_pb2.PublicKey()
-            pubKey.n = self.key.n
-            pubKey.g = str(self.g)
+            pubKey = self.getProtoBufPubKey()
             self.pubKeySerialized = pubKey.SerializeToString()
         
         return self.pubKeySerialized
-    
+        
     
     def getSecretKeyFields(self):
         secret = {}

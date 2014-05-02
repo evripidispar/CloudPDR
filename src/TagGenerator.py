@@ -5,8 +5,7 @@ class TagGenerator(object):
     '''
     Class to generate tags from blocks
     '''
-
-
+    
     def __init__(self, hashFunctionObject):
         self.h = hashFunctionObject
     

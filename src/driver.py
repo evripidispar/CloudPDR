@@ -2,13 +2,16 @@ import argparse
 import sys
 from BlockUtil import *
 from Ibf import *
-from CloudPDRObj import *
-import CloudPdrFuncs
+#from CloudPDRObj import *
+#import CloudPdrFuncs
 import BlockEngine
 from CloudPDRKey import CloudPDRKey
 from TagGenerator import TagGenerator
 from Crypto.Hash import SHA256
 from datetime import datetime
+import CloudPdrMessages_pb2
+from client import requestReply
+
 
 def main():
     
@@ -49,7 +52,13 @@ def main():
         sys.exit(1)
         
     
-    # Read blocks from Serialized file
+ 
+    
+    #Construct the init message   / Read blocks from Serialized file
+    #initMsg = CloudPdrMessages_pb2.Init()
+    #TODO: CloudPdr must be constructed bottom up
+    
+    
     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
     blockObjects = BlockEngine.blockCollection2BlockObject(blocks)
     
@@ -82,6 +91,31 @@ def main():
     tagEndTime = datetime.now()
     print "W creation:" , wEndTime-wStartTime
     print "Tag creation:" , tagEndTime-tagStartTime
+ 
+ 
+    #Construct the rest of the InitMsg
+#     initMsg.pk.n = str(pdrKey.key.n)
+#     initMsg.pk.g = str(pdrKey.g)   
+#     for tag in T:
+#         initMsg.tc.tags.append(str(tag))
+#         
+#     
+#    
+#     
+#     
+    #Construct the CloudPdrMsg
+    #pdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
+    #pdrMsg.type = pdrMsg.INIT
+    #pdrMsg.init = initMsg
+    #pdrMsg = pdrMsg.SerializeToString()
+    
+    
+    #RPC to send/rcv the init/initAck 
+    msg = requestReply('127.0.0.1', 9090, pdrMsg)
+    
+    
+    
+    
  
    
 #    commonBlocks = pickCommonBlocks(args.numBlocks, args.numCommon)

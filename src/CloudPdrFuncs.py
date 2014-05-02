@@ -1,4 +1,14 @@
-from HashFunc import *
+from HashFunc import RSHash
+from HashFunc import JSHash
+from HashFunc import PJWHash
+from HashFunc import ELFHash
+from HashFunc import BKDRHash
+from HashFunc import SDBMHash
+from HashFunc import DJBHash
+from HashFunc import DEKHash
+from HashFunc import BPHash
+from HashFunc import FNVHash
+from HashFunc import APHash
 from Ibf import *
 
 hashFunList = [RSHash, JSHash, 
