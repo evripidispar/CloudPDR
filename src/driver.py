@@ -9,9 +9,17 @@ from CloudPDRKey import CloudPDRKey
 from TagGenerator import TagGenerator
 from Crypto.Hash import SHA256
 from datetime import datetime
+import MessageUtil
 import CloudPdrMessages_pb2
-from client import requestReply
+from client import RpcPdrClient
 
+def processClientMessages(incoming):
+    cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
+    
+    if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
+        print "Received Init ack"
+    elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
+        print "Received Proof"
 
 def main():
     
@@ -54,9 +62,7 @@ def main():
     
  
     
-    #Construct the init message   / Read blocks from Serialized file
-    #initMsg = CloudPdrMessages_pb2.Init()
-    #TODO: CloudPdr must be constructed bottom up
+    # Read blocks from Serialized file
     
     
     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
@@ -72,14 +78,13 @@ def main():
     #Generate key class
     pdrKey = CloudPDRKey(args.n, g)
     secret = pdrKey.getSecretKeyFields()
+    pubPB = pdrKey.getProtoBufPubKey()
     
     #Create the "h" object
     h = SHA256.new()
     
     #Create a tag generator
     tGen = TagGenerator(h)
-    
-    
     wStartTime = datetime.now()
     #Create Wi
     W = tGen.getW(blockObjects, secret["u"])
@@ -89,29 +94,28 @@ def main():
     tagStartTime = datetime.now()
     T = tGen.getTags(W, g, blockObjects, secret["d"], pdrKey.key.n)
     tagEndTime = datetime.now()
+    tagCollection = tGen.createTagProtoBuf(T)
     print "W creation:" , wEndTime-wStartTime
     print "Tag creation:" , tagEndTime-tagStartTime
+    
  
  
-    #Construct the rest of the InitMsg
-#     initMsg.pk.n = str(pdrKey.key.n)
-#     initMsg.pk.g = str(pdrKey.g)   
-#     for tag in T:
-#         initMsg.tc.tags.append(str(tag))
-#         
-#     
-#    
-#     
-#     
-    #Construct the CloudPdrMsg
-    #pdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
-    #pdrMsg.type = pdrMsg.INIT
-    #pdrMsg.init = initMsg
-    #pdrMsg = pdrMsg.SerializeToString()
-    
-    
+    #Construct InitMsg
+    initMessage = MessageUtil.constructInitMessage(pubPB, blocks, tagCollection)
+        
+    #Construct CloudPdrMessage
+    msgType = CloudPdrMessages_pb2.CloudPdrMsg.INIT
+    cloudPdrMessage = MessageUtil.constructCloudPdrMessage(msgType, initMessage)
+ 
+ 
     #RPC to send/rcv the init/initAck 
-    msg = requestReply('127.0.0.1', 9090, pdrMsg)
+    netMsg = cloudPdrMessage.SerializeToString()
+    clt = RpcPdrClient()
+    
+    inComing = clt.rpc("127.0.0.1", 9090, netMsg)
+    processClientMessages(inComing)
+    
+    
     
     
     
