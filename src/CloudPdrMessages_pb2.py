@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='protocols/CloudPdrMessages.proto',
   package='',
-  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\"\x1d\n\rTagCollection\x12\x0c\n\x04tags\x18\x01 \x03(\t\"X\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x1c\n\x02\x62\x63\x18\x02 \x02(\x0b\x32\x10.BlockCollection\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"\x16\n\x05Proof\x12\r\n\x05proof\x18\x01 \x02(\x08\"\xcc\x01\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\";\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03')
+  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\"\x1d\n\rTagCollection\x12\x0c\n\x04tags\x18\x01 \x03(\t\"X\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x1c\n\x02\x62\x63\x18\x02 \x02(\x0b\x32\x10.BlockCollection\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"\x16\n\x05Proof\x12\r\n\x05proof\x18\x01 \x02(\x08\"\x11\n\x04Lost\x12\t\n\x01L\x18\x01 \x03(\x05\"\x16\n\x07LostAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x91\x02\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\x12\x13\n\x04lost\x18\x06 \x01(\x0b\x32\x05.Lost\x12\x16\n\x04lack\x18\x07 \x01(\x0b\x32\x08.LostAck\"S\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03\x12\x08\n\x04LOSS\x10\x04\x12\x0c\n\x08LOSS_ACK\x10\x05')
 
 
 
@@ -39,11 +39,19 @@ _CLOUDPDRMSG_MSGTYPE = _descriptor.EnumDescriptor(
       name='PROOF', index=3, number=3,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='LOSS', index=4, number=4,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='LOSS_ACK', index=5, number=5,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=521,
-  serialized_end=580,
+  serialized_start=609,
+  serialized_end=692,
 )
 
 
@@ -306,6 +314,62 @@ _PROOF = _descriptor.Descriptor(
 )
 
 
+_LOST = _descriptor.Descriptor(
+  name='Lost',
+  full_name='Lost',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='L', full_name='Lost.L', index=0,
+      number=1, type=5, cpp_type=1, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=375,
+  serialized_end=392,
+)
+
+
+_LOSTACK = _descriptor.Descriptor(
+  name='LostAck',
+  full_name='LostAck',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ack', full_name='LostAck.ack', index=0,
+      number=1, type=8, cpp_type=7, label=2,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=394,
+  serialized_end=416,
+)
+
+
 _CLOUDPDRMSG = _descriptor.Descriptor(
   name='CloudPdrMsg',
   full_name='CloudPdrMsg',
@@ -348,6 +412,20 @@ _CLOUDPDRMSG = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='lost', full_name='CloudPdrMsg.lost', index=5,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='lack', full_name='CloudPdrMsg.lack', index=6,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -358,8 +436,8 @@ _CLOUDPDRMSG = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=376,
-  serialized_end=580,
+  serialized_start=419,
+  serialized_end=692,
 )
 
 _BLOCKCOLLECTION.fields_by_name['blocks'].message_type = _BLOCK
@@ -371,6 +449,8 @@ _CLOUDPDRMSG.fields_by_name['init'].message_type = _INIT
 _CLOUDPDRMSG.fields_by_name['ack'].message_type = _INITACK
 _CLOUDPDRMSG.fields_by_name['chlng'].message_type = _CHALLENGE
 _CLOUDPDRMSG.fields_by_name['proof'].message_type = _PROOF
+_CLOUDPDRMSG.fields_by_name['lost'].message_type = _LOST
+_CLOUDPDRMSG.fields_by_name['lack'].message_type = _LOSTACK
 _CLOUDPDRMSG_MSGTYPE.containing_type = _CLOUDPDRMSG;
 DESCRIPTOR.message_types_by_name['PublicKey'] = _PUBLICKEY
 DESCRIPTOR.message_types_by_name['Block'] = _BLOCK
@@ -380,6 +460,8 @@ DESCRIPTOR.message_types_by_name['Init'] = _INIT
 DESCRIPTOR.message_types_by_name['InitAck'] = _INITACK
 DESCRIPTOR.message_types_by_name['Challenge'] = _CHALLENGE
 DESCRIPTOR.message_types_by_name['Proof'] = _PROOF
+DESCRIPTOR.message_types_by_name['Lost'] = _LOST
+DESCRIPTOR.message_types_by_name['LostAck'] = _LOSTACK
 DESCRIPTOR.message_types_by_name['CloudPdrMsg'] = _CLOUDPDRMSG
 
 class PublicKey(_message.Message):
@@ -429,6 +511,18 @@ class Proof(_message.Message):
   DESCRIPTOR = _PROOF
 
   # @@protoc_insertion_point(class_scope:Proof)
+
+class Lost(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _LOST
+
+  # @@protoc_insertion_point(class_scope:Lost)
+
+class LostAck(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _LOSTACK
+
+  # @@protoc_insertion_point(class_scope:LostAck)
 
 class CloudPdrMsg(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType

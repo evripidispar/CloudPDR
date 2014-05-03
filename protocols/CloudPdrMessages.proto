@@ -6,7 +6,6 @@ message PublicKey {
 }
 
 
-
 message Block {
 	required string index = 1;
 	required bytes data = 2;
@@ -43,6 +42,15 @@ message Proof {
 	required bool proof=1;
 }
 
+message Lost {
+	repeated int32 L=1;
+}
+
+
+message LostAck {
+	required bool ack = 1;
+}
+
 message CloudPdrMsg {
 
 	enum msgType {
@@ -50,11 +58,15 @@ message CloudPdrMsg {
 		INIT_ACK=1;
 		CHALLENGE=2;
 		PROOF=3;
+		LOSS=4;
+		LOSS_ACK=5;
 	}
 	
 	required msgType type = 1;
 	optional Init init = 2;
 	optional InitAck ack = 3;
 	optional Challenge chlng=4;
-	optional Proof proof=5;	
+	optional Proof proof=5;
+	optional Lost lost=6;	
+	optional LostAck lack=7;
 }

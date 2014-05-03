@@ -51,3 +51,22 @@ def constructChallengeMessage(challenge):
     cpdrMsg.type = CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE
     cpdrMsg.chlng.CopyFrom(chlng)
     return cpdrMsg
+
+def constructLossMessage(indeces):
+    lost= CloudPdrMessages_pb2.Lost()
+    for index in indeces:
+        lost.L.append(index)
+    cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
+    cpdrMsg.msgType = CloudPdrMessages_pb2.CloudPdrMsg.LOSS
+    cpdrMsg.lost.CopyFrom(lost)
+    return cpdrMsg
+    
+
+def constructLostAckMessage():
+    lostAck = CloudPdrMessages_pb2.LostAck()
+    lostAck.ack = True
+    cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
+    cpdrMsg.msgType = CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK
+    cpdrMsg.lack.CopyFrom(lostAck)
+    return cpdrMsg
+}

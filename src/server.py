@@ -4,7 +4,7 @@ import zmq
 import CloudPdrMessages_pb2
 
 
-def processInitMessage(cpdrMsg):
+def processInitMessage(cpdrMsg, clientSession):
     
     #TODO store info about the client
     #Things like storing to S3 etc should be here
@@ -13,21 +13,32 @@ def processInitMessage(cpdrMsg):
     outgoing = MessageUtil.constructInitAckMessage()
     return outgoing
 
-def processChallenge(cpdrMsg):
+def processChallenge(cpdrMsg, clientSession):
     print "Produce the proof"
     return "proof"
 
 
-def procMessage(incoming):
+def processLost(cpdrMsg, clientSession):
+    print "Process Lost message"
+    outgoing = MessageUtil.constructLostAckMessage()
+    return outgoing
+
+def procMessage(incoming, clientSession):
+    
     print "Processing incoming message..."
+    
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT:
         outgoing = processInitMessage(cpdrMsg)
         return outgoing
     
-    if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE:
+    elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE:
+        print "Incoming challenge"
         proof = processChallenge(cpdrMsg)
         return proof
+    
+    elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS:
+        
         
 def serve(port):
     context = zmq.Context()
