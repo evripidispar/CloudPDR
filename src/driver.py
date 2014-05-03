@@ -12,12 +12,17 @@ from datetime import datetime
 import MessageUtil
 import CloudPdrMessages_pb2
 from client import RpcPdrClient
+from PdrSession import PdrSession
 
-def processClientMessages(incoming):
+def processClientMessages(incoming, session):
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
-        print "Received Init ack"
+        session.challenge = session.sesKey.generateChallenge()
+        outgoingMsg = MessageUtil.constructChallengeMessage(session.challenge)
+        return outgoingMsg
+        
+        
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
 
@@ -45,8 +50,6 @@ def main():
     
 
     args = p.parse_args()
-
-    
     if args.hashNum > 10: 
         print "Number of hashFunctions should be less than 10"
         sys.exit(1)
@@ -59,14 +62,14 @@ def main():
         print 'Please specify a generator file'
         sys.exit(1)
         
-    
- 
+        
+    #Create current session
+    pdrSes = PdrSession()  
     
     # Read blocks from Serialized file
-    
-    
     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
-    blockObjects = BlockEngine.blockCollection2BlockObject(blocks)
+    pdrSes.blocks = BlockEngine.blockCollection2BlockObject(blocks)
+    
     
     #Read the generator from File
     fp = open(args.genFile, "r")
@@ -76,9 +79,9 @@ def main():
     
    
     #Generate key class
-    pdrKey = CloudPDRKey(args.n, g)
-    secret = pdrKey.getSecretKeyFields()
-    pubPB = pdrKey.getProtoBufPubKey()
+    pdrSes.sesKey = CloudPDRKey(args.n, g)
+    secret = pdrSes.sesKey.getSecretKeyFields()
+    pubPB = pdrSes.sesKey.getProtoBufPubKey()
     
     #Create the "h" object
     h = SHA256.new()
@@ -87,12 +90,12 @@ def main():
     tGen = TagGenerator(h)
     wStartTime = datetime.now()
     #Create Wi
-    W = tGen.getW(blockObjects, secret["u"])
+    pdrSes.W = tGen.getW(pdrSes.blocks, secret["u"])
     wEndTime = datetime.now()
     
     #Create Tags
     tagStartTime = datetime.now()
-    T = tGen.getTags(W, g, blockObjects, secret["d"], pdrKey.key.n)
+    T = tGen.getTags(pdrSes.W, g, pdrSes.blocks, secret["d"], pdrSes.sesKey.key.n)
     tagEndTime = datetime.now()
     tagCollection = tGen.createTagProtoBuf(T)
     print "W creation:" , wEndTime-wStartTime
@@ -113,7 +116,10 @@ def main():
     clt = RpcPdrClient()
     
     inComing = clt.rpc("127.0.0.1", 9090, netMsg)
-    processClientMessages(inComing)
+    outgoing = processClientMessages(inComing, pdrSes)
+    
+    netMsg = outgoing.SerializeToString()
+    clt.rpc("127.0.0.1", 9090, netMsg)
     
     
     

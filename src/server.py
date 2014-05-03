@@ -15,7 +15,7 @@ def processInitMessage(cpdrMsg):
 
 def processChallenge(cpdrMsg):
     print "Produce the proof"
-    
+    return "proof"
 
 
 def procMessage(incoming):

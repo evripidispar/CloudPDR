@@ -43,3 +43,11 @@ def constructInitAckMessage():
     cpdrMsg.ack.CopyFrom(initAck)
     cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
+
+def constructChallengeMessage(challenge):
+    chlng = CloudPdrMessages_pb2.Challenge()
+    chlng.challenge = str(challenge)
+    cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
+    cpdrMsg.type = CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE
+    cpdrMsg.chlng.CopyFrom(chlng)
+    return cpdrMsg
