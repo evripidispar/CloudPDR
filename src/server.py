@@ -9,8 +9,9 @@ clients = {}
 
 def processInitMessage(cpdrMsg, storeBlocks=None):
     
+    print "Processing Init Message"
     cltName = cpdrMsg.cltId
-    if cltName not in clients.key():
+    if cltName not in clients.keys():
         N = cpdrMsg.init.pk.n
         g = cpdrMsg.init.pk.g
         T = cpdrMsg.init.tc.tags
@@ -40,15 +41,16 @@ def processChallenge(cpdrMsg):
 
 def processLostMessage(cpdrMsg):
     
+    print "Processing Lost Message"
     lossNum = cpdrMsg.lost.lossNum
     if cpdrMsg.cltId in clients.keys():
-        clients[cpdrMsg.cltId].addLostBlocks(L)
+        clients[cpdrMsg.cltId].chooseBlocksToLose(lossNum)
     
     #Just generate a loss ack
     outgoing = MessageUtil.constructLostAckMessage()
     return outgoing
 
-def procMessage(incoming, clientSession):
+def procMessage(incoming):
     
     print "Processing incoming message..."
     

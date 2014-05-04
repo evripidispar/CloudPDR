@@ -17,7 +17,7 @@ from PdrSession import PdrSession
 
 def produceClientId():
     h = SHA256.new()
-    h.update(datetime.now())
+    h.update(str(datetime.now()))
     return h.hexdigest()
 
 
@@ -25,13 +25,19 @@ def processClientMessages(incoming, session):
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
-        session.challenge = session.sesKey.generateChallenge()
-        outgoingMsg = MessageUtil.constructChallengeMessage(session.challenge)
+        print "Processing INIT_ACK"
+        outgoingMsg = MessageUtil.constructLossMessage(0, session.cltId)
         return outgoingMsg
         
-        
+    elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
+        print "Processing LOSS_ACK"
+        session.challenge = session.sesKey.generateChallenge()
+        outgoingMsg = MessageUtil.constructChallengeMessage(session.challenge, session.cltId)
+        return outgoingMsg    
+    
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
+        sys.exit(1)
 
 def main():
     
@@ -51,7 +57,7 @@ def main():
     p.add_argument('-n', dest='n', action='store', type=int,
                    default=1024, help='RSA modulus size')
     
-    p.add_argument('-d', dest='d', action='store', type=float, default=0.005,
+    p.add_argument('-d', dest='delta', action='store', type=float, default=0.005,
                    help='Delta: number of blocks we can recover')
    
 
@@ -68,10 +74,12 @@ def main():
         print 'Please specify a generator file'
         sys.exit(1)
         
-        
+    #Generate client id
+    cltId = produceClientId()
+       
     
     #Create current session
-    pdrSes = PdrSession()  
+    pdrSes = PdrSession(cltId)  
     
     # Read blocks from Serialized file
     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
@@ -79,8 +87,8 @@ def main():
     
     
     #Get Ibf len based on delta, k and number of blocks
-    ibfLength = args.delta * len(blocks)
-    ibfLength *= (args.k+1)
+    ibfLength = args.delta * len(pdrSes.blocks)
+    ibfLength *= (args.hashNum+1)
     
     
     #Read the generator from File
@@ -90,8 +98,6 @@ def main():
     fp.close() 
     
     
-    #Generate client id
-    cltId = produceClientId()
    
     #Generate key class
     pdrSes.sesKey = CloudPDRKey(args.n, g)
@@ -124,27 +130,22 @@ def main():
                                                    blocks, 
                                                    tagCollection,
                                                    cltId,
-                                                   args.k,
-                                                   args.d)
+                                                   args.hashNum,
+                                                   args.delta)
 
     clt = RpcPdrClient()    
     
     print "Sending Init..."
     inComing = clt.rpc("127.0.0.1", 9090, initMessage)
-    
-    print "Processing Init Ack and producing Lost Message"
-    #TODO tell the guy what indeces to lost
     outgoing = processClientMessages(inComing, pdrSes)
     
     
     print "Sending Lost message"
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    
+    outgoing = processClientMessages(incoming, pdrSes)
     
     print "Sending Challenge ...."
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    
-    print "Processing proof and determine if server checks out"
     processClientMessages(incoming, pdrSes)
     
     

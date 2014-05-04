@@ -64,10 +64,9 @@ def constructChallengeMessage(challenge, cltId):
     cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
 
-def constructLossMessage(indeces, cId):
+def constructLossMessage(lossNum, cId):
     lost= CloudPdrMessages_pb2.Lost()
-    for index in indeces:
-        lost.L.append(index)
+    lost.lossNum = lossNum
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.LOSS,
                                        None, None, None, None, cId, lost)
     cpdrMsg = cpdrMsg.SerializeToString()

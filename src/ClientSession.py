@@ -48,7 +48,7 @@ class ClientSession(object):
         while len(self.lost) > 0:
             self.lost.pop()
             
-        for index in random.choice(range(len(self.blocks)), lossNum):
+        for index in random.sample(range(len(self.blocks)), lossNum):
             self.lost.append(index)
     
     
