@@ -3,9 +3,9 @@ from Block import *
 from CryptoUtil import apply_f
 
 class Cell(object):
-	def __init__(self, id, dataByteSize):
+	def __init__(self, id, dataBitSize):
 		self.count = 0
-		self.dataSum = Block(id, dataByteSize*8)
+		self.dataSum = Block(id, dataBitSize)
 		self.hashProd = 1
 		self.f = 0
 
@@ -74,9 +74,9 @@ class Cell(object):
 			return True
 		return False
 
-	def subtract(self, otherCell, dataByteSize, N):
+	def subtract(self, otherCell, dataBitSize, N):
 		
-		diffCell = Cell(0, dataByteSize)
+		diffCell = Cell(0, dataBitSize)
 		
 		#counter
 		diffCell.count = self.count - otherCell.getCount()

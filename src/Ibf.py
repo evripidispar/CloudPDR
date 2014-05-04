@@ -25,11 +25,11 @@ class Ibf(object):
 		return indices
 
 
-	def zero(self,  dataByteSize):
+	def zero(self,  dataBitSize):
 		for cellIndex in xrange(self.m):
-			self.cells[cellIndex] = Cell(0, dataByteSize)
+			self.cells[cellIndex] = Cell(0, dataBitSize)
 
-	def insert(self, block, secret, N, g, dataByteSize, isHashProdOne=False):
+	def insert(self, block, secret, N, g, isHashProdOne=False):
 		blockIndices = self.getIndices(block)
 		for i in blockIndices:
 				self.cells[i].add(block, secret, N, g, isHashProdOne)

@@ -12,6 +12,7 @@ def constructInitMessage(pub, blks, tags, cltId, k, delta):
     initMsg.tc.CopyFrom(tags)
     initMsg.k = k
     initMsg.delta = delta
+    print delta
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.INIT,
                                        initMsg, None, None, None, cltId)
     cpdrMsg = cpdrMsg.SerializeToString()

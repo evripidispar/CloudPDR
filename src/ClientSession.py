@@ -21,10 +21,10 @@ class ClientSession(object):
         self.k = k
         
     
-    def storeBlocksInMemory(self, blocks):
+    def storeBlocksInMemory(self, blocks, blockBitSize):
         self.blocks = blocks
-        self.ibfLength = (self.delta * len(blocks))
-        self.ibfLength *= (self.k+1)
+        self.ibfLength = self.delta *(self.k+1) 
+        self.blockBitSize = blockBitSize
     
     def storeBlocksInDisk(self, blockCollection):
         self.blkLocalDrive="cblk"+str(datetime.now())
@@ -52,10 +52,10 @@ class ClientSession(object):
             self.lost.append(index)
     
     
-    def findKeptCombinedValues(self):
+    def findCombinedValues(self):
         index = 0
         combinedSum = 0
-        combinedTag = 0
+        combinedTag = 1
         for blk in self.blocks:
             if index in self.lost:
                 index+=1
@@ -78,8 +78,9 @@ class ClientSession(object):
         return binLostIndex    
     
     def produceProof(self):
-        combinedSum, combinedTag = self.findKeptCombinedSum()
+        combinedSum, combinedTag = self.findCombinedValues()
         ibf = Ibf(self.k, self.ibfLength)
+        ibf.zero(self.blockBitSize)
         
         index=0
         for blk in self.blocks:
@@ -88,7 +89,7 @@ class ClientSession(object):
                 continue
             ibf.insert(blk, self.challenge,
                         self.clientKeyN, 
-                        self.clientKeyG, len(blk)/8, True) 
+                        self.clientKeyG, True) 
     
     
         qSets = {}

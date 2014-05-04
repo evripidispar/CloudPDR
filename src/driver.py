@@ -13,7 +13,8 @@ import MessageUtil
 import CloudPdrMessages_pb2
 from client import RpcPdrClient
 from PdrSession import PdrSession
-
+from math import floor
+from math import log
 
 def produceClientId():
     h = SHA256.new()
@@ -57,8 +58,8 @@ def main():
     p.add_argument('-n', dest='n', action='store', type=int,
                    default=1024, help='RSA modulus size')
     
-    p.add_argument('-d', dest='delta', action='store', type=float, default=0.005,
-                   help='Delta: number of blocks we can recover')
+    #p.add_argument('-d', dest='delta', action='store', type=float, default=0.005,
+    #               help='Delta: number of blocks we can recover')
    
 
     args = p.parse_args()
@@ -87,7 +88,8 @@ def main():
     
     
     #Get Ibf len based on delta, k and number of blocks
-    ibfLength = args.delta * len(pdrSes.blocks)
+    
+    ibfLength =  floor(log(len(pdrSes.blocks),2)) 
     ibfLength *= (args.hashNum+1)
     
     
@@ -126,12 +128,15 @@ def main():
  
  
     #Construct InitMsg
+    log2Blocks = log(len(pdrSes.blocks), 2)
+    log2Blocks = floor(log2Blocks)
+    delta = int(log2Blocks)
     initMessage = MessageUtil.constructInitMessage(pubPB, 
                                                    blocks, 
                                                    tagCollection,
                                                    cltId,
                                                    args.hashNum,
-                                                   args.delta)
+                                                   delta)
 
     clt = RpcPdrClient()    
     

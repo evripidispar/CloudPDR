@@ -12,16 +12,17 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
     print "Processing Init Message"
     cltName = cpdrMsg.cltId
     if cltName not in clients.keys():
-        N = cpdrMsg.init.pk.n
-        g = cpdrMsg.init.pk.g
-        T = cpdrMsg.init.tc.tags
+        N = long(cpdrMsg.init.pk.n)
+        g = long(cpdrMsg.init.pk.g)
+        T = map(long, cpdrMsg.init.tc.tags)
         delta = cpdrMsg.init.delta
         k = cpdrMsg.init.k
         clients[cltName] = ClientSession(N, g, T, delta, k)
     
     blks = BlockEngine.blockCollection2BlockObject(cpdrMsg.init.bc)
+    blksBitSize = cpdrMsg.init.bc.blockBitSize
     if storeBlocks == None:
-        clients[cltName].storeBlocksInMemory(blks)
+        clients[cltName].storeBlocksInMemory(blks, blksBitSize)
     elif storeBlocks == "file":
         print "TODO: store in file on the server side along with client id"
     elif storeBlocks == "s3":

@@ -29,7 +29,7 @@ message Init {
 	required PublicKey pk = 1;
 	required BlockCollection bc = 2;
 	required TagCollection tc = 3;
-	required float delta=4;
+	required int32 delta=4;
 	required int32 k=5;
 }
 
