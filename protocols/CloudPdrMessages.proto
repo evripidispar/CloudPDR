@@ -23,10 +23,14 @@ message TagCollection {
 }
 
 
+
+
 message Init {
 	required PublicKey pk = 1;
 	required BlockCollection bc = 2;
 	required TagCollection tc = 3;
+	required float delta=4;
+	required int32 k=5;
 }
 
 message InitAck {
@@ -37,13 +41,33 @@ message Challenge {
 	required string challenge=1;
 }
 
+message Cell {
+	required int32 count=1;
+	required int32 hashprod=2;
+	required bytes data=3;
+}
+
+message Ibf {
+	repeated Cell ibf=1;
+}
+
+
+message CombinedLostTagPair {
+	required int32  k=1;
+	required string v=2;
+}
 
 message Proof {
-	required bool proof=1;
+	required string combinedSum=1;
+	required string combinedTag=2;
+	required Ibf serverState=3;
+	repeated int32 lostIndeces=4;
+	repeated CombinedLostTagPair p=5;
 }
 
 message Lost {
 	repeated int32 L=1;
+	optional int32 lossNum=2;
 }
 
 
@@ -69,4 +93,5 @@ message CloudPdrMsg {
 	optional Proof proof=5;
 	optional Lost lost=6;	
 	optional LostAck lack=7;
+	optional string cltId=8;
 }

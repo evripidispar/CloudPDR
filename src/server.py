@@ -14,8 +14,9 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
         N = cpdrMsg.init.pk.n
         g = cpdrMsg.init.pk.g
         T = cpdrMsg.init.tc.tags
-        
-        clients[cltName] = ClientSession(N, g, T)
+        delta = cpdrMsg.init.delta
+        k = cpdrMsg.init.k
+        clients[cltName] = ClientSession(N, g, T, delta, k)
     
     blks = BlockEngine.blockCollection2BlockObject(cpdrMsg.init.bc)
     if storeBlocks == None:
@@ -39,7 +40,7 @@ def processChallenge(cpdrMsg):
 
 def processLostMessage(cpdrMsg):
     
-    L = cpdrMsg.lost.L
+    lossNum = cpdrMsg.lost.lossNum
     if cpdrMsg.cltId in clients.keys():
         clients[cpdrMsg.cltId].addLostBlocks(L)
     

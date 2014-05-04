@@ -41,10 +41,6 @@ def main():
     p.add_argument('-b', dest='blkFp', action='store', default=None,
                    help='Serialized block filename as generated from BlockEngine')
     
-    
-    p.add_argument('-m', dest='ibfLen', action='store', type=int,
-                   default=500, help='Length of the bloom filter')
-    
     p.add_argument('-k', dest='hashNum', action='store', type=int,
                    default=5, help='Number of hash arguments')
     
@@ -55,6 +51,9 @@ def main():
     p.add_argument('-n', dest='n', action='store', type=int,
                    default=1024, help='RSA modulus size')
     
+    p.add_argument('-d', dest='d', action='store', type=float, default=0.005,
+                   help='Delta: number of blocks we can recover')
+   
 
     args = p.parse_args()
     if args.hashNum > 10: 
@@ -70,12 +69,18 @@ def main():
         sys.exit(1)
         
         
+    
     #Create current session
     pdrSes = PdrSession()  
     
     # Read blocks from Serialized file
     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
     pdrSes.blocks = BlockEngine.blockCollection2BlockObject(blocks)
+    
+    
+    #Get Ibf len based on delta, k and number of blocks
+    ibfLength = args.delta * len(blocks)
+    ibfLength *= (args.k+1)
     
     
     #Read the generator from File
@@ -99,6 +104,7 @@ def main():
     #Create a tag generator
     tGen = TagGenerator(h)
     wStartTime = datetime.now()
+    
     #Create Wi
     pdrSes.W = tGen.getW(pdrSes.blocks, secret["u"])
     wEndTime = datetime.now()
@@ -117,7 +123,9 @@ def main():
     initMessage = MessageUtil.constructInitMessage(pubPB, 
                                                    blocks, 
                                                    tagCollection,
-                                                   cltId)
+                                                   cltId,
+                                                   args.k,
+                                                   args.d)
 
     clt = RpcPdrClient()    
     

@@ -5,11 +5,13 @@ import CloudPdrMessages_pb2
     @var blks: block collection in protocol buffer format
     @var tags: tag collection in protocol buffer format
 '''
-def constructInitMessage(pub, blks, tags, cltId):
+def constructInitMessage(pub, blks, tags, cltId, k, delta):
     initMsg = CloudPdrMessages_pb2.Init()
     initMsg.pk.CopyFrom(pub)
     initMsg.bc.CopyFrom(blks)
     initMsg.tc.CopyFrom(tags)
+    initMsg.k = k
+    initMsg.delta = delta
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.INIT,
                                        initMsg, None, None, None, cltId)
     cpdrMsg = cpdrMsg.SerializeToString()

@@ -1,5 +1,5 @@
 from HashFunc import *
-from Cell import *
+from Cell import Cell
 
 class Ibf(object):
 	
@@ -12,10 +12,13 @@ class Ibf(object):
 			DJBHash, DEKHash, BPHash, FNVHash, APHash]
 		
 
-
-	def getIndices(self, block):
+	def getIndices(self, block, isIndex=False):
 		indices = []
-		blockIndex = block.getStringIndex()
+		if isIndex == False:
+			blockIndex = block.getStringIndex()
+		else:
+			blockIndex = block #Cases coming from the proof part of the algorithm
+			
 		for i in range(self.k):
 			hashIndexVal = self.HashFunc[i](blockIndex)
 			indices.append(hashIndexVal % self.m)
@@ -26,10 +29,11 @@ class Ibf(object):
 		for cellIndex in xrange(self.m):
 			self.cells[cellIndex] = Cell(0, dataByteSize)
 
-	def insert(self, block, secret, N, g, dataByteSize):
+	def insert(self, block, secret, N, g, dataByteSize, isHashProdOne=False):
 		blockIndices = self.getIndices(block)
 		for i in blockIndices:
-			self.cells[i].add(block, secret, N, g)
+				self.cells[i].add(block, secret, N, g, isHashProdOne)
+			
 
 		
 	def delete(self, block, secret, N, g, selfIndex=-1):
