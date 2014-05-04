@@ -2,24 +2,48 @@ import argparse
 import MessageUtil
 import zmq
 import CloudPdrMessages_pb2
+import BlockEngine
+from ClientSession import ClientSession
 
+clients = {}
 
-def processInitMessage(cpdrMsg, clientSession):
+def processInitMessage(cpdrMsg, storeBlocks=None):
     
-    #TODO store info about the client
-    #Things like storing to S3 etc should be here
+    cltName = cpdrMsg.cltId
+    if cltName not in clients.key():
+        N = cpdrMsg.init.pk.n
+        g = cpdrMsg.init.pk.g
+        T = cpdrMsg.init.tc.tags
+        
+        clients[cltName] = ClientSession(N, g, T)
+    
+    blks = BlockEngine.blockCollection2BlockObject(cpdrMsg.init.bc)
+    if storeBlocks == None:
+        clients[cltName].storeBlocksInMemory(blks)
+    elif storeBlocks == "file":
+        print "TODO: store in file on the server side along with client id"
+    elif storeBlocks == "s3":
+        print "TODO: store the blocks in S3"
     
     #Just ack that you got the message
     outgoing = MessageUtil.constructInitAckMessage()
     return outgoing
 
-def processChallenge(cpdrMsg, clientSession):
-    print "Produce the proof"
-    return "proof"
+def processChallenge(cpdrMsg):
+     
+    if cpdrMsg.cltId in clients.keys():
+        chlng = cpdrMsg.chlng.challenge
+        clients[cpdrMsg.cltId].addClientChallenge(chlng)
+        clients[cpdrMsg.cltId].produceProof()
 
 
-def processLost(cpdrMsg, clientSession):
-    print "Process Lost message"
+def processLostMessage(cpdrMsg):
+    
+    L = cpdrMsg.lost.L
+    if cpdrMsg.cltId in clients.keys():
+        clients[cpdrMsg.cltId].addLostBlocks(L)
+    
+    #Just generate a loss ack
     outgoing = MessageUtil.constructLostAckMessage()
     return outgoing
 
@@ -29,15 +53,19 @@ def procMessage(incoming, clientSession):
     
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT:
-        outgoing = processInitMessage(cpdrMsg)
-        return outgoing
+        initAck = processInitMessage(cpdrMsg)
+        return initAck
+    
+    elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS:
+        lossAck = processLostMessage(cpdrMsg)
+        return lossAck
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE:
         print "Incoming challenge"
         proof = processChallenge(cpdrMsg)
         return proof
     
-    elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS:
+    
         
         
 def serve(port):

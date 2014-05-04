@@ -10,6 +10,7 @@ class ClientSession(object):
         self.challenge=None
         self.blocks = None
         self.blkLocalDrive=""
+        self.lost=[]
     
     def storeBlocksInMemory(self, blocks):
         self.blocks = blocks
@@ -25,5 +26,12 @@ class ClientSession(object):
     def addClientChallenge(self, challenge):
         self.challenge = challenge
     
+    def addLostBlocks(self, lostIndeces):
+        while len(self.lost) > 0:
+            self.lost.pop()
+            
+        for index in lostIndeces:
+            self.lost.append(index)
     
     def produceProof(self):
+        print "produce proof"

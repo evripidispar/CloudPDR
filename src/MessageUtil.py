@@ -5,15 +5,20 @@ import CloudPdrMessages_pb2
     @var blks: block collection in protocol buffer format
     @var tags: tag collection in protocol buffer format
 '''
-def constructInitMessage(pub, blks, tags):
+def constructInitMessage(pub, blks, tags, cltId):
     initMsg = CloudPdrMessages_pb2.Init()
     initMsg.pk.CopyFrom(pub)
     initMsg.bc.CopyFrom(blks)
     initMsg.tc.CopyFrom(tags)
-    return initMsg
+    cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.INIT,
+                                       initMsg, None, None, None, cltId)
+    cpdrMsg = cpdrMsg.SerializeToString()
+    return cpdrMsg
 
 
-def constructCloudPdrMessage(msgType, init=None, ack=None, chlng=None, proof=None):
+def constructCloudPdrMessage(msgType, init=None, ack=None, 
+                             chlng=None, proof=None,
+                            cId=None, loss=None, lossAck=None):
     cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
     cpdrMsg.type = msgType
     
@@ -25,6 +30,12 @@ def constructCloudPdrMessage(msgType, init=None, ack=None, chlng=None, proof=Non
         cpdrMsg.chlng.CopyFrom(chlng)
     if proof != None:
         cpdrMsg.proof.CopyFrom(proof)
+    if cId != None:
+        cpdrMsg.cltId = cId
+    if loss != None:
+        cpdrMsg.lost.CopyFrom(loss)
+    if lossAck != None:
+        cpdrMsg.lack.CopyFrom(lossAck)
     
     return cpdrMsg
     
@@ -38,35 +49,33 @@ def constructCloudPdrMessageNet(data):
 def constructInitAckMessage():
     initAck = CloudPdrMessages_pb2.InitAck()
     initAck.ack = True
-    cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
-    cpdrMsg.type = CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK
-    cpdrMsg.ack.CopyFrom(initAck)
+    cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK,
+                                     None, initAck)
     cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
 
-def constructChallengeMessage(challenge):
+def constructChallengeMessage(challenge, cltId):
     chlng = CloudPdrMessages_pb2.Challenge()
     chlng.challenge = str(challenge)
-    cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
-    cpdrMsg.type = CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE
-    cpdrMsg.chlng.CopyFrom(chlng)
+    cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE,
+                                       None, None, chlng, None, cltId)
+    cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
 
-def constructLossMessage(indeces):
+def constructLossMessage(indeces, cId):
     lost= CloudPdrMessages_pb2.Lost()
     for index in indeces:
         lost.L.append(index)
-    cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
-    cpdrMsg.msgType = CloudPdrMessages_pb2.CloudPdrMsg.LOSS
-    cpdrMsg.lost.CopyFrom(lost)
+    cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.LOSS,
+                                       None, None, None, None, cId, lost)
+    cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
     
 
 def constructLostAckMessage():
     lostAck = CloudPdrMessages_pb2.LostAck()
     lostAck.ack = True
-    cpdrMsg = CloudPdrMessages_pb2.CloudPdrMsg()
-    cpdrMsg.msgType = CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK
-    cpdrMsg.lack.CopyFrom(lostAck)
+    cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK,
+                                       None, None, None, None, None, None, lostAck)
+    cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
-}

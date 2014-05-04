@@ -14,6 +14,13 @@ import CloudPdrMessages_pb2
 from client import RpcPdrClient
 from PdrSession import PdrSession
 
+
+def produceClientId():
+    h = SHA256.new()
+    h.update(datetime.now())
+    return h.hexdigest()
+
+
 def processClientMessages(incoming, session):
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
@@ -77,6 +84,9 @@ def main():
     g = long(g)
     fp.close() 
     
+    
+    #Generate client id
+    cltId = produceClientId()
    
     #Generate key class
     pdrSes.sesKey = CloudPDRKey(args.n, g)
@@ -104,23 +114,30 @@ def main():
  
  
     #Construct InitMsg
-    initMessage = MessageUtil.constructInitMessage(pubPB, blocks, tagCollection)
-        
-    #Construct CloudPdrMessage
-    msgType = CloudPdrMessages_pb2.CloudPdrMsg.INIT
-    cloudPdrMessage = MessageUtil.constructCloudPdrMessage(msgType, initMessage)
- 
- 
-    #RPC to send/rcv the init/initAck 
-    netMsg = cloudPdrMessage.SerializeToString()
-    clt = RpcPdrClient()
+    initMessage = MessageUtil.constructInitMessage(pubPB, 
+                                                   blocks, 
+                                                   tagCollection,
+                                                   cltId)
+
+    clt = RpcPdrClient()    
     
-    inComing = clt.rpc("127.0.0.1", 9090, netMsg)
+    print "Sending Init..."
+    inComing = clt.rpc("127.0.0.1", 9090, initMessage)
+    
+    print "Processing Init Ack and producing Lost Message"
+    #TODO tell the guy what indeces to lost
     outgoing = processClientMessages(inComing, pdrSes)
     
-    netMsg = outgoing.SerializeToString()
-    clt.rpc("127.0.0.1", 9090, netMsg)
     
+    print "Sending Lost message"
+    incoming = clt.rpc("127.0.0.1", 9090, outgoing)
+    
+    
+    print "Sending Challenge ...."
+    incoming = clt.rpc("127.0.0.1", 9090, outgoing)
+    
+    print "Processing proof and determine if server checks out"
+    processClientMessages(incoming, pdrSes)
     
     
     
