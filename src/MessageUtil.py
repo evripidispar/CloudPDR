@@ -12,7 +12,6 @@ def constructInitMessage(pub, blks, tags, cltId, k, delta):
     initMsg.tc.CopyFrom(tags)
     initMsg.k = k
     initMsg.delta = delta
-    print delta
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.INIT,
                                        initMsg, None, None, None, cltId)
     cpdrMsg = cpdrMsg.SerializeToString()
@@ -82,31 +81,38 @@ def constructLostAckMessage():
     cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
 
+
+def constructIbfMessage(ibf):
+    ibfMsg = CloudPdrMessages_pb2.Ibf()
+    for cell in ibf:
+        c = ibfMsg.cells.add()
+        c.count = cell.count
+        c.hashprod = cell.hashProd
+        c.data = cell.dataSum.data.tobytes()
+    return ibfMsg
+
+def constructCombinedLostTagPairsMessage(combinedLostTags):
+    cltpMessage = CloudPdrMessages_pb2.CombinedLostTagPair()
+    for k, v in combinedLostTags.items():
+        pair = cltpMessage.add()
+        pair.k = k
+        pair.v = str(v)
+    return cltpMessage
+
 def constructProofMessage(combinedSum, combinedTag, ibf, lostIndeces, combinedLostTags):
     proof = CloudPdrMessages_pb2.Proof()
     proof.combinedSum = str(combinedSum)
     proof.combinedTag = str(combinedTag)
     
-    #TODO: transform dataSum
-    #ibf_bytes = Ibf(ibf.k, ibf.m)
-    #print ibf.m
-    #for cIndex in range(ibf.m):
-        #print(ibf.cells[1].count)
-        #ibf_bytes.cells[cIndex].setCount(ibf.cells[cIndex].count)
-        #ibf_bytes.cells[cIndex].setHashProd(ibf.cells[cIndex].hashProd)
-        #ibf_bytes.cells[cIndex].dataSum = ibf.cells[cIndex].dataSum.tobytes()
+    ibfMsg = constructIbfMessage(ibf)
+    proof.serverState.CopyFrom(ibfMsg)
     
-    #proof.serverState = ibf_bytes
+    for lIndex in lostIndeces:
+        proof.lostIndeces.append(lIndex)
     
-    for index in lostIndeces:
-        proof.lostIndeces = lostIndeces[index]
-    
-    
-    combinedLostTags_Str={}
-    for k in combinedLostTags.keys():
-        combinedLostTags_Str[k] = str(combinedLostTags[k])
-    proof.p = combinedLostTags_Str
-    
+    lostTagPairs = constructCombinedLostTagPairsMessage(combinedLostTags)
+    proof.p.CopyFrom(lostTagPairs)
+    return proof
     
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.PROOF,
                                        None, None, None, proof)

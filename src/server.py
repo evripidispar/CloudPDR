@@ -37,7 +37,11 @@ def processChallenge(cpdrMsg):
     if cpdrMsg.cltId in clients.keys():
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
-        outgoing=clients[cpdrMsg.cltId].produceProof() #construct message inside the proof
+        (combinedSum, combinedTag, ibf, combinedLostTags)= clients[cpdrMsg.cltId].produceProof() 
+        outgoing = MessageUtil.constructProofMessage(combinedSum,
+                                                      combinedTag, 
+                                                      ibf, clients[cpdrMsg.cltId].lost ,
+                                                      combinedLostTags)
     return outgoing
 
 def processLostMessage(cpdrMsg):

@@ -72,20 +72,16 @@ class ClientSession(object):
         return (combinedSum, combinedTag)
         
     
-    def binPadLostIndex(self, index):
-        binLostIndex = "{0:b}".format(lIndex)
+    def binPadLostIndex(self, lostIndex):
+        binLostIndex = "{0:b}".format(lostIndex)
         pad = self.BLOCK_INDEX_LEN-len(binLostIndex)
         binLostIndex = pad*'0'+binLostIndex
         return binLostIndex    
     
     def produceProof(self):
-        #self.challenge=self.addClientChallenge(challenge)
+    
         combinedSum, combinedTag = self.findCombinedValues()
-        #print combinedSum
-        #print self.ibfLength
         ibf = Ibf(self.k, self.ibfLength)
-        print self.blockBitSize
-        print self.ibfLength
         ibf.zero(self.blockBitSize)
         
         index=0
@@ -97,8 +93,6 @@ class ClientSession(object):
                         self.clientKeyN, 
                         self.clientKeyG, True) 
     
-        print "test"
-    
         qSets = {}
         for lIndex in self.lost:
             binLostIndex = self.binPadLostIndex(lIndex)
@@ -109,22 +103,28 @@ class ClientSession(object):
                     qSets[i] = set()
                 qSets[i].add(lIndex)
                 
-        print "test"
         
         combinedLostTags = {}
         for k in qSets.keys():
-            print k
             val = qSets[k]
             if k not in combinedLostTags.keys():
                 combinedLostTags[k] = 1
                 
-            print "test"    
             for v in val:
                 binV  = self.binPadLostIndex(v)
                 aBlk = pickPseudoRandomTheta(self.challenge, binV)
                 aI = number.bytes_to_long(aBlk)
                 combinedLostTags[k] *= pow(self.T[v], aI, self.clientKeyN)
-            print combinedLostTags[k]
-        proof = MessageUtil.constructProofMessage(combinedSum, combinedTag, ibf, self.lost, combinedLostTags)
         
-        return proof
+        
+        return (combinedSum, combinedTag, ibf, combinedLostTags)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        return (combinedSum, combinedTag, ibf, combinedLostTags)

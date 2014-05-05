@@ -27,7 +27,7 @@ def processClientMessages(incoming, session):
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
         print "Processing INIT_ACK"
-        outgoingMsg = MessageUtil.constructLossMessage(0, session.cltId)
+        outgoingMsg = MessageUtil.constructLossMessage(3, session.cltId)
         return outgoingMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
