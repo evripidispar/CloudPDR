@@ -37,8 +37,8 @@ def processChallenge(cpdrMsg):
     if cpdrMsg.cltId in clients.keys():
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
-        clients[cpdrMsg.cltId].produceProof()
-
+        outgoing=clients[cpdrMsg.cltId].produceProof() #construct message inside the proof
+    return outgoing
 
 def processLostMessage(cpdrMsg):
     

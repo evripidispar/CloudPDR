@@ -33,6 +33,7 @@ def processClientMessages(incoming, session):
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
         print "Processing LOSS_ACK"
         session.challenge = session.sesKey.generateChallenge()
+        #print session.challenge
         outgoingMsg = MessageUtil.constructChallengeMessage(session.challenge, session.cltId)
         return outgoingMsg    
     
@@ -131,6 +132,7 @@ def main():
     log2Blocks = log(len(pdrSes.blocks), 2)
     log2Blocks = floor(log2Blocks)
     delta = int(log2Blocks)
+    print delta
     initMessage = MessageUtil.constructInitMessage(pubPB, 
                                                    blocks, 
                                                    tagCollection,

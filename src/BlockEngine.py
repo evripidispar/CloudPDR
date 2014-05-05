@@ -14,7 +14,7 @@ def createBlocks(blocksNum, blockSize):
 def createBlockProtoBufs(blocks, blockSize):
     print "Creating protocol buffers...."
     blockCollection = CloudPdrMessages_pb2.BlockCollection()
-    blockCollection.blockBitSize = blockSize
+    blockCollection.blockBitSize = blockSize*8
     for b in blocks:
         pbufBlock = blockCollection.blocks.add()
         pbufBlock.index = b.getStringIndex()
@@ -59,7 +59,7 @@ def main():
                    default=2, help='Number of blocks to create')
     
     p.add_argument('-s', dest='dataSize', action='store', type=int,
-                   default=512, help='Block data size')
+                   default=64, help='Block data size')
     
     p.add_argument('-w', dest='fpW', action='store', default=None,
                    help='File to write Block collection')

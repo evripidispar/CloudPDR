@@ -1,4 +1,5 @@
 import BlockEngine
+import MessageUtil
 from datetime import datetime
 from Crypto.Random import random
 from CryptoUtil import pickPseudoRandomTheta
@@ -23,7 +24,7 @@ class ClientSession(object):
     
     def storeBlocksInMemory(self, blocks, blockBitSize):
         self.blocks = blocks
-        self.ibfLength = self.delta *(self.k+1) 
+        self.ibfLength = int(self.delta *(self.k+1)) 
         self.blockBitSize = blockBitSize
     
     def storeBlocksInDisk(self, blockCollection):
@@ -78,8 +79,13 @@ class ClientSession(object):
         return binLostIndex    
     
     def produceProof(self):
+        #self.challenge=self.addClientChallenge(challenge)
         combinedSum, combinedTag = self.findCombinedValues()
+        #print combinedSum
+        #print self.ibfLength
         ibf = Ibf(self.k, self.ibfLength)
+        print self.blockBitSize
+        print self.ibfLength
         ibf.zero(self.blockBitSize)
         
         index=0
@@ -91,6 +97,7 @@ class ClientSession(object):
                         self.clientKeyN, 
                         self.clientKeyG, True) 
     
+        print "test"
     
         qSets = {}
         for lIndex in self.lost:
@@ -102,16 +109,22 @@ class ClientSession(object):
                     qSets[i] = set()
                 qSets[i].add(lIndex)
                 
+        print "test"
         
         combinedLostTags = {}
         for k in qSets.keys():
+            print k
             val = qSets[k]
             if k not in combinedLostTags.keys():
                 combinedLostTags[k] = 1
                 
+            print "test"    
             for v in val:
                 binV  = self.binPadLostIndex(v)
                 aBlk = pickPseudoRandomTheta(self.challenge, binV)
                 aI = number.bytes_to_long(aBlk)
                 combinedLostTags[k] *= pow(self.T[v], aI, self.clientKeyN)
-    
+            print combinedLostTags[k]
+        proof = MessageUtil.constructProofMessage(combinedSum, combinedTag, ibf, self.lost, combinedLostTags)
+        
+        return proof

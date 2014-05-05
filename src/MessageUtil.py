@@ -1,5 +1,5 @@
 import CloudPdrMessages_pb2
-
+from Ibf import Ibf
 '''
     @var pub: public key in protocol buffer format
     @var blks: block collection in protocol buffer format
@@ -79,5 +79,36 @@ def constructLostAckMessage():
     lostAck.ack = True
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK,
                                        None, None, None, None, None, None, lostAck)
+    cpdrMsg = cpdrMsg.SerializeToString()
+    return cpdrMsg
+
+def constructProofMessage(combinedSum, combinedTag, ibf, lostIndeces, combinedLostTags):
+    proof = CloudPdrMessages_pb2.Proof()
+    proof.combinedSum = str(combinedSum)
+    proof.combinedTag = str(combinedTag)
+    
+    #TODO: transform dataSum
+    #ibf_bytes = Ibf(ibf.k, ibf.m)
+    #print ibf.m
+    #for cIndex in range(ibf.m):
+        #print(ibf.cells[1].count)
+        #ibf_bytes.cells[cIndex].setCount(ibf.cells[cIndex].count)
+        #ibf_bytes.cells[cIndex].setHashProd(ibf.cells[cIndex].hashProd)
+        #ibf_bytes.cells[cIndex].dataSum = ibf.cells[cIndex].dataSum.tobytes()
+    
+    #proof.serverState = ibf_bytes
+    
+    for index in lostIndeces:
+        proof.lostIndeces = lostIndeces[index]
+    
+    
+    combinedLostTags_Str={}
+    for k in combinedLostTags.keys():
+        combinedLostTags_Str[k] = str(combinedLostTags[k])
+    proof.p = combinedLostTags_Str
+    
+    
+    cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.PROOF,
+                                       None, None, None, proof)
     cpdrMsg = cpdrMsg.SerializeToString()
     return cpdrMsg
