@@ -15,5 +15,15 @@ class PdrSession(object):
         self.challenge = challenge
         self.state = self.INIT
         self.cltId = cltId
-    
         
+    def addSecret(self, secret):
+        self.secret = secret
+    
+    def addState(self, ibf):
+        self.ibf = ibf
+    
+    def addDelta(self, delta):
+        self.delta = delta
+        
+    def addG(self, g):
+        self.g = g

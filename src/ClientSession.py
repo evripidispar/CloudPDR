@@ -36,7 +36,7 @@ class ClientSession(object):
         print "S3"
         
     def addClientChallenge(self, challenge):
-        self.challenge = challenge
+        self.challenge = str(challenge)
     
     def addLostBlocks(self, lostIndeces):
         while len(self.lost) > 0:

@@ -29,8 +29,6 @@ class Block(object):
 		self.data.extend(blockData)
 
 	def addBlockData(self, otherBlock):
-		print self.data.length()
-		print otherBlock.data.length()
 		assert self.data.length() == otherBlock.data.length()
 		self.data = self.data ^ otherBlock.data
 

@@ -22,6 +22,32 @@ def produceClientId():
     return h.hexdigest()
 
 
+def processServerProof(cpdrProofMsg, session):
+    serverLost =  set()
+    
+    if len(cpdrProofMsg.proof.lostIndeces) > 0:
+        for lost in cpdrProofMsg.proof.lostIndeces:
+            serverLost.add(lost)
+        
+        blockSet = set(range(len(session.blocks)))
+        if serverLost.issubset(blockSet) == False:
+            del blockSet
+            print "FAIL#1: LostSet from the server is not subset of the blocks in the Client"
+            return False
+        
+        
+        if len(serverLost) > session.delta:
+            print "FAIL#2: Server has lost more than DELTA blocks"
+            return False
+    
+        serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
+        gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
+        serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
+        
+        
+
+
+
 def processClientMessages(incoming, session):
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
@@ -39,7 +65,7 @@ def processClientMessages(incoming, session):
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
-        sys.exit(1)
+        processServerProof(cpdrMsg, session)
 
 def main():
     
@@ -92,6 +118,7 @@ def main():
     
     ibfLength =  floor(log(len(pdrSes.blocks),2)) 
     ibfLength *= (args.hashNum+1)
+    ibfLength = int(ibfLength)
     
     
     #Read the generator from File
@@ -99,12 +126,13 @@ def main():
     g = fp.read()
     g = long(g)
     fp.close() 
-    
+    pdrSes.addG(g)
     
    
     #Generate key class
     pdrSes.sesKey = CloudPDRKey(args.n, g)
     secret = pdrSes.sesKey.getSecretKeyFields()
+    pdrSes.addSecret(secret)
     pubPB = pdrSes.sesKey.getProtoBufPubKey()
     
     #Create the "h" object
@@ -128,11 +156,22 @@ def main():
     
  
  
+    #Create the local state
+    clientIbf = Ibf(args.hashNum, ibfLength)
+    clientIbf.zero(blocks.blockBitSize)
+    for blk in pdrSes.blocks:
+        clientIbf.insert(blk, None, pdrSes.sesKey.key.n, g, True)
+ 
+    pdrSes.addState(clientIbf)
+    
+ 
     #Construct InitMsg
     log2Blocks = log(len(pdrSes.blocks), 2)
     log2Blocks = floor(log2Blocks)
     delta = int(log2Blocks)
-    print delta
+    pdrSes.addDelta(delta)
+    
+    
     initMessage = MessageUtil.constructInitMessage(pubPB, 
                                                    blocks, 
                                                    tagCollection,
