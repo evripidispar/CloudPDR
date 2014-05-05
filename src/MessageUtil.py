@@ -84,20 +84,21 @@ def constructLostAckMessage():
 
 def constructIbfMessage(ibf):
     ibfMsg = CloudPdrMessages_pb2.Ibf()
-    for cell in ibf:
+    for cell in ibf.cells.values():
         c = ibfMsg.cells.add()
         c.count = cell.count
         c.hashprod = cell.hashProd
         c.data = cell.dataSum.data.tobytes()
     return ibfMsg
 
-def constructCombinedLostTagPairsMessage(combinedLostTags):
-    cltpMessage = CloudPdrMessages_pb2.CombinedLostTagPair()
-    for k, v in combinedLostTags.items():
-        pair = cltpMessage.add()
-        pair.k = k
-        pair.v = str(v)
-    return cltpMessage
+
+def constructLostTagPairsMessage(combinedLostTags):
+    lostTagsPairMsg = CloudPdrMessages_pb2.LostTagPairs()
+    for k,v in combinedLostTags.items():
+        lpair = lostTagsPairMsg.pairs.add()
+        lpair.k = k
+        lpair.v = str(v)
+    return lostTagsPairMsg
 
 def constructProofMessage(combinedSum, combinedTag, ibf, lostIndeces, combinedLostTags):
     proof = CloudPdrMessages_pb2.Proof()
@@ -110,9 +111,8 @@ def constructProofMessage(combinedSum, combinedTag, ibf, lostIndeces, combinedLo
     for lIndex in lostIndeces:
         proof.lostIndeces.append(lIndex)
     
-    lostTagPairs = constructCombinedLostTagPairsMessage(combinedLostTags)
-    proof.p.CopyFrom(lostTagPairs)
-    return proof
+    lostTagPairs = constructLostTagPairsMessage(combinedLostTags)
+    proof.lostTags.CopyFrom(lostTagPairs)
     
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.PROOF,
                                        None, None, None, proof)

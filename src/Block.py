@@ -13,7 +13,7 @@ class Block(object):
 
 	def buildBlockFromProtoBuf(self, index, data, dataBitSize):
 		self.data = bitarray()
-		self.data.extend(index)
+		self.data.extend(str(index))
 		self.data.extend(data)
 		self.dataBitsize = dataBitSize
 

@@ -48,13 +48,17 @@ message Cell {
 }
 
 message Ibf {
-	repeated Cell ibf=1;
+	repeated Cell cells=1;
 }
 
 
-message CombinedLostTagPair {
+message LTagPair {
 	required int32  k=1;
 	required string v=2;
+}
+
+message LostTagPairs {
+	repeated LTagPair pairs=1;
 }
 
 message Proof {
@@ -62,7 +66,7 @@ message Proof {
 	required string combinedTag=2;
 	required Ibf serverState=3;
 	repeated int32 lostIndeces=4;
-	repeated CombinedLostTagPair p=5;
+	optional LostTagPairs lostTags=5;
 }
 
 message Lost {

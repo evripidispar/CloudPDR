@@ -42,7 +42,7 @@ def processChallenge(cpdrMsg):
                                                       combinedTag, 
                                                       ibf, clients[cpdrMsg.cltId].lost ,
                                                       combinedLostTags)
-    return outgoing
+        return outgoing
 
 def processLostMessage(cpdrMsg):
     

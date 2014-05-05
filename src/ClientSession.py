@@ -118,13 +118,3 @@ class ClientSession(object):
         
         
         return (combinedSum, combinedTag, ibf, combinedLostTags)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        return (combinedSum, combinedTag, ibf, combinedLostTags)

@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='protocols/CloudPdrMessages.proto',
   package='',
-  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\"\x1d\n\rTagCollection\x12\x0c\n\x04tags\x18\x01 \x03(\t\"r\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x1c\n\x02\x62\x63\x18\x02 \x02(\x0b\x32\x10.BlockCollection\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\x12\r\n\x05\x64\x65lta\x18\x04 \x02(\x05\x12\t\n\x01k\x18\x05 \x02(\x05\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"5\n\x04\x43\x65ll\x12\r\n\x05\x63ount\x18\x01 \x02(\x05\x12\x10\n\x08hashprod\x18\x02 \x02(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x02(\x0c\"\x1b\n\x03Ibf\x12\x14\n\x05\x63\x65lls\x18\x01 \x03(\x0b\x32\x05.Cell\"+\n\x13\x43ombinedLostTagPair\x12\t\n\x01k\x18\x01 \x02(\x05\x12\t\n\x01v\x18\x02 \x02(\t\"\x82\x01\n\x05Proof\x12\x13\n\x0b\x63ombinedSum\x18\x01 \x02(\t\x12\x13\n\x0b\x63ombinedTag\x18\x02 \x02(\t\x12\x19\n\x0bserverState\x18\x03 \x02(\x0b\x32\x04.Ibf\x12\x13\n\x0blostIndeces\x18\x04 \x03(\x05\x12\x1f\n\x01p\x18\x05 \x03(\x0b\x32\x14.CombinedLostTagPair\"\"\n\x04Lost\x12\t\n\x01L\x18\x01 \x03(\x05\x12\x0f\n\x07lossNum\x18\x02 \x01(\x05\"\x16\n\x07LostAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\xa0\x02\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\x12\x13\n\x04lost\x18\x06 \x01(\x0b\x32\x05.Lost\x12\x16\n\x04lack\x18\x07 \x01(\x0b\x32\x08.LostAck\x12\r\n\x05\x63ltId\x18\x08 \x01(\t\"S\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03\x12\x08\n\x04LOSS\x10\x04\x12\x0c\n\x08LOSS_ACK\x10\x05')
+  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\"\x1d\n\rTagCollection\x12\x0c\n\x04tags\x18\x01 \x03(\t\"r\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x1c\n\x02\x62\x63\x18\x02 \x02(\x0b\x32\x10.BlockCollection\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\x12\r\n\x05\x64\x65lta\x18\x04 \x02(\x05\x12\t\n\x01k\x18\x05 \x02(\x05\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"5\n\x04\x43\x65ll\x12\r\n\x05\x63ount\x18\x01 \x02(\x05\x12\x10\n\x08hashprod\x18\x02 \x02(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x02(\x0c\"\x1b\n\x03Ibf\x12\x14\n\x05\x63\x65lls\x18\x01 \x03(\x0b\x32\x05.Cell\" \n\x08LTagPair\x12\t\n\x01k\x18\x01 \x02(\x05\x12\t\n\x01v\x18\x02 \x02(\t\"(\n\x0cLostTagPairs\x12\x18\n\x05pairs\x18\x01 \x03(\x0b\x32\t.LTagPair\"\x82\x01\n\x05Proof\x12\x13\n\x0b\x63ombinedSum\x18\x01 \x02(\t\x12\x13\n\x0b\x63ombinedTag\x18\x02 \x02(\t\x12\x19\n\x0bserverState\x18\x03 \x02(\x0b\x32\x04.Ibf\x12\x13\n\x0blostIndeces\x18\x04 \x03(\x05\x12\x1f\n\x08lostTags\x18\x05 \x01(\x0b\x32\r.LostTagPairs\"\"\n\x04Lost\x12\t\n\x01L\x18\x01 \x03(\x05\x12\x0f\n\x07lossNum\x18\x02 \x01(\x05\"\x16\n\x07LostAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\xa0\x02\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\x12\x13\n\x04lost\x18\x06 \x01(\x0b\x32\x05.Lost\x12\x16\n\x04lack\x18\x07 \x01(\x0b\x32\x08.LostAck\x12\r\n\x05\x63ltId\x18\x08 \x01(\t\"S\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03\x12\x08\n\x04LOSS\x10\x04\x12\x0c\n\x08LOSS_ACK\x10\x05')
 
 
 
@@ -50,8 +50,8 @@ _CLOUDPDRMSG_MSGTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=905,
-  serialized_end=988,
+  serialized_start=936,
+  serialized_end=1019,
 )
 
 
@@ -370,22 +370,22 @@ _IBF = _descriptor.Descriptor(
 )
 
 
-_COMBINEDLOSTTAGPAIR = _descriptor.Descriptor(
-  name='CombinedLostTagPair',
-  full_name='CombinedLostTagPair',
+_LTAGPAIR = _descriptor.Descriptor(
+  name='LTagPair',
+  full_name='LTagPair',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='k', full_name='CombinedLostTagPair.k', index=0,
+      name='k', full_name='LTagPair.k', index=0,
       number=1, type=5, cpp_type=1, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='v', full_name='CombinedLostTagPair.v', index=1,
+      name='v', full_name='LTagPair.v', index=1,
       number=2, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=unicode("", "utf-8"),
       message_type=None, enum_type=None, containing_type=None,
@@ -401,7 +401,35 @@ _COMBINEDLOSTTAGPAIR = _descriptor.Descriptor(
   is_extendable=False,
   extension_ranges=[],
   serialized_start=461,
-  serialized_end=504,
+  serialized_end=493,
+)
+
+
+_LOSTTAGPAIRS = _descriptor.Descriptor(
+  name='LostTagPairs',
+  full_name='LostTagPairs',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='pairs', full_name='LostTagPairs.pairs', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  extension_ranges=[],
+  serialized_start=495,
+  serialized_end=535,
 )
 
 
@@ -441,9 +469,9 @@ _PROOF = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='p', full_name='Proof.p', index=4,
-      number=5, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
+      name='lostTags', full_name='Proof.lostTags', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -456,8 +484,8 @@ _PROOF = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=507,
-  serialized_end=637,
+  serialized_start=538,
+  serialized_end=668,
 )
 
 
@@ -491,8 +519,8 @@ _LOST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=639,
-  serialized_end=673,
+  serialized_start=670,
+  serialized_end=704,
 )
 
 
@@ -519,8 +547,8 @@ _LOSTACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=675,
-  serialized_end=697,
+  serialized_start=706,
+  serialized_end=728,
 )
 
 
@@ -597,8 +625,8 @@ _CLOUDPDRMSG = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=700,
-  serialized_end=988,
+  serialized_start=731,
+  serialized_end=1019,
 )
 
 _BLOCKCOLLECTION.fields_by_name['blocks'].message_type = _BLOCK
@@ -606,8 +634,9 @@ _INIT.fields_by_name['pk'].message_type = _PUBLICKEY
 _INIT.fields_by_name['bc'].message_type = _BLOCKCOLLECTION
 _INIT.fields_by_name['tc'].message_type = _TAGCOLLECTION
 _IBF.fields_by_name['cells'].message_type = _CELL
+_LOSTTAGPAIRS.fields_by_name['pairs'].message_type = _LTAGPAIR
 _PROOF.fields_by_name['serverState'].message_type = _IBF
-_PROOF.fields_by_name['p'].message_type = _COMBINEDLOSTTAGPAIR
+_PROOF.fields_by_name['lostTags'].message_type = _LOSTTAGPAIRS
 _CLOUDPDRMSG.fields_by_name['type'].enum_type = _CLOUDPDRMSG_MSGTYPE
 _CLOUDPDRMSG.fields_by_name['init'].message_type = _INIT
 _CLOUDPDRMSG.fields_by_name['ack'].message_type = _INITACK
@@ -625,7 +654,8 @@ DESCRIPTOR.message_types_by_name['InitAck'] = _INITACK
 DESCRIPTOR.message_types_by_name['Challenge'] = _CHALLENGE
 DESCRIPTOR.message_types_by_name['Cell'] = _CELL
 DESCRIPTOR.message_types_by_name['Ibf'] = _IBF
-DESCRIPTOR.message_types_by_name['CombinedLostTagPair'] = _COMBINEDLOSTTAGPAIR
+DESCRIPTOR.message_types_by_name['LTagPair'] = _LTAGPAIR
+DESCRIPTOR.message_types_by_name['LostTagPairs'] = _LOSTTAGPAIRS
 DESCRIPTOR.message_types_by_name['Proof'] = _PROOF
 DESCRIPTOR.message_types_by_name['Lost'] = _LOST
 DESCRIPTOR.message_types_by_name['LostAck'] = _LOSTACK
@@ -685,11 +715,17 @@ class Ibf(_message.Message):
 
   # @@protoc_insertion_point(class_scope:Ibf)
 
-class CombinedLostTagPair(_message.Message):
+class LTagPair(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
-  DESCRIPTOR = _COMBINEDLOSTTAGPAIR
+  DESCRIPTOR = _LTAGPAIR
 
-  # @@protoc_insertion_point(class_scope:CombinedLostTagPair)
+  # @@protoc_insertion_point(class_scope:LTagPair)
+
+class LostTagPairs(_message.Message):
+  __metaclass__ = _reflection.GeneratedProtocolMessageType
+  DESCRIPTOR = _LOSTTAGPAIRS
+
+  # @@protoc_insertion_point(class_scope:LostTagPairs)
 
 class Proof(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType
