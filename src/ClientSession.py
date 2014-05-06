@@ -85,11 +85,13 @@ class ClientSession(object):
         index=0
         for blk in self.blocks:
             if index in self.lost:
+                print "Correct", self.lost, index
                 index+=1
                 continue
             ibf.insert(blk, self.challenge,
                         self.clientKeyN, 
-                        self.clientKeyG, True) 
+                        self.clientKeyG, True)
+            index+=1
     
         qSets = {}
         for lIndex in self.lost:
