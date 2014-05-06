@@ -9,6 +9,11 @@ class Cell(object):
 		self.hashProd = 1
 		self.f = 0
 
+	def cellFromProtobuf(self, count, hashProd, data):
+		self.count = count
+		self.hashprod = hashProd
+		self.dataSum.data = self.dataSum.data.frombytes(data)
+		
 
 	def zeroCell(self):
 		self.count=0
@@ -74,7 +79,7 @@ class Cell(object):
 			return True
 		return False
 
-	def subtract(self, otherCell, dataBitSize, N):
+	def subtract(self, otherCell, dataBitSize, N, isHashProdOne=False):
 		
 		diffCell = Cell(0, dataBitSize)
 		
@@ -87,10 +92,12 @@ class Cell(object):
 		
 		#dataSum.addBlockData(localDS ^ otherDS)
 		
-		#hashProd	
-		otherFInv = number.inverse(otherCell.getHashProd(), N)
-		diffCell.hashProd = otherFInv * self.hashProd
-		diffCell.hashProd = pow(diffCell.hashProd, 1, N) 
+		#hashProd
+		diffCell.hashProd = 1	
+		if isHashProdOne == False:
+			otherFInv = number.inverse(otherCell.getHashProd(), N)
+			diffCell.hashProd = otherFInv * self.hashProd
+			diffCell.hashProd = pow(diffCell.hashProd, 1, N) 
 		
 		return diffCell
 

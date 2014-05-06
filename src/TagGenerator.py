@@ -1,4 +1,5 @@
 from Crypto.Util import number
+from Crypto.Hash import SHA256
 from CloudPdrMessages_pb2 import TagCollection
 
 class TagGenerator(object):
@@ -6,27 +7,32 @@ class TagGenerator(object):
     Class to generate tags from blocks
     '''
     
-    def __init__(self, hashFunctionObject):
-        self.h = hashFunctionObject
+    def __init__(self):
+        print ""
     
     def getW(self, blocks, u):
         w_collection = []
         for blk in blocks:
             index = blk.getStringIndex()
-            wBlk = index + str(u)
+            wBlk = str(u) + index
             w_collection.append(wBlk)
         return w_collection
 
     def getTags(self, w_collection, g, blocks, d, n):
         tags = []
+        fp = open("BEFORE","w")
         for (w, b) in zip(w_collection, blocks):
+            h = SHA256.new()
             bLong =  number.bytes_to_long(b.data.tobytes())
             powG = pow(g,bLong, n)
-            self.h.update(str(w))
-            wHash = number.bytes_to_long(self.h.digest())
+            h.update(str(w))
+            wHash = number.bytes_to_long(h.digest())
+            fp.write(str(wHash)+"\n")
+            
             wGmodN = pow((wHash*powG),1, n)
             res = pow(wGmodN, d, n)
             tags.append(res)
+        fp.close()
         return tags
         
     
@@ -35,3 +41,5 @@ class TagGenerator(object):
         for tag in tags:
             tc.tags.append(str(tag))
         return tc
+    
+    

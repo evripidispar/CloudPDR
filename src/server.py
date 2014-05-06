@@ -38,8 +38,7 @@ def processChallenge(cpdrMsg):
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
         (combinedSum, combinedTag, ibf, combinedLostTags)= clients[cpdrMsg.cltId].produceProof() 
-        for i in clients[cpdrMsg.cltId].lost:
-            print i
+        
         outgoing = MessageUtil.constructProofMessage(combinedSum,
                                                       combinedTag, 
                                                       ibf, clients[cpdrMsg.cltId].lost ,

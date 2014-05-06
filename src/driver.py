@@ -18,6 +18,8 @@ from math import log
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 
+LOST_BLOCKS = 1
+
 def produceClientId():
     h = SHA256.new()
     h.update(str(datetime.now()))
@@ -42,52 +44,93 @@ def processServerProof(cpdrProofMsg, session):
             print "FAIL#2: Server has lost more than DELTA blocks"
             return False
     
-        serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
-        gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
-        serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
-        SesSecret = session.sesKey.getSecretKeyFields() 
+    serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
+    gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
+    serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
+    sesSecret = session.sesKey.getSecretKeyFields() 
         
-        Te =pow(serCombinedTag, SesSecret["e"], session.sesKey.key.n)
+    Te =pow(serCombinedTag, sesSecret["e"], session.sesKey.key.n)
         
-        #print session.g
-        #print serCombinedTag
-        #print serCombinedSum
-        
-        index = 0
-        combinedW=1
-        for blk in session.blocks:
-            if index in cpdrProofMsg.proof.lostIndeces:
-                index+=1
-                continue
-            
-            aBlk = pickPseudoRandomTheta(session.challenge, blk.getStringIndex())
-            aI = number.bytes_to_long(aBlk)
-            #print aI
-            
-            w = session.W[index]
-            session.h.update(str(w))
-            wHash = number.bytes_to_long(session.h.digest())
-            wa= pow(wHash, aI, session.sesKey.key.n)
-            combinedW = pow((combinedW*wa), 1, session.sesKey.key.n)
+    index = 0
+    combinedW=1
+    for blk in session.blocks:
+        if index in cpdrProofMsg.proof.lostIndeces:
             index+=1
+            continue
+        
+        h = SHA256.new()
+        aBlk = pickPseudoRandomTheta(session.challenge, blk.getStringIndex())
+        aI = number.bytes_to_long(aBlk)
+        
+        w = session.W[index]
+        h.update(str(w))
+        wHash = number.bytes_to_long(h.digest())
+        wa= pow(wHash, aI, session.sesKey.key.n)
+        combinedW = pow((combinedW*wa), 1, session.sesKey.key.n)
+        index+=1
             
-        
-        combinedWInv = number.inverse(combinedW, session.sesKey.key.n)  #TODO: Not sure this is true
-        RatioCheck1=Te*combinedWInv
-        RatioCheck1 = pow(RatioCheck1, 1, session.sesKey.key.n)
-        
-        if RatioCheck1 != gS:
-            print "FAIL#3: The Proof did not pass the first check to go to recover"
-            return False
 
+    combinedWInv = number.inverse(combinedW, session.sesKey.key.n)  #TODO: Not sure this is true
+    RatioCheck1=Te*combinedWInv
+    RatioCheck1 = pow(RatioCheck1, 1, session.sesKey.key.n)
+        
+    if RatioCheck1 != gS:
+        print "FAIL#3: The Proof did not pass the first check to go to recover"
+        return False
 
+    print "# # # # # # # ##  # # # # # # # # # # # # # ##"
+    
+    qSets = {}
+    for lIndex in serverLost:
+        binLostIndex = session.ibf.binPadLostIndex(lIndex)
+        indeces = session.ibf.getIndices(binLostIndex, True)
+            
+        for i in indeces:
+            if i not in qSets.keys():
+                qSets[i] = set()
+            qSets[i].add(lIndex)
+    
+    
+    lostSum = {}
+    for p in cpdrProofMsg.proof.lostTags.pairs:
+        lostCombinedTag = long(p.v)
+        serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
+        Lre =pow(lostCombinedTag, sesSecret["e"], session.sesKey.key.n)
+        
+        Qi = qSets[p.k]
+        combinedWL = 1
+        for vQi in Qi:
+            h = SHA256.new()
+            aLBlk = pickPseudoRandomTheta(session.challenge, session.ibf.binPadLostIndex(vQi))
+            aLI = number.bytes_to_long(aLBlk)
+            wL = session.W[vQi]
+            h.update(str(wL))
+            wLHash = number.bytes_to_long(h.digest())
+            waL = pow(wLHash, aLI, session.sesKey.key.n)
+            combinedWL = pow((combinedW*waL), 1, session.sesKey.key.n)
+        
+        combinedWLInv = number.inverse(combinedWL, session.sesKey.key.n)
+        lostSum[p.k] = Lre*combinedWLInv
+        lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
+
+        
+    serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
+                                                 session.dataBitSize)
+    
+
+    diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
+                                      session.sesKey.key.n, session.dataBitSize, True)    
+    
+
+    
+    return True
 
 def processClientMessages(incoming, session):
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
         print "Processing INIT_ACK"
-        outgoingMsg = MessageUtil.constructLossMessage(3, session.cltId)
+        outgoingMsg = MessageUtil.constructLossMessage(LOST_BLOCKS, session.cltId)
         return outgoingMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
@@ -99,7 +142,8 @@ def processClientMessages(incoming, session):
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
-        processServerProof(cpdrMsg, session)
+        res = processServerProof(cpdrMsg, session)
+        print res
 
 def main():
     
@@ -119,8 +163,8 @@ def main():
     p.add_argument('-n', dest='n', action='store', type=int,
                    default=1024, help='RSA modulus size')
     
-    #p.add_argument('-d', dest='delta', action='store', type=float, default=0.005,
-    #               help='Delta: number of blocks we can recover')
+    p.add_argument('-s', dest='size', action='store', type=int, default=512,
+                   help='Data Bit Size')
    
 
     args = p.parse_args()
@@ -141,7 +185,8 @@ def main():
        
     
     #Create current session
-    pdrSes = PdrSession(cltId)  
+    pdrSes = PdrSession(cltId)
+    pdrSes.addDataBitSize(args.size)
     
     # Read blocks from Serialized file
     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
@@ -169,11 +214,9 @@ def main():
     pdrSes.addSecret(secret)
     pubPB = pdrSes.sesKey.getProtoBufPubKey()
     
-    #Create the "h" object
-    h = SHA256.new()
-    pdrSes.addh(h)
+    
     #Create a tag generator
-    tGen = TagGenerator(h)
+    tGen = TagGenerator()
     wStartTime = datetime.now()
     
     #Create Wi

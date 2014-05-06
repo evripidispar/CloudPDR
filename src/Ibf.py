@@ -3,6 +3,8 @@ from Cell import Cell
 
 class Ibf(object):
 	
+	BLOCK_INDEX_LEN=32
+
 	def __init__(self, k, m):
 		self.k = k
 		self.m = m
@@ -11,6 +13,13 @@ class Ibf(object):
 			PJWHash, BKDRHash, SDBMHash, 
 			DJBHash, DEKHash, BPHash, FNVHash, APHash]
 		
+
+	def binPadLostIndex(self, lostIndex):
+		binLostIndex = "{0:b}".format(lostIndex)
+		pad = self.BLOCK_INDEX_LEN-len(binLostIndex)
+		binLostIndex = pad*'0'+binLostIndex
+		return binLostIndex 
+
 
 	def getIndices(self, block, isIndex=False):
 		indices = []
@@ -49,14 +58,17 @@ class Ibf(object):
 		if selfIndex != -1:
 			self.cells[selfIndex].zeroCell()
 
-	def subtractIbf(self, otherIbf, secret, N, dataByteSize):
+	def subtractIbf(self, otherIbf, secret, N, dataByteSize, isHashProd=False):
 		if self.m != otherIbf.m:
 			print "IBFs different sizes"
 			return None
 
 		newIbf = Ibf(self.k, self.m)
 		for cIndex in range(self.m):
-			newIbf.cells[cIndex]= self.cells[cIndex].subtract(otherIbf.cells[cIndex], dataByteSize, N)
+			newIbf.cells[cIndex]= self.cells[cIndex].subtract(otherIbf.cells[cIndex],
+															 dataByteSize,
+															  N,
+															  isHashProd)
 		return newIbf
 
 	def getPureCells(self):
@@ -74,4 +86,11 @@ class Ibf(object):
 				return False
 		return True
 
-
+	def generateIbfFromProtobuf(self, ibfPbuf, dataBitSize):
+		newIbf = Ibf(self.k, self.m)
+		newIbf.zero(dataBitSize)
+		for c in ibfPbuf.cells:
+			realCell = Cell(0,dataBitSize)
+			realCell.cellFromProtobuf(c.count, c.hashprod, c.data)
+			newIbf.cells[c.cellIndex] = realCell
+		return newIbf

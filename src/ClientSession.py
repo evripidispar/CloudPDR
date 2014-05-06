@@ -57,6 +57,7 @@ class ClientSession(object):
         index = 0
         combinedSum = 0
         combinedTag = 1
+        fp = open("aIserver.txt", "w")
         for blk in self.blocks:
             if index in self.lost:
                 index+=1
@@ -64,25 +65,16 @@ class ClientSession(object):
             
             aBlk = pickPseudoRandomTheta(self.challenge, blk.getStringIndex())
             aI = number.bytes_to_long(aBlk)
-            #print aI
+            fp.write(str(aI)+"\n")
             bI = number.bytes_to_long(blk.data.tobytes())
             combinedSum += (aI*bI)
-            #combinedSum = pow(combinedSum, 1, self.clientKeyN)
             combinedTag *= pow(self.T[index], aI, self.clientKeyN)
             combinedTag = pow(combinedTag, 1, self.clientKeyN)
             index+=1
-        #print combinedTag
-        #print self.clientKeyG
-        #print combinedSum
-            
+       
+        fp.close()
         return (combinedSum, combinedTag)
         
-    
-    def binPadLostIndex(self, lostIndex):
-        binLostIndex = "{0:b}".format(lostIndex)
-        pad = self.BLOCK_INDEX_LEN-len(binLostIndex)
-        binLostIndex = pad*'0'+binLostIndex
-        return binLostIndex    
     
     def produceProof(self):
     
@@ -101,7 +93,7 @@ class ClientSession(object):
     
         qSets = {}
         for lIndex in self.lost:
-            binLostIndex = self.binPadLostIndex(lIndex)
+            binLostIndex = ibf.binPadLostIndex(lIndex)
             indeces = ibf.getIndices(binLostIndex, True)
             
             for i in indeces:
@@ -117,7 +109,7 @@ class ClientSession(object):
                 combinedLostTags[k] = 1
                 
             for v in val:
-                binV  = self.binPadLostIndex(v)
+                binV  = ibf.binPadLostIndex(v)
                 aBlk = pickPseudoRandomTheta(self.challenge, binV)
                 aI = number.bytes_to_long(aBlk)
                 combinedLostTags[k] *= pow(self.T[v], aI, self.clientKeyN)

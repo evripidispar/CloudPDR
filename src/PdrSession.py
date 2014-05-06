@@ -28,7 +28,7 @@ class PdrSession(object):
     def addG(self, g):
         self.g = g
         
-    def addh(self, h):
-        self.h=h
+    def addDataBitSize(self, dataBitSize):
+        self.dataBitSize =  dataBitSize
         
         
