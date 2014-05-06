@@ -19,7 +19,7 @@ from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 
 
-LOST_BLOCKS = 2
+LOST_BLOCKS = 5
 
 def produceClientId():
     h = SHA256.new()
@@ -81,15 +81,15 @@ def processServerProof(cpdrProofMsg, session):
 
     print "# # # # # # # ##  # # # # # # # # # # # # # ##"
     
-    qSets = {}
+    qSets = [[] for x in xrange(session.ibfLength)]
     for lIndex in serverLost:
         binLostIndex = session.ibf.binPadLostIndex(lIndex)
         indeces = session.ibf.getIndices(binLostIndex, True)
             
         for i in indeces:
-            if i not in qSets.keys():
-                qSets[i] = set()
-            qSets[i].add(lIndex)
+            #if i not in qSets.keys():
+                #qSets[i] = set()
+            qSets[i].append(lIndex)
     
     
     lostSum = {}
@@ -222,6 +222,7 @@ def main():
     ibfLength =  floor(log(len(pdrSes.blocks),2)) 
     ibfLength *= (args.hashNum+1)
     ibfLength = int(ibfLength)
+    pdrSes.addibfLength (ibfLength)
     
     
     #Read the generator from File

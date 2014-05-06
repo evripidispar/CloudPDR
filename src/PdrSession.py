@@ -31,4 +31,7 @@ class PdrSession(object):
     def addDataBitSize(self, dataBitSize):
         self.dataBitSize =  dataBitSize
         
+    def addibfLength(self, ibfLength):
+        self.ibfLength =  ibfLength
+        
         
