@@ -90,7 +90,7 @@ class Ibf(object):
 		newIbf = Ibf(self.k, self.m)
 		newIbf.zero(dataBitSize)
 		for c in ibfPbuf.cells:
-			realCell = Cell(0,dataBitSize)
+			realCell = Cell(0,0)
 			realCell.cellFromProtobuf(c.count, c.hashprod, c.data)
 			newIbf.cells[c.cellIndex] = realCell
 		return newIbf

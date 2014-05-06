@@ -44,7 +44,7 @@ message Challenge {
 message Cell {
 	required int32 count=1;
 	required int32 hashprod=2;
-	required bytes data=3;
+	required string data=3;
 	required int32 cellIndex=4;
 }
 

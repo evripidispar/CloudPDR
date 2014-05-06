@@ -16,6 +16,7 @@ class Block(object):
 		self.data.extend(str(index))
 		self.data.extend(data)
 		self.dataBitsize = dataBitSize
+			
 
 	def idToBinary(self, blockId):
 		bit_id = "{0:b}".format(blockId)
@@ -29,6 +30,11 @@ class Block(object):
 		self.data.extend(blockData)
 
 	def addBlockData(self, otherBlock):
+# 		if self.data.length() != otherBlock.data.length():
+# 			print self.data.length()
+# 			print otherBlock.data.length()
+# 			print "------"
+# 		else:
 		assert self.data.length() == otherBlock.data.length()
 		self.data = self.data ^ otherBlock.data
 

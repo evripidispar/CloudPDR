@@ -122,6 +122,7 @@ def processServerProof(cpdrProofMsg, session):
                                       session.sesKey.key.n, session.dataBitSize, True)    
     
 
+    print "Good job server"
     
     return True
 

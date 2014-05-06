@@ -88,7 +88,7 @@ def constructIbfMessage(ibf):
         c = ibfMsg.cells.add()
         c.count = cell.count
         c.hashprod = cell.hashProd
-        c.data = cell.dataSum.data.tobytes()
+        c.data = cell.dataSum.data.to01()
         c.cellIndex = index
     return ibfMsg
 
