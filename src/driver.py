@@ -19,7 +19,7 @@ from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 
 
-LOST_BLOCKS = 5
+LOST_BLOCKS = 6
 
 def produceClientId():
     h = SHA256.new()
@@ -81,14 +81,14 @@ def processServerProof(cpdrProofMsg, session):
 
     print "# # # # # # # ##  # # # # # # # # # # # # # ##"
     
-    qSets = [[] for x in xrange(session.ibfLength)]
+    qSets = {}
     for lIndex in serverLost:
         binLostIndex = session.ibf.binPadLostIndex(lIndex)
         indeces = session.ibf.getIndices(binLostIndex, True)
             
         for i in indeces:
-            #if i not in qSets.keys():
-                #qSets[i] = set()
+            if i not in qSets.keys():
+                qSets[i] = []
             qSets[i].append(lIndex)
     
     
@@ -143,9 +143,12 @@ def processServerProof(cpdrProofMsg, session):
     if L==None:
         print "fail to recover"
     
+    #for block in L:
+        #print block.data
+        #print block.getDecimalIndex()
+        
     for index in L:
-        print index
-   
+       print index
       
     return "Exiting Recovery..."
 
@@ -178,7 +181,7 @@ def main():
                    help='Serialized block filename as generated from BlockEngine')
     
     p.add_argument('-k', dest='hashNum', action='store', type=int,
-                   default=4, help='Number of hash arguments')
+                   default=5, help='Number of hash arguments')
     
     p.add_argument('-g', dest="genFile", action="store", default=None,
                  help="static generator file")

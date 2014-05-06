@@ -93,7 +93,8 @@ class ClientSession(object):
                         self.clientKeyG, True)
             index+=1
     
-        qSets = [[] for x in xrange(self.ibfLength)]
+        #qSets = [[] for x in xrange(self.ibfLength)]
+        qSets={}
         for lIndex in self.lost:
             #print lIndex
             binLostIndex = ibf.binPadLostIndex(lIndex)
@@ -101,8 +102,8 @@ class ClientSession(object):
             
             for i in indeces:
                 #print i
-                #if i not in qSets.keys():
-                    #qSets[i] = set()
+                if i not in qSets.keys():
+                        qSets[i] = []
                 qSets[i].append(lIndex)
             
         #for x in xrange(self.ibfLength):
@@ -113,22 +114,22 @@ class ClientSession(object):
                 
         
         combinedLostTags = {}
-        for k in xrange(self.ibfLength):
-            if  qSets[k]!=[]:
-                print "Position in the Ibf", k
-                val = qSets[k]
+        for k in qSets.keys():
+            #if  qSets[k]!=[]:
+            print "Position in the Ibf", k
+            val = qSets[k]
                 #for v in val:
                     #print v
-                if k not in combinedLostTags.keys():
-                    combinedLostTags[k] = 1
+            if k not in combinedLostTags.keys():
+                combinedLostTags[k] = 1
                 
-                for v in val:
-                    print "Things in qset", v
-                    binV  = ibf.binPadLostIndex(v)
-                    aBlk = pickPseudoRandomTheta(self.challenge, binV)
-                    aI = number.bytes_to_long(aBlk)
-                    lostTag=pow(self.T[v], aI, self.clientKeyN)
-                    combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
+            for v in val:
+                print "Things in qset", v
+                binV  = ibf.binPadLostIndex(v)
+                aBlk = pickPseudoRandomTheta(self.challenge, binV)
+                aI = number.bytes_to_long(aBlk)
+                lostTag=pow(self.T[v], aI, self.clientKeyN)
+                combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
                 #print combinedLostTags[k]
         
         return (combinedSum, combinedTag, ibf, combinedLostTags)

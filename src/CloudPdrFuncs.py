@@ -27,6 +27,7 @@ def recover(ibfLost, lostIndices, secret, N, g):
 	while pureCellsNum > 0:
 		cIndex = lostPureCells.pop(0)
 		blockIndex =  ibfLost.cells[cIndex].getDataSum().getDecimalIndex()
+		#blockRecover = ibfLost.cells[cIndex].getDataSum()
 		if blockIndex not in lostIndices:
 			return None
 
