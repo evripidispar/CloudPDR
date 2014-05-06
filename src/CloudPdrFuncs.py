@@ -10,6 +10,7 @@ from HashFunc import BPHash
 from HashFunc import FNVHash
 from HashFunc import APHash
 from Ibf import *
+from Block import *
 
 hashFunList = [RSHash, JSHash, 
 			PJWHash, ELFHash, BKDRHash, SDBMHash, 
@@ -24,20 +25,35 @@ def recover(ibfLost, lostIndices, secret, N, g):
 	lostPureCells = ibfLost.getPureCells()
 	pureCellsNum = len(lostPureCells)
 	
+	#index=0
 	while pureCellsNum > 0:
 		cIndex = lostPureCells.pop(0)
 		blockIndex =  ibfLost.cells[cIndex].getDataSum().getDecimalIndex()
-		#blockRecover = ibfLost.cells[cIndex].getDataSum()
+		#blockRecover = Block(0,0)
+		#blockRecover.data = ibfLost.cells[cIndex].getDataSum().data
+		#blockRecover.dataBitsize = ibfLost.cells[cIndex].getDataSum().dataBitsize
+
+		
 		if blockIndex not in lostIndices:
 			return None
 
-		
+		#print blockIndex
 		L.append(blockIndex)
+		#index=0
+		#for block in L:
+			#print block.getDecimalIndex()
+			#index+=1
+		#print index
+		#index+=1
 		ibfLost.delete(ibfLost.cells[cIndex].getDataSum(), secret, N, g, cIndex)
 		lostIndices.remove(blockIndex)
 		
 		lostPureCells = ibfLost.getPureCells()
 		pureCellsNum = len(lostPureCells)
+	#for block in L:
+		#print block.getDecimalIndex()
+	#print L[0].getDecimalIndex()
+	#print L[1].getDecimalIndex()
 		
 	print "Entering Check..."
 	for cIndex in xrange(ibfLost.m):

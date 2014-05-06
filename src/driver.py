@@ -17,7 +17,8 @@ from math import floor
 from math import log
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
-
+from bitarray import bitarray
+from Block import *
 
 LOST_BLOCKS = 6
 
