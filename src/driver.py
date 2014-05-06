@@ -152,12 +152,12 @@ def processServerProof(cpdrProofMsg, session):
       
     return "Exiting Recovery..."
 
-def processClientMessages(incoming, session):
+def processClientMessages(incoming, session, args):
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
         print "Processing INIT_ACK"
-        outgoingMsg = MessageUtil.constructLossMessage(LOST_BLOCKS, session.cltId)
+        outgoingMsg = MessageUtil.constructLossMessage(args.lostNum, session.cltId)
         return outgoingMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
@@ -192,6 +192,9 @@ def main():
     
     p.add_argument('-s', dest='size', action='store', type=int, default=512,
                    help='Data Bit Size')
+    
+    p.add_argument('-l', dest='lostNum', action='store', type=int, default=5,
+                   help='Number of Lost Packets')
    
 
     args = p.parse_args()
@@ -288,16 +291,16 @@ def main():
     
     print "Sending Init..."
     inComing = clt.rpc("127.0.0.1", 9090, initMessage)
-    outgoing = processClientMessages(inComing, pdrSes)
+    outgoing = processClientMessages(inComing, pdrSes, args)
     
     
     print "Sending Lost message"
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    outgoing = processClientMessages(incoming, pdrSes)
+    outgoing = processClientMessages(incoming, pdrSes, args)
     
     print "Sending Challenge ...."
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    processClientMessages(incoming, pdrSes)
+    processClientMessages(incoming, pdrSes, args)
     
     
     
