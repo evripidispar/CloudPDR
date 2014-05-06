@@ -3,7 +3,7 @@ import sys
 from BlockUtil import *
 from Ibf import *
 #from CloudPDRObj import *
-#import CloudPdrFuncs
+import CloudPdrFuncs
 import BlockEngine
 from CloudPDRKey import CloudPDRKey
 from TagGenerator import TagGenerator
@@ -18,7 +18,8 @@ from math import log
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 
-LOST_BLOCKS = 1
+
+LOST_BLOCKS = 2
 
 def produceClientId():
     h = SHA256.new()
@@ -94,25 +95,29 @@ def processServerProof(cpdrProofMsg, session):
     lostSum = {}
     for p in cpdrProofMsg.proof.lostTags.pairs:
         lostCombinedTag = long(p.v)
-        serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
+        #print lostCombinedTag
+        #serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
         Lre =pow(lostCombinedTag, sesSecret["e"], session.sesKey.key.n)
         
         Qi = qSets[p.k]
         combinedWL = 1
         for vQi in Qi:
+            #print vQi
             h = SHA256.new()
             aLBlk = pickPseudoRandomTheta(session.challenge, session.ibf.binPadLostIndex(vQi))
             aLI = number.bytes_to_long(aLBlk)
+            #print aLI
             wL = session.W[vQi]
             h.update(str(wL))
             wLHash = number.bytes_to_long(h.digest())
             waL = pow(wLHash, aLI, session.sesKey.key.n)
-            combinedWL = pow((combinedW*waL), 1, session.sesKey.key.n)
+            combinedWL = pow((combinedWL*waL), 1, session.sesKey.key.n)
         
         combinedWLInv = number.inverse(combinedWL, session.sesKey.key.n)
         lostSum[p.k] = Lre*combinedWLInv
         lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
-        
+        #print p.k
+        #print lostSum[p.k]
       
     serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
                                                  session.dataBitSize)
@@ -121,10 +126,28 @@ def processServerProof(cpdrProofMsg, session):
     diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
                                       session.sesKey.key.n, session.dataBitSize, True)    
     
-
-    print "Good job server"
     
-    return True
+    for k in lostSum.keys():
+        #print k
+        val=lostSum[k]
+        diffIbf.cells[k].setHashProd(val)
+        #print diffIbf.cells[k].hashProd
+        #print diffIbf.cells[k].dataSum.data
+           
+    print "Good job server"
+    L=CloudPdrFuncs.recover(diffIbf, serverLost, session.challenge, session.sesKey.key.n, session.g)
+    
+    for k in lostSum.keys():
+        print diffIbf.cells[k].hashProd
+        
+    if L==None:
+        print "fail to recover"
+    
+    for index in L:
+        print index
+   
+      
+    return "Exiting Recovery..."
 
 def processClientMessages(incoming, session):
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
@@ -155,7 +178,7 @@ def main():
                    help='Serialized block filename as generated from BlockEngine')
     
     p.add_argument('-k', dest='hashNum', action='store', type=int,
-                   default=5, help='Number of hash arguments')
+                   default=4, help='Number of hash arguments')
     
     p.add_argument('-g', dest="genFile", action="store", default=None,
                  help="static generator file")

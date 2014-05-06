@@ -106,15 +106,18 @@ class ClientSession(object):
         
         combinedLostTags = {}
         for k in qSets.keys():
+            print "Position in the Ibf", k
             val = qSets[k]
             if k not in combinedLostTags.keys():
                 combinedLostTags[k] = 1
                 
             for v in val:
+                print "Things in qset", v
                 binV  = ibf.binPadLostIndex(v)
                 aBlk = pickPseudoRandomTheta(self.challenge, binV)
                 aI = number.bytes_to_long(aBlk)
-                combinedLostTags[k] *= pow(self.T[v], aI, self.clientKeyN)
-        
+                lostTag=pow(self.T[v], aI, self.clientKeyN)
+                combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
+                #print combinedLostTags[k]
         
         return (combinedSum, combinedTag, ibf, combinedLostTags)

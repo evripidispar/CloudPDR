@@ -19,7 +19,7 @@ hashFunList = [RSHash, JSHash,
 
 # lostIndeces a list of decimal lost indices
 
-def recover(ibfLost, lostIndices, dataByteSize, secret, N, g):
+def recover(ibfLost, lostIndices, secret, N, g):
 	L = []
 	lostPureCells = ibfLost.getPureCells()
 	pureCellsNum = len(lostPureCells)
@@ -38,7 +38,7 @@ def recover(ibfLost, lostIndices, dataByteSize, secret, N, g):
 		lostPureCells = ibfLost.getPureCells()
 		pureCellsNum = len(lostPureCells)
 		
-		
+	print "Entering Check..."
 	for cIndex in xrange(ibfLost.m):
 		if ibfLost.cells[cIndex].getCount() != 0:
 			print "Failed to recover", "Reason: ", "Count", cIndex
@@ -49,8 +49,10 @@ def recover(ibfLost, lostIndices, dataByteSize, secret, N, g):
 			print "Failed to recover", "Reason: ", "Datasum", cIndex
 			return None
 			
+		#print ibfLost.cells[cIndex].hashProd
 		if  ibfLost.cells[cIndex].getHashProd() !=1:
 			print "Failed to recover", "Reason: ", "HashProd", cIndex
+			print cIndex
 			return None
 					
 		

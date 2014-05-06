@@ -13,6 +13,7 @@ def apply_f(block, N, secret_key, g):
 	
 	
 	aLong = number.bytes_to_long(a)
+	#print aLong
 	bLong = number.bytes_to_long(block.data.tobytes())
 	
 	abExp = aLong*bLong
