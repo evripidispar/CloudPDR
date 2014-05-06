@@ -64,10 +64,16 @@ class ClientSession(object):
             
             aBlk = pickPseudoRandomTheta(self.challenge, blk.getStringIndex())
             aI = number.bytes_to_long(aBlk)
+            #print aI
             bI = number.bytes_to_long(blk.data.tobytes())
             combinedSum += (aI*bI)
+            #combinedSum = pow(combinedSum, 1, self.clientKeyN)
             combinedTag *= pow(self.T[index], aI, self.clientKeyN)
+            combinedTag = pow(combinedTag, 1, self.clientKeyN)
             index+=1
+        #print combinedTag
+        #print self.clientKeyG
+        #print combinedSum
             
         return (combinedSum, combinedTag)
         

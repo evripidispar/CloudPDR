@@ -15,6 +15,8 @@ from client import RpcPdrClient
 from PdrSession import PdrSession
 from math import floor
 from math import log
+from CryptoUtil import pickPseudoRandomTheta
+from Crypto.Util import number
 
 def produceClientId():
     h = SHA256.new()
@@ -43,8 +45,40 @@ def processServerProof(cpdrProofMsg, session):
         serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
         gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
         serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
+        SesSecret = session.sesKey.getSecretKeyFields() 
         
+        Te =pow(serCombinedTag, SesSecret["e"], session.sesKey.key.n)
         
+        #print session.g
+        #print serCombinedTag
+        #print serCombinedSum
+        
+        index = 0
+        combinedW=1
+        for blk in session.blocks:
+            if index in cpdrProofMsg.proof.lostIndeces:
+                index+=1
+                continue
+            
+            aBlk = pickPseudoRandomTheta(session.challenge, blk.getStringIndex())
+            aI = number.bytes_to_long(aBlk)
+            #print aI
+            
+            w = session.W[index]
+            session.h.update(str(w))
+            wHash = number.bytes_to_long(session.h.digest())
+            wa= pow(wHash, aI, session.sesKey.key.n)
+            combinedW = pow((combinedW*wa), 1, session.sesKey.key.n)
+            index+=1
+            
+        
+        combinedWInv = number.inverse(combinedW, session.sesKey.key.n)  #TODO: Not sure this is true
+        RatioCheck1=Te*combinedWInv
+        RatioCheck1 = pow(RatioCheck1, 1, session.sesKey.key.n)
+        
+        if RatioCheck1 != gS:
+            print "FAIL#3: The Proof did not pass the first check to go to recover"
+            return False
 
 
 
@@ -137,7 +171,7 @@ def main():
     
     #Create the "h" object
     h = SHA256.new()
-    
+    pdrSes.addh(h)
     #Create a tag generator
     tGen = TagGenerator(h)
     wStartTime = datetime.now()
