@@ -76,13 +76,18 @@ class ClientSession(object):
         return (combinedSum, combinedTag)
         
     
-    def produceProof(self):
+    def produceProof(self, serverTimer, cltId):
     
+        serverTimer.startTimer(cltId, "Server-ProofCombinedValues")
         combinedSum, combinedTag = self.findCombinedValues()
+        serverTimer.endTimer(cltId, "Server-ProofCombinedValues")
         ibf = Ibf(self.k, self.ibfLength)
         ibf.zero(self.blockBitSize)
         
+        
+        
         index=0
+        serverTimer.startTimer(cltId, "Server-ProofIbfInsert")
         for blk in self.blocks:
             if index in self.lost:
                 print "Correct", self.lost, index
@@ -92,7 +97,10 @@ class ClientSession(object):
                         self.clientKeyN, 
                         self.clientKeyG, True)
             index+=1
-    
+        serverTimer.endTimer(cltId, "Server-ProofIbfInsert")
+
+
+        serverTimer.startTimer(cltId, "Server-ProofCombinedLostTags")
         qSets={}
         for lIndex in self.lost:
             binLostIndex = ibf.binPadLostIndex(lIndex)
@@ -118,5 +126,5 @@ class ClientSession(object):
                 aI = number.bytes_to_long(aBlk)
                 lostTag=pow(self.T[v], aI, self.clientKeyN)
                 combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
-            
+        serverTimer.endTimer(cltId, "Server-ProofCombinedLostTags")
         return (combinedSum, combinedTag, ibf, combinedLostTags)

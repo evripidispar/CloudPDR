@@ -8,12 +8,19 @@ class ExpTimer(object):
     def registerSession(self, session):
         self.timers[session] = {}
     
-    def registerTimer(self, session, timerId):
-        self.timers[session][timerId] = 0
+    def registerTimer(self, sId, tId):
+        self.timers[sId][tId] = 0
     
-    def startTimer(self, session, timerId):
-        self.timers[session][timerId] = time()
+    def startTimer(self, sId, tId):
+        self.timers[sId][tId] = time()
     
-    def endTimer(self, session, timerId):
+    def endTimer(self, sId, tId):
         tEnd=time()
-        self.timers[session][timerId] = tEnd - self.timers[session][timerId]
+        self.timers[sId][tId] = tEnd - self.timers[sId][tId]
+    
+    def printTimer(self, sId, tId):
+        print tId, ":", self.timers[sId][tId] , "sec"
+    
+    def printSessionTimers(self, sId):
+        for k in self.timers[sId].keys():
+            print k, ":", self.timers[sId][k], "sec"

@@ -17,8 +17,9 @@ from math import floor
 from math import log
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
-from bitarray import bitarray
-from Block import *
+#from bitarray import bitarray
+#from Block import Block
+from ExpTimer import ExpTimer
 
 LOST_BLOCKS = 6
 
@@ -28,9 +29,10 @@ def produceClientId():
     return h.hexdigest()
 
 
-def processServerProof(cpdrProofMsg, session):
+def processServerProof(cpdrProofMsg, session, cltTimer):
     serverLost =  set()
     
+    cltTimer.startTimer(session.cltId, "ProcProof-Clt-SubSet")
     if len(cpdrProofMsg.proof.lostIndeces) > 0:
         for lost in cpdrProofMsg.proof.lostIndeces:
             serverLost.add(lost)
@@ -46,11 +48,13 @@ def processServerProof(cpdrProofMsg, session):
             print "FAIL#2: Server has lost more than DELTA blocks"
             return False
     
+    cltTimer.endTimer(session.cltId, "ProcProof-Clt-SubSet")
     serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
     gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
     serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
     sesSecret = session.sesKey.getSecretKeyFields() 
-        
+     
+    cltTimer.startTimer(session.cltId, "ProcProof-Clt-Te")    
     Te =pow(serCombinedTag, sesSecret["e"], session.sesKey.key.n)
         
     index = 0
@@ -75,6 +79,7 @@ def processServerProof(cpdrProofMsg, session):
     combinedWInv = number.inverse(combinedW, session.sesKey.key.n)  #TODO: Not sure this is true
     RatioCheck1=Te*combinedWInv
     RatioCheck1 = pow(RatioCheck1, 1, session.sesKey.key.n)
+    cltTimer.endTimer(session.cltId, "ProcProof-Clt-Te")
         
     if RatioCheck1 != gS:
         print "FAIL#3: The Proof did not pass the first check to go to recover"
@@ -82,6 +87,8 @@ def processServerProof(cpdrProofMsg, session):
 
     print "# # # # # # # ##  # # # # # # # # # # # # # ##"
     
+    
+    cltTimer.startTimer(session.cltId, "ProcProof-Clt-LostSum")
     qSets = {}
     for lIndex in serverLost:
         binLostIndex = session.ibf.binPadLostIndex(lIndex)
@@ -113,20 +120,27 @@ def processServerProof(cpdrProofMsg, session):
         combinedWLInv = number.inverse(combinedWL, session.sesKey.key.n)
         lostSum[p.k] = Lre*combinedWLInv
         lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
-        
+    
+    cltTimer.endTimer(session.cltId, "ProcProof-Clt-LostSum")
+       
+    
+    cltTimer.startTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf") 
     serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
                                                  session.dataBitSize)
-    
+    cltTimer.endTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf")
 
+    cltTimer.startTimer(session.cltId, "ProcProof-SubtractIbf")
     diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
                                       session.sesKey.key.n, session.dataBitSize, True)    
-    
+    cltTimer.endTimer(session.cltId, "ProcProof-SubtractIbf")
     
     for k in lostSum.keys():
         val=lostSum[k]
         diffIbf.cells[k].setHashProd(val)
     
+    cltTimer.startTimer(session.cltId, "ProcProof-Recover")
     L=CloudPdrFuncs.recover(diffIbf, serverLost, session.challenge, session.sesKey.key.n, session.g)
+    cltTimer.endTimer(session.cltId, "ProcProof-Recover")
     
     for k in lostSum.keys():
         print diffIbf.cells[k].hashProd
@@ -140,25 +154,29 @@ def processServerProof(cpdrProofMsg, session):
       
     return "Exiting Recovery..."
 
-def processClientMessages(incoming, session, lostNum=None):
+def processClientMessages(incoming, session, cltTimer, lostNum=None):
     
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
         print "Processing INIT_ACK"
+        cltTimer.startTimer(session.cltId, "LossMessage-Create")
         outgoingMsg = MessageUtil.constructLossMessage(lostNum, session.cltId)
+        cltTimer.endTimer(session.cltId, "LossMessage-Create")
         return outgoingMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
         print "Processing LOSS_ACK"
+        
+        cltTimer.startTimer(session.cltId, "ChallengeMsg-Create")
         session.challenge = session.sesKey.generateChallenge()
-        #print session.challenge
         outgoingMsg = MessageUtil.constructChallengeMessage(session.challenge, session.cltId)
+        cltTimer.endTimer(session.cltId, "ChallengeMsg-Create")
         return outgoingMsg    
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
-        res = processServerProof(cpdrMsg, session)
+        res = processServerProof(cpdrMsg, session, cltTimer)
         print res
 
 def main():
@@ -235,29 +253,53 @@ def main():
     pubPB = pdrSes.sesKey.getProtoBufPubKey()
     
     
+    #Register client timers
+    cltTimer = ExpTimer()
+    cltTimer.registerSession(cltId)
+    cltTimer.registerTimer(cltId, "W-Time")
+    cltTimer.registerTimer(cltId, "Tag-Time")
+    cltTimer.registerTimer(cltId, "Pop-Clt-Ibf")
+    cltTimer.registerTimer(cltId, "Init-Create")
+    cltTimer.registerTimer(cltId, "Init-InitAck-RTT")
+    cltTimer.registerTimer(cltId, "LossMessage-Create")
+    cltTimer.registerTimer(cltId, "ChallengeMsg-Create")
+    cltTimer.registerTimer(cltId, "ProcProof-Clt-SubSet")
+    cltTimer.registerTimer(cltId, "ProcProof-Clt-Te")
+    cltTimer.registerTimer(cltId, "ProcProof-Clt-LostSum")
+    cltTimer.registerTimer(cltId, "ProcProof-CreateIbf-From-ProtoBuf")
+    cltTimer.registerTimer(cltId, "ProcProof-Recover")
+    cltTimer.registerTimer(cltId, "ProcProof-SubtractIbf")
+    cltTimer.registerTimer(cltId, "Loss-LossAck-RTT")
+    cltTimer.registerTimer(cltId, "Challenge-Proof-RTT")
+    
     #Create a tag generator
     tGen = TagGenerator()
-    wStartTime = datetime.now()
     
     #Create Wi
+    cltTimer.startTimer(cltId,"W-Time")
     pdrSes.W = tGen.getW(pdrSes.blocks, secret["u"])
-    wEndTime = datetime.now()
+    cltTimer.endTimer(cltId, "W-Time")
+    
     
     #Create Tags
-    tagStartTime = datetime.now()
+    cltTimer.startTimer(cltId, "Tag-Time")
     T = tGen.getTags(pdrSes.W, g, pdrSes.blocks, secret["d"], pdrSes.sesKey.key.n)
-    tagEndTime = datetime.now()
+    cltTimer.endTimer(cltId, "Tag-Time")
     tagCollection = tGen.createTagProtoBuf(T)
-    print "W creation:" , wEndTime-wStartTime
-    print "Tag creation:" , tagEndTime-tagStartTime
-    
+   
+ 
+    cltTimer.printTimer(cltId, "W-Time")  
+    cltTimer.printTimer(cltId, "Tag-Time")
  
  
     #Create the local state
     clientIbf = Ibf(args.hashNum, ibfLength)
     clientIbf.zero(blocks.blockBitSize)
+    
+    cltTimer.startTimer(cltId, "Pop-Clt-Ibf")
     for blk in pdrSes.blocks:
         clientIbf.insert(blk, None, pdrSes.sesKey.key.n, g, True)
+    cltTimer.endTimer(cltId, "Pop-Clt-Ibf")
  
     pdrSes.addState(clientIbf)
     
@@ -269,90 +311,42 @@ def main():
     pdrSes.addDelta(delta)
     
     
+    cltTimer.startTimer(cltId, "Init-Create")
     initMessage = MessageUtil.constructInitMessage(pubPB, 
                                                    blocks, 
                                                    tagCollection,
                                                    cltId,
                                                    args.hashNum,
                                                    delta)
-
+    cltTimer.endTimer(cltId, "Init-Create")
     clt = RpcPdrClient()    
     
     print "Sending Init..."
+    
+    cltTimer.startTimer(cltId, "Init-InitAck-RTT")
     inComing = clt.rpc("127.0.0.1", 9090, initMessage)
-    outgoing = processClientMessages(inComing, pdrSes, args.lostNum)
+    cltTimer.endTimer(cltId, "Init-InitAck-RTT")
+    
+    
+    outgoing = processClientMessages(inComing, pdrSes, cltTimer, args.lostNum)
     
     
     print "Sending Lost message"
+    cltTimer.startTimer(cltId, "Loss-LossAck-RTT")
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    outgoing = processClientMessages(incoming, pdrSes)
+    cltTimer.endTimer(cltId, "Loss-LossAck-RTT")
+    
+    outgoing = processClientMessages(incoming, pdrSes, cltTimer)
     
     print "Sending Challenge ...."
+    cltTimer.startTimer(cltId, "Challenge-Proof-RTT")
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    processClientMessages(incoming, pdrSes)
+    cltTimer.endTimer(cltId, "Challenge-Proof-RTT")
+    processClientMessages(incoming, pdrSes, cltTimer)
     
-    
-    
-    
-    
- 
-   
-#    commonBlocks = pickCommonBlocks(args.numBlocks, args.numCommon)
-#    diff_a, diff_b = pickDiffBlocks(args.numBlocks, commonBlocks, args.totalBlocks)
-#   
-#
-#     ibfA = Ibf(args.hashNum, args.ibfLen)
-#     ibfA.zero(args.dataSize)
-#     ibfB = Ibf(args.hashNum, args.ibfLen)
-#     ibfB.zero(args.dataSize)
-# 
-#     for cBlock in commonBlocks:
-#         ibfA.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
-#         ibfB.insert(blocks[cBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
-# 
-#     for diffBlock in diff_a:
-#         ibfA.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g, args.dataSize)
-# 
-#     lostindices=[]
-#     #lostindices=diff_a
-#     for i in diff_a:
-#         lostindices.append(i)
-# 
-#     for diffBlock in diff_b:
-#         ibfB.insert(blocks[diffBlock], cObj.secret, cObj.N, cObj.g,  args.dataSize)
-# 
-# 
-#     for diffBlock in diff_b:
-#         ibfB.delete(blocks[diffBlock], cObj.secret, cObj.N, cObj.g)
-#         
-#     
-#     diffIbf = ibfA.subtractIbf(ibfB,  cObj.secret, cObj.N, args.dataSize)
-#     for cellIndex in xrange(args.ibfLen):
-#         diffIbf.cells[cellIndex].printSelf()
-#     
-#     #lostindices=diff_a
-#     L=CloudPdrFuncs.recover(diffIbf, diff_a, args.dataSize, cObj.secret, cObj.N, cObj.g)
-# 
-#     if L==None:
-#         print "fail to recover"
-# 
-#     for block in L:
-#         print block
-# 
-#     
-#     print len(L)
-#     print len(lostindices)
-# 
-#     recovered=0
-#     if(len(L)==len(lostindices)):
-#         for i in lostindices:
-#             if i in L:
-#                 recovered+=1
-#                 #print "SUCCESS"
-# 
-#     print recovered
-    
-    
+
+    cltTimer.printSessionTimers(cltId)
+
 
 
 if __name__ == "__main__":

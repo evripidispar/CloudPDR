@@ -4,6 +4,7 @@ import zmq
 import CloudPdrMessages_pb2
 import BlockEngine
 from ClientSession import ClientSession
+from ExpTimer import ExpTimer
 
 clients = {}
 
@@ -32,17 +33,21 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
     outgoing = MessageUtil.constructInitAckMessage()
     return outgoing
 
-def processChallenge(cpdrMsg):
+def processChallenge(cpdrMsg,serverTimer):
      
     if cpdrMsg.cltId in clients.keys():
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
-        (combinedSum, combinedTag, ibf, combinedLostTags)= clients[cpdrMsg.cltId].produceProof() 
+        (combinedSum, combinedTag, ibf, combinedLostTags)= clients[cpdrMsg.cltId].produceProof(serverTimer, cpdrMsg.cltId) 
         
+        serverTimer.startTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
         outgoing = MessageUtil.constructProofMessage(combinedSum,
                                                       combinedTag, 
                                                       ibf, clients[cpdrMsg.cltId].lost ,
                                                       combinedLostTags)
+        serverTimer.endTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
+        
+        serverTimer.printSessionTimers(cpdrMsg.cltId)
         return outgoing
 
 def processLostMessage(cpdrMsg):
@@ -56,35 +61,49 @@ def processLostMessage(cpdrMsg):
     outgoing = MessageUtil.constructLostAckMessage()
     return outgoing
 
-def procMessage(incoming):
+def procMessage(incoming, serverTimer):
     
     print "Processing incoming message..."
     
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
+    if cpdrMsg.cltId not in serverTimer.timers.keys():
+        serverTimer.registerSession(cpdrMsg.cltId)
+        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProcInit")
+        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProcLoss")
+        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
+        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofCombinedValues")
+        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofIbfInsert")
+        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofCombinedLostTags")
+    
+    
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT:
+        serverTimer.startTimer(cpdrMsg.cltId, "Server-ProcInit")
         initAck = processInitMessage(cpdrMsg)
+        serverTimer.endTimer(cpdrMsg.cltId, "Server-ProcInit")
         return initAck
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS:
+        serverTimer.startTimer(cpdrMsg.cltId, "Server-ProcLoss")
         lossAck = processLostMessage(cpdrMsg)
+        serverTimer.endTimer(cpdrMsg.cltId, "Server-ProcLoss")
         return lossAck
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE:
         print "Incoming challenge"
-        proof = processChallenge(cpdrMsg)
+        proof = processChallenge(cpdrMsg, serverTimer)
         return proof
     
     
         
         
-def serve(port):
+def serve(port, serverTimer):
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     socket.bind("tcp://*:"+str(port))
 
     while True:
         msg = socket.recv()
-        outMessage = procMessage(msg)
+        outMessage = procMessage(msg, serverTimer)
         socket.send(outMessage)
 
 def main():
@@ -94,8 +113,9 @@ def main():
     p.add_argument('-p', dest='port', action='store', default=9090,
                    help='CloudPdr server port')
     
+    serverTimer = ExpTimer()
     args = p.parse_args()
-    serve(args.port)
+    serve(args.port, serverTimer)
 
 if __name__ == "__main__":
     main()
