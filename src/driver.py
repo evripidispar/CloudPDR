@@ -96,18 +96,14 @@ def processServerProof(cpdrProofMsg, session):
     lostSum = {}
     for p in cpdrProofMsg.proof.lostTags.pairs:
         lostCombinedTag = long(p.v)
-        #print lostCombinedTag
-        #serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
         Lre =pow(lostCombinedTag, sesSecret["e"], session.sesKey.key.n)
         
         Qi = qSets[p.k]
         combinedWL = 1
         for vQi in Qi:
-            #print vQi
             h = SHA256.new()
             aLBlk = pickPseudoRandomTheta(session.challenge, session.ibf.binPadLostIndex(vQi))
             aLI = number.bytes_to_long(aLBlk)
-            #print aLI
             wL = session.W[vQi]
             h.update(str(wL))
             wLHash = number.bytes_to_long(h.digest())
@@ -117,9 +113,7 @@ def processServerProof(cpdrProofMsg, session):
         combinedWLInv = number.inverse(combinedWL, session.sesKey.key.n)
         lostSum[p.k] = Lre*combinedWLInv
         lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
-        #print p.k
-        #print lostSum[p.k]
-      
+        
     serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
                                                  session.dataBitSize)
     
@@ -129,13 +123,9 @@ def processServerProof(cpdrProofMsg, session):
     
     
     for k in lostSum.keys():
-        #print k
         val=lostSum[k]
         diffIbf.cells[k].setHashProd(val)
-        #print diffIbf.cells[k].hashProd
-        #print diffIbf.cells[k].dataSum.data
-           
-    print "Good job server"
+    
     L=CloudPdrFuncs.recover(diffIbf, serverLost, session.challenge, session.sesKey.key.n, session.g)
     
     for k in lostSum.keys():
@@ -144,21 +134,19 @@ def processServerProof(cpdrProofMsg, session):
     if L==None:
         print "fail to recover"
     
-    #for block in L:
-        #print block.data
-        #print block.getDecimalIndex()
         
-    for index in L:
-       print index
+    for blk in L:
+        print blk.getDecimalIndex()
       
     return "Exiting Recovery..."
 
-def processClientMessages(incoming, session, args):
+def processClientMessages(incoming, session, lostNum=None):
+    
     cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
         print "Processing INIT_ACK"
-        outgoingMsg = MessageUtil.constructLossMessage(args.lostNum, session.cltId)
+        outgoingMsg = MessageUtil.constructLossMessage(lostNum, session.cltId)
         return outgoingMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
@@ -292,16 +280,16 @@ def main():
     
     print "Sending Init..."
     inComing = clt.rpc("127.0.0.1", 9090, initMessage)
-    outgoing = processClientMessages(inComing, pdrSes, args)
+    outgoing = processClientMessages(inComing, pdrSes, args.lostNum)
     
     
     print "Sending Lost message"
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    outgoing = processClientMessages(incoming, pdrSes, args)
+    outgoing = processClientMessages(incoming, pdrSes)
     
     print "Sending Challenge ...."
     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    processClientMessages(incoming, pdrSes, args)
+    processClientMessages(incoming, pdrSes)
     
     
     

@@ -14,7 +14,6 @@ class Cell(object):
 		self.count = count
 		self.hashprod = hashProd
 		self.dataSum.data = bitarray(str(data))
-		#print self.dataSum.data.length()
 
 	def zeroCell(self):
 		self.count=0
@@ -65,13 +64,11 @@ class Cell(object):
 		
 		if block.isZeroDataSum()==False: #TODO
 			self.dataSum.addBlockData(block)
-			#print block.data
 			f = apply_f(block, N, secret, g)
-			#print f
 			fInv = number.inverse(f, N)  #TODO: Not sure this is true
 			self.hashProd *= fInv
 			self.hashProd = pow(self.hashProd, 1, N)
-			#print "---"
+
 	def isPure(self):
 		if self.count == 1:  
 			return True

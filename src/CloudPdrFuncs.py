@@ -11,6 +11,7 @@ from HashFunc import FNVHash
 from HashFunc import APHash
 from Ibf import *
 from Block import *
+import copy
 
 hashFunList = [RSHash, JSHash, 
 			PJWHash, ELFHash, BKDRHash, SDBMHash, 
@@ -25,37 +26,27 @@ def recover(ibfLost, lostIndices, secret, N, g):
 	lostPureCells = ibfLost.getPureCells()
 	pureCellsNum = len(lostPureCells)
 	
-	#index=0
+
 	while pureCellsNum > 0:
 		cIndex = lostPureCells.pop(0)
 		blockIndex =  ibfLost.cells[cIndex].getDataSum().getDecimalIndex()
-		#blockRecover = Block(0,0)
-		#blockRecover.data = ibfLost.cells[cIndex].getDataSum().data
-		#blockRecover.dataBitsize = ibfLost.cells[cIndex].getDataSum().dataBitsize
-
+		
 		
 		if blockIndex not in lostIndices:
 			return None
 
-		#print blockIndex
-		L.append(blockIndex)
-		#index=0
-		#for block in L:
-			#print block.getDecimalIndex()
-			#index+=1
-		#print index
-		#index+=1
+
+		recoveredBlock = copy.deepcopy(ibfLost.cells[cIndex].getDataSum())
+		L.append(recoveredBlock)
+		
 		ibfLost.delete(ibfLost.cells[cIndex].getDataSum(), secret, N, g, cIndex)
 		lostIndices.remove(blockIndex)
 		
 		lostPureCells = ibfLost.getPureCells()
 		pureCellsNum = len(lostPureCells)
-	#for block in L:
-		#print block.getDecimalIndex()
-	#print L[0].getDecimalIndex()
-	#print L[1].getDecimalIndex()
+	
 		
-	print "Entering Check..."
+	print "Recovery Check..."
 	for cIndex in xrange(ibfLost.m):
 		if ibfLost.cells[cIndex].getCount() != 0:
 			print "Failed to recover", "Reason: ", "Count", cIndex
@@ -66,7 +57,6 @@ def recover(ibfLost, lostIndices, secret, N, g):
 			print "Failed to recover", "Reason: ", "Datasum", cIndex
 			return None
 			
-		#print ibfLost.cells[cIndex].hashProd
 		if  ibfLost.cells[cIndex].getHashProd() !=1:
 			print "Failed to recover", "Reason: ", "HashProd", cIndex
 			print cIndex
