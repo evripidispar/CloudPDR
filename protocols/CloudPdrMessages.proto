@@ -6,6 +6,15 @@ message PublicKey {
 }
 
 
+message BlockDisk {
+	required bytes blk=1;
+}
+
+message BlockCollectionDisk {
+	required int32 blockBitSize=1;
+	repeated BlockDisk collection=2;
+}
+
 message Block {
 	required string index = 1;
 	required bytes data = 2;

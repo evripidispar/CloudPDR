@@ -23,6 +23,24 @@ def createBlockProtoBufs(blocks, blockSize):
     return blockCollection
 
 
+def createBlockProtoBufsDisk(blocks, blockSize):
+    blockCollection = CloudPdrMessages_pb2.BlockCollectionDisk()
+    blockCollection.blockBitSize = blockSize*8
+    for b in blocks:
+        pbfBlk = blockCollection.collection.add()
+        pbfBlk.blk = b.data.tobytes()
+        
+    return blockCollection
+
+
+def readBlockCollectionFromDisk(filename):
+    print "Reading block collection from disk (", filename, ")"
+    bc = CloudPdrMessages_pb2.BlockCollectionDisk()
+    fp = open(filename,"rb")
+    bc.ParseFromString(fp.read())
+    fp.close()
+    return bc
+
 def writeBlockCollectionToFile(filename, blkCollection):
     print "Writing Block Collection to File"
     fp = open(filename, "wb")
@@ -37,9 +55,18 @@ def readBlockCollectionFromFile(filename):
     fp.close()
     return blockCollection
 
-def listBlocksInCollection(blockCollection):
-    for blk in blockCollection.blocks:
-        print int(blk.index, 2)
+def listBlocksInCollection(blocks):
+    for blk in blocks:
+        print blk.getDecimalIndex()
+
+def blockCollectionDisk2BlockObject(blockCollection):
+    b = []
+    bSize = blockCollection.blockBitSize
+    for i in blockCollection.collection:
+        bObj = Block(0,bSize, True)
+        bObj.buildBlockFromProtoBufDisk(i.blk)
+        b.append(bObj)
+    return b
 
 def blockCollection2BlockObject(blockCollection):
     b = []
@@ -87,7 +114,8 @@ def main():
 
         start = datetime.datetime.now()
         blocks = createBlocks(args.numBlocks, args.dataSize)
-        blkCol = createBlockProtoBufs(blocks, args.dataSize)
+        #blkCol = createBlockProtoBufs(blocks, args.dataSize)
+        blkCol = createBlockProtoBufsDisk(blocks, args.dataSize)
         writeBlockCollectionToFile(args.fpW, blkCol)
         end = datetime.datetime.now()
         
@@ -95,8 +123,10 @@ def main():
         
         if TEST:
             start = datetime.datetime.now()
-            blkCol = readBlockCollectionFromFile(args.fpW)
-            #listBlocksInCollection(blkCol)
+            #blkCol = readBlockCollectionFromFile(args.fpW)
+            blkCol = readBlockCollectionFromDisk(args.fpW)
+            blocks = blockCollectionDisk2BlockObject(blkCol)
+            listBlocksInCollection(blocks)
             end = datetime.datetime.now()
             print "Time passed Reading: ", end-start
             

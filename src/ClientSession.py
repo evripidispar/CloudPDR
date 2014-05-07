@@ -112,7 +112,7 @@ class ClientSession(object):
                 combinedLostTags[k] = 1
                 
             for v in val:
-                print "Indeces in Qset", v
+                print "Indices in Qset", v
                 binV  = ibf.binPadLostIndex(v)
                 aBlk = pickPseudoRandomTheta(self.challenge, binV)
                 aI = number.bytes_to_long(aBlk)

@@ -3,12 +3,13 @@ from bitarray import bitarray
 BINDEX_LEN = 32
 
 class Block(object):
-	def __init__(self, blockId, dataBitSize):
-		util_id = self.idToBinary(blockId)
-		id_len = BINDEX_LEN - len(util_id)
-		self.data = bitarray(id_len*'0')
-		self.data.extend(util_id)
-		self.data.extend(dataBitSize*'0')
+	def __init__(self, blockId, dataBitSize, fromDisk=False):
+		if fromDisk == False:
+			util_id = self.idToBinary(blockId)
+			id_len = BINDEX_LEN - len(util_id)
+			self.data = bitarray(id_len*'0')
+			self.data.extend(util_id)
+			self.data.extend(dataBitSize*'0')
 		self.dataBitsize = dataBitSize
 
 	def buildBlockFromProtoBuf(self, index, data, dataBitSize):
@@ -17,6 +18,9 @@ class Block(object):
 		self.data.extend(data)
 		self.dataBitsize = dataBitSize
 			
+	def buildBlockFromProtoBufDisk(self, data):
+		self.data = bitarray()
+		self.data.frombytes(data)
 
 	def idToBinary(self, blockId):
 		bit_id = "{0:b}".format(blockId)
