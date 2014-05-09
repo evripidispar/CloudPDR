@@ -43,3 +43,16 @@ class TagGenerator(object):
         return tc
     
     
+def singleW(block, u):
+    wBlk = str(u)+block.getStringIndex()
+    return wBlk
+
+def singleTag(w, block, g, d, n):
+        h = SHA256.new()
+        bLong = number.bytes_to_long(block.data.tobytes())
+        powG = pow(g,bLong,n)
+        h.update(str(w))
+        wHash = number.bytes_to_long(h.digest())
+        wGmodN = pow((wHash*powG),1, n)
+        tag = pow(wGmodN, d, n)
+        return tag

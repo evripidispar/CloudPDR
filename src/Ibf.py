@@ -1,6 +1,7 @@
 from HashFunc import *
 from Cell import Cell
 
+
 class Ibf(object):
 	
 	BLOCK_INDEX_LEN=32

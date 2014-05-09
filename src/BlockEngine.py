@@ -127,6 +127,14 @@ def createWriteFilesystem2Disk(blkNum, blkSz, indexSize, filename):
         
     fp.close()
     
+def getFsDetailsStream(fsFilename):
+    fp=open(fsFilename,"rb")
+    fsSize = fp.read(4)
+    fsSize, = struct.unpack("i", fsSize)
+    fs = CloudPdrMessages_pb2.Filesystem()
+    fs.ParseFromString(fp.read(int(fsSize)))
+    return (fs, fp)
+
     
 def readFileSystem(fsFilename):
     #DEBUG function
@@ -153,8 +161,12 @@ def readFileSystem(fsFilename):
     fp.close()
     
     
-    
-    
+def BlockDisk2Block(serialized, blkSz):
+    bPbf = CloudPdrMessages_pb2.BlockDisk()
+    bPbf.ParseFromString(serialized)
+    block = Block(0,blkSz,True)
+    block.buildBlockFromProtoBuf(bPbf.index, bPbf.dat)
+    return block
 
 
 

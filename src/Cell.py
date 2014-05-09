@@ -2,6 +2,7 @@ from Crypto.Util import number
 from bitarray import bitarray
 from Block import *
 from CryptoUtil import apply_f
+import multiprocessing as mp
 
 class Cell(object):
 	def __init__(self, id, dataBitSize):
@@ -9,6 +10,7 @@ class Cell(object):
 		self.dataSum = Block(id, dataBitSize)
 		self.hashProd = 1
 		self.f = 0
+		self.lock = mp.Lock()
 
 	def cellFromProtobuf(self, count, hashProd, data):
 		self.count = count
@@ -40,7 +42,9 @@ class Cell(object):
 
 
 	def add(self, block, secret, N, g, keepHashProdOne=False):
+		self.lock.acquire()
 		self.count += 1
+		self.lock.release()
 		self.dataSum.addBlockData(block)
 		
 		if keepHashProdOne == False:

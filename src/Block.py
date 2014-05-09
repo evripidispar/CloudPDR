@@ -12,11 +12,10 @@ class Block(object):
 			self.data.extend(dataBitSize*'0')
 		self.dataBitsize = dataBitSize
 
-	def buildBlockFromProtoBuf(self, index, data, dataBitSize):
+	def buildBlockFromProtoBuf(self, index, data):
 		self.data = bitarray()
-		self.data.extend(str(index))
-		self.data.extend(data)
-		self.dataBitsize = dataBitSize
+		self.data.frombytes(index)
+		self.data.frombytes(data)
 			
 	def buildBlockFromProtoBufDisk(self, data):
 		self.data = bitarray()

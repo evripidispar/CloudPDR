@@ -18,8 +18,16 @@ from math import log
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 from ExpTimer import ExpTimer
+import multiprocessing as mp
+from TagGenerator import singleTag
+from TagGenerator import singleW
+import struct
+
 
 LOST_BLOCKS = 6
+fileLock = mp.Lock()
+W = {}
+Tags = {}
 
 def produceClientId():
     h = SHA256.new()
@@ -177,6 +185,48 @@ def processClientMessages(incoming, session, cltTimer, lostNum=None):
         res = processServerProof(cpdrMsg, session, cltTimer)
         print res
 
+
+def workerTask(fsFp, bytesPerWorker, blockPbSz, taskNum, blkSize, u,g,d,n):
+    try:
+        print "WorkerBefore-acq"
+        fileLock.acquire()
+        print bytesPerWorker
+        blockData = fsFp.read(bytesPerWorker)
+        print len(blockData)
+        fileLock.release()
+        print "WorkerBefore-rel"
+    except Exception as inst:
+        print inst
+    
+    wSlice={}
+    tagSlice={}
+    
+    start=0
+    end=0
+    indexKey = None
+    for i in taskNum:
+        blk = BlockEngine.BlockDisk2Block(blockData[start:end], blkSize)
+        if start==0:
+            indexKey = blk.getDecimalIndex()
+            wSlice[indexKey]= []
+            tagSlice[indexKey]= []
+        w = singleTag(blk,u)
+        tag = singleTag(w, blk, g, d, n)
+        wSlice[indexKey].append(w)
+        tagSlice[indexKey].append(tag)
+        
+        start+=blockPbSz
+        end+=blockPbSz
+    return (wSlice, tagSlice)
+        
+
+def keepWTags(wSlice, tagSlice):
+    for k in wSlice.keys():
+        W[k]=wSlice[k]
+        
+    for k in tagSlice.keys():
+        Tags[k]=tagSlice[k]
+
 def main():
     
     p = argparse.ArgumentParser(description='Driver for IBF')
@@ -200,6 +250,9 @@ def main():
     
     p.add_argument('-l', dest='lostNum', action='store', type=int, default=5,
                    help='Number of Lost Packets')
+    
+    p.add_argument('--task', dest='task', action='store', type=int, default=100,
+                   help='Number of blocks per worker for the W,Tag calculation')
    
 
     args = p.parse_args()
@@ -218,22 +271,10 @@ def main():
     #Generate client id
     cltId = produceClientId()
        
-    
+   
     #Create current session
     pdrSes = PdrSession(cltId)
     pdrSes.addDataBitSize(args.size)
-    
-    # Read blocks from Serialized file
-    blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
-    pdrSes.blocks = BlockEngine.blockCollection2BlockObject(blocks)
-    
-    
-    #Get Ibf len based on delta, k and number of blocks
-    
-    ibfLength =  floor(log(len(pdrSes.blocks),2)) 
-    ibfLength *= (args.hashNum+1)
-    ibfLength = int(ibfLength)
-    pdrSes.addibfLength (ibfLength)
     
     
     #Read the generator from File
@@ -243,7 +284,6 @@ def main():
     fp.close() 
     pdrSes.addG(g)
     
-   
     #Generate key class
     pdrSes.sesKey = CloudPDRKey(args.n, g)
     secret = pdrSes.sesKey.getSecretKeyFields()
@@ -251,99 +291,138 @@ def main():
     pubPB = pdrSes.sesKey.getProtoBufPubKey()
     
     
-    #Register client timers
-    cltTimer = ExpTimer()
-    cltTimer.registerSession(cltId)
-    cltTimer.registerTimer(cltId, "W-Time")
-    cltTimer.registerTimer(cltId, "Tag-Time")
-    cltTimer.registerTimer(cltId, "Pop-Clt-Ibf")
-    cltTimer.registerTimer(cltId, "Init-Create")
-    cltTimer.registerTimer(cltId, "Init-InitAck-RTT")
-    cltTimer.registerTimer(cltId, "LossMessage-Create")
-    cltTimer.registerTimer(cltId, "ChallengeMsg-Create")
-    cltTimer.registerTimer(cltId, "ProcProof-Clt-SubSet")
-    cltTimer.registerTimer(cltId, "ProcProof-Clt-Te")
-    cltTimer.registerTimer(cltId, "ProcProof-Clt-LostSum")
-    cltTimer.registerTimer(cltId, "ProcProof-CreateIbf-From-ProtoBuf")
-    cltTimer.registerTimer(cltId, "ProcProof-Recover")
-    cltTimer.registerTimer(cltId, "ProcProof-SubtractIbf")
-    cltTimer.registerTimer(cltId, "Loss-LossAck-RTT")
-    cltTimer.registerTimer(cltId, "Challenge-Proof-RTT")
-    
-    #Create a tag generator
-    tGen = TagGenerator()
-    
-    #Create Wi
-    cltTimer.startTimer(cltId,"W-Time")
-    pdrSes.W = tGen.getW(pdrSes.blocks, secret["u"])
-    cltTimer.endTimer(cltId, "W-Time")
+    fp=open(args.blkFp,"rb")
+    fsSize = fp.read(4)
+    fsSize, = struct.unpack("i", fsSize)
+    fs = CloudPdrMessages_pb2.Filesystem()
+    fs.ParseFromString(fp.read(int(fsSize)))
     
     
-    #Create Tags
-    cltTimer.startTimer(cltId, "Tag-Time")
-    T = tGen.getTags(pdrSes.W, g, pdrSes.blocks, secret["d"], pdrSes.sesKey.key.n)
-    cltTimer.endTimer(cltId, "Tag-Time")
-    tagCollection = tGen.createTagProtoBuf(T)
-   
- 
-    cltTimer.printTimer(cltId, "W-Time")  
-    cltTimer.printTimer(cltId, "Tag-Time")
- 
- 
-    #Create the local state
-    clientIbf = Ibf(args.hashNum, ibfLength)
-    clientIbf.zero(blocks.blockBitSize)
+    #fs, fsFp = BlockEngine.getFsDetailsStream(args.blkFp)
+    totalBlockBytes = fs.pbSize*fs.numBlk
+    bytesPerWorker = (args.task*totalBlockBytes)/ fs.numBlk
+    poolIterations = fs.numBlk / args.task
+    pool = mp.Pool()
     
-    cltTimer.startTimer(cltId, "Pop-Clt-Ibf")
-    for blk in pdrSes.blocks:
-        clientIbf.insert(blk, None, pdrSes.sesKey.key.n, g, True)
-    cltTimer.endTimer(cltId, "Pop-Clt-Ibf")
- 
-    pdrSes.addState(clientIbf)
+    #workerTask(fsFp, bytesPerWorker, blockPbSz, taskNum, blkSize, u,g,d,n):
+       
+    arguments = (fp, bytesPerWorker, 
+                     fs.pbSize, args.task, 
+                     fs.datSize, secret["u"], g, 
+                     secret["d"],pdrSes.sesKey.key.n)
+        
+    for i in xrange(1):
+        pool.apply_async(workerTask, args=arguments ,callback = keepWTags)
+    pool.close()
+    pool.join()
+    print W
     
- 
-    #Construct InitMsg
-    log2Blocks = log(len(pdrSes.blocks), 2)
-    log2Blocks = floor(log2Blocks)
-    delta = int(log2Blocks)
-    pdrSes.addDelta(delta)
-    
-    
-    cltTimer.startTimer(cltId, "Init-Create")
-    initMessage = MessageUtil.constructInitMessage(pubPB, 
-                                                   args.blkFp,
-                                                   tagCollection,
-                                                   cltId,
-                                                   args.hashNum,
-                                                   delta)
-    cltTimer.endTimer(cltId, "Init-Create")
-    clt = RpcPdrClient()    
-    
-    print "Sending Init..."
-    
-    cltTimer.startTimer(cltId, "Init-InitAck-RTT")
-    inComing = clt.rpc("127.0.0.1", 9090, initMessage)
-    cltTimer.endTimer(cltId, "Init-InitAck-RTT")
-    
-    
-    outgoing = processClientMessages(inComing, pdrSes, cltTimer, args.lostNum)
-    
-    
-    print "Sending Lost message"
-    cltTimer.startTimer(cltId, "Loss-LossAck-RTT")
-    incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    cltTimer.endTimer(cltId, "Loss-LossAck-RTT")
-    
-    outgoing = processClientMessages(incoming, pdrSes, cltTimer)
-    
-    print "Sending Challenge ...."
-    cltTimer.startTimer(cltId, "Challenge-Proof-RTT")
-    incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-    cltTimer.endTimer(cltId, "Challenge-Proof-RTT")
-    processClientMessages(incoming, pdrSes, cltTimer)
-    
-
-    cltTimer.printSessionTimers(cltId)
+#     # Read blocks from Serialized file
+#     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
+#     pdrSes.blocks = BlockEngine.blockCollection2BlockObject(blocks)
+#     
+#     
+#     #Get Ibf len based on delta, k and number of blocks
+#     
+#     ibfLength =  floor(log(len(pdrSes.blocks),2)) 
+#     ibfLength *= (args.hashNum+1)
+#     ibfLength = int(ibfLength)
+#     pdrSes.addibfLength (ibfLength)
+#     
+#     
+#     #Register client timers
+#     cltTimer = ExpTimer()
+#     cltTimer.registerSession(cltId)
+#     cltTimer.registerTimer(cltId, "W-Time")
+#     cltTimer.registerTimer(cltId, "Tag-Time")
+#     cltTimer.registerTimer(cltId, "Pop-Clt-Ibf")
+#     cltTimer.registerTimer(cltId, "Init-Create")
+#     cltTimer.registerTimer(cltId, "Init-InitAck-RTT")
+#     cltTimer.registerTimer(cltId, "LossMessage-Create")
+#     cltTimer.registerTimer(cltId, "ChallengeMsg-Create")
+#     cltTimer.registerTimer(cltId, "ProcProof-Clt-SubSet")
+#     cltTimer.registerTimer(cltId, "ProcProof-Clt-Te")
+#     cltTimer.registerTimer(cltId, "ProcProof-Clt-LostSum")
+#     cltTimer.registerTimer(cltId, "ProcProof-CreateIbf-From-ProtoBuf")
+#     cltTimer.registerTimer(cltId, "ProcProof-Recover")
+#     cltTimer.registerTimer(cltId, "ProcProof-SubtractIbf")
+#     cltTimer.registerTimer(cltId, "Loss-LossAck-RTT")
+#     cltTimer.registerTimer(cltId, "Challenge-Proof-RTT")
+#     
+#     #Create a tag generator
+#     tGen = TagGenerator()
+#     
+#     #Create Wi
+#     cltTimer.startTimer(cltId,"W-Time")
+#     pdrSes.W = tGen.getW(pdrSes.blocks, secret["u"])
+#     cltTimer.endTimer(cltId, "W-Time")
+#     
+#     
+#     #Create Tags
+#     cltTimer.startTimer(cltId, "Tag-Time")
+#     T = tGen.getTags(pdrSes.W, g, pdrSes.blocks, secret["d"], pdrSes.sesKey.key.n)
+#     cltTimer.endTimer(cltId, "Tag-Time")
+#     tagCollection = tGen.createTagProtoBuf(T)
+#    
+#  
+#     cltTimer.printTimer(cltId, "W-Time")  
+#     cltTimer.printTimer(cltId, "Tag-Time")
+#  
+#  
+#     #Create the local state
+#     clientIbf = Ibf(args.hashNum, ibfLength)
+#     clientIbf.zero(blocks.blockBitSize)
+#     
+#     cltTimer.startTimer(cltId, "Pop-Clt-Ibf")
+#     for blk in pdrSes.blocks:
+#         clientIbf.insert(blk, None, pdrSes.sesKey.key.n, g, True)
+#     cltTimer.endTimer(cltId, "Pop-Clt-Ibf")
+#  
+#     pdrSes.addState(clientIbf)
+#     
+#  
+#     #Construct InitMsg
+#     log2Blocks = log(len(pdrSes.blocks), 2)
+#     log2Blocks = floor(log2Blocks)
+#     delta = int(log2Blocks)
+#     pdrSes.addDelta(delta)
+#     
+#     
+#     cltTimer.startTimer(cltId, "Init-Create")
+#     initMessage = MessageUtil.constructInitMessage(pubPB, 
+#                                                    args.blkFp,
+#                                                    tagCollection,
+#                                                    cltId,
+#                                                    args.hashNum,
+#                                                    delta)
+#     cltTimer.endTimer(cltId, "Init-Create")
+#     clt = RpcPdrClient()    
+#     
+#     print "Sending Init..."
+#     
+#     cltTimer.startTimer(cltId, "Init-InitAck-RTT")
+#     inComing = clt.rpc("127.0.0.1", 9090, initMessage)
+#     cltTimer.endTimer(cltId, "Init-InitAck-RTT")
+#     
+#     
+#     outgoing = processClientMessages(inComing, pdrSes, cltTimer, args.lostNum)
+#     
+#     
+#     print "Sending Lost message"
+#     cltTimer.startTimer(cltId, "Loss-LossAck-RTT")
+#     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
+#     cltTimer.endTimer(cltId, "Loss-LossAck-RTT")
+#     
+#     outgoing = processClientMessages(incoming, pdrSes, cltTimer)
+#     
+#     print "Sending Challenge ...."
+#     cltTimer.startTimer(cltId, "Challenge-Proof-RTT")
+#     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
+#     cltTimer.endTimer(cltId, "Challenge-Proof-RTT")
+#     processClientMessages(incoming, pdrSes, cltTimer)
+#     
+# 
+#     cltTimer.printSessionTimers(cltId)
 
 
 
