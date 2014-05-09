@@ -7,6 +7,7 @@ def main():
     blockSizes = [512, 1024, 2048, 4096, 8192, 16384, 32768]
     blockNumbers = [100, 1000, 10000, 100000, 500000]
     
+    
     desc = "BlockEngineTalk: orders BlockEngine.py to create files \n"
     desc += "of different block sizes and different number of blocks"
     p = argparse.ArgumentParser(description=desc)
@@ -40,7 +41,6 @@ def main():
     et = ExpTimer()
     et.registerSession("writing")
     et.registerTimer("writing", "write")
-    prevNum = None
     for bNum in blockNumbers:
         if bNum > args.maxBlock:
             continue
@@ -48,7 +48,6 @@ def main():
         for bSize in blockSizes:
             if bSize > args.maxSize:
                 continue
-            
             
             fName = "blocks/blk_%d_blocks_%d_sizeBytes.dat" % (bNum, bSize)
             et.startTimer("writing", "write")

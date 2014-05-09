@@ -8,7 +8,6 @@ class Block(object):
 			util_id = self.idToBinary(blockId)
 			id_len = BINDEX_LEN - len(util_id)
 			self.data = bitarray(id_len*'0')
-			self.data2 = None
 			self.data.extend(util_id)
 			self.data.extend(dataBitSize*'0')
 		self.dataBitsize = dataBitSize
@@ -23,15 +22,13 @@ class Block(object):
 		self.data = bitarray()
 		self.data.frombytes(data)
 
+
 	def idToBinary(self, blockId):
 		bit_id = "{0:b}".format(blockId)
 		return bit_id
 
 	def setBlockData(self, blockData):
 		self.data = blockData.data
-	
-	def setRandomBlockData2(self, data):
-		self.data2 = data
 	
 	def setRandomBlockData(self, blockData):
 		self.data.extend(blockData)

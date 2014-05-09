@@ -8,7 +8,7 @@ from bitarray import bitarray
 import struct
 from ExpTimer import ExpTimer
 import copy
-import numpy as np
+
 
 TEST = False
 
@@ -84,27 +84,36 @@ def blockCollection2BlockObject(blockCollection):
 
 
 ### # # # # # Filesystem functions  ## # # # # # # # # ##  ## 
+BINDEX_LEN = 32
+
+def getPaddedBlockId(blockId):
+        bit_id = "{0:b}".format(blockId)
+        id_len = BINDEX_LEN - len(bit_id)
+        bit_id ='0'*id_len+bit_id
+        index=bitarray()
+        index.extend(bit_id)
+        return index.tobytes()
+        
 
 def createWriteFilesystem2Disk(blkNum, blkSz, indexSize, filename):
+   
     fs = CloudPdrMessages_pb2.Filesystem()
     fs.numBlk = blkNum
     fs.index = indexSize
     fs.datSize = blkSz*8
     
     fp = open(filename, "wb")
-    xrangeObj = None
     for i in xrange(blkNum):
         if i == 0:
-            blk = BlockUtil.createSingleBlock(i, blkSz)
-            pseudoData = copy.deepcopy(blk.data2)
-            xrangeObj = xrange(len(pseudoData))
+            blk = BlockUtil.createSingleBlock(blkSz)
+            pseudoData = copy.deepcopy(blk)
         else:
-            BlockUtil.createSingleBlock(i, blkSz, pseudoData, xrangeObj, 8)
+            blk = BlockUtil.createSingleBlock(blkSz, pseudoData, 8)
             
         blkPbf = CloudPdrMessages_pb2.BlockDisk()
-        #reshaped = np.reshape(blk.data2, (8,len(blk.data2)/8))
         
-        blkPbf.blk = (BlockUtil.npArray2bitArray(blk.data2)).tobytes()
+        blkPbf.index= getPaddedBlockId(i)
+        blkPbf.dat= (BlockUtil.npArray2bitArray(blk)).tobytes()
         blkPbf = blkPbf.SerializeToString()
         if i == 0:
             fs.pbSize=len(blkPbf)

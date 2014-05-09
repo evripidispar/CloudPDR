@@ -10,29 +10,18 @@ def npArray2bitArray(npArray):
 	bit.pack(npArray.tostring())
 	return bit
 
-def createSingleBlock(index, dataSize, pseudoData=None, xrangeObj=None, bits=None):
-	newBlock = Block(index, 0)
-	data = bitarray()
-	if pseudoData == None:
-		data = np.random.rand(dataSize*8) < 0.5
-		#byteData = Random.get_random_bytes(dataSize)
-		#data.frombytes(byteData)
-	else:
-		data = createSinglePseudoRandomData(pseudoData, xrangeObj, bits)
-	
-	newBlock.setRandomBlockData2(data)
-	return newBlock
 
-def createSinglePseudoRandomData(data, xrangeObj, bits):
-	smpl = random.sample(xrangeObj, bits)
-	data[smpl]=~data[smpl]
-# 	for c in smpl:
-# 		if data[c] == True:
-# 			data[c]=False
-# 		else:
-# 			data[c]=True
-# 	return data
+
+def createSingleBlock(dataSize, pseudoData=None, bits=None):
+	data = pseudoData
+	if data == None:
+		data = np.random.randint(2, size=dataSize)
+	else:
 		
+		smpl = np.random.random_integers(dataSize-1, size=bits)
+		data[smpl]=~data[smpl]
+	return data
+
 
 
 def blockCreatorMemory(howMany, dataSize):

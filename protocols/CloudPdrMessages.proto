@@ -6,7 +6,8 @@ message PublicKey {
 }
 
 message BlockDisk {
-	required bytes blk=1;
+	required bytes index=1;
+	required bytes dat=2;
 }
 
 message BlockDisk2 {
