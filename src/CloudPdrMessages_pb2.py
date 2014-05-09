@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='protocols/CloudPdrMessages.proto',
   package='',
-  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"\'\n\tBlockDisk\x12\r\n\x05index\x18\x01 \x02(\x0c\x12\x0b\n\x03\x64\x61t\x18\x02 \x02(\x0c\"\x1a\n\nBlockDisk2\x12\x0c\n\x04\x62its\x18\x01 \x03(\x08\"L\n\nFilesystem\x12\x0e\n\x06pbSize\x18\x01 \x02(\x05\x12\x0e\n\x06numBlk\x18\x02 \x02(\x05\x12\r\n\x05index\x18\x03 \x02(\x05\x12\x0f\n\x07\x64\x61tSize\x18\x04 \x02(\x05\"K\n\x13\x42lockCollectionDisk\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x1e\n\ncollection\x18\x02 \x03(\x0b\x32\n.BlockDisk\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\"\x1d\n\rTagCollection\x12\x0c\n\x04tags\x18\x01 \x03(\t\"h\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x12\n\nfilesystem\x18\x02 \x02(\t\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\x12\r\n\x05\x64\x65lta\x18\x04 \x02(\x05\x12\t\n\x01k\x18\x05 \x02(\x05\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"H\n\x04\x43\x65ll\x12\r\n\x05\x63ount\x18\x01 \x02(\x05\x12\x10\n\x08hashprod\x18\x02 \x02(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x02(\t\x12\x11\n\tcellIndex\x18\x04 \x02(\x05\"\x1b\n\x03Ibf\x12\x14\n\x05\x63\x65lls\x18\x01 \x03(\x0b\x32\x05.Cell\" \n\x08LTagPair\x12\t\n\x01k\x18\x01 \x02(\x05\x12\t\n\x01v\x18\x02 \x02(\t\"(\n\x0cLostTagPairs\x12\x18\n\x05pairs\x18\x01 \x03(\x0b\x32\t.LTagPair\"\x82\x01\n\x05Proof\x12\x13\n\x0b\x63ombinedSum\x18\x01 \x02(\t\x12\x13\n\x0b\x63ombinedTag\x18\x02 \x02(\t\x12\x19\n\x0bserverState\x18\x03 \x02(\x0b\x32\x04.Ibf\x12\x13\n\x0blostIndeces\x18\x04 \x03(\x05\x12\x1f\n\x08lostTags\x18\x05 \x01(\x0b\x32\r.LostTagPairs\"\"\n\x04Lost\x12\t\n\x01L\x18\x01 \x03(\x05\x12\x0f\n\x07lossNum\x18\x02 \x01(\x05\"\x16\n\x07LostAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\xa0\x02\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\x12\x13\n\x04lost\x18\x06 \x01(\x0b\x32\x05.Lost\x12\x16\n\x04lack\x18\x07 \x01(\x0b\x32\x08.LostAck\x12\r\n\x05\x63ltId\x18\x08 \x01(\t\"S\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03\x12\x08\n\x04LOSS\x10\x04\x12\x0c\n\x08LOSS_ACK\x10\x05')
+  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"\'\n\tBlockDisk\x12\r\n\x05index\x18\x01 \x02(\x0c\x12\x0b\n\x03\x64\x61t\x18\x02 \x02(\x0c\"L\n\nFilesystem\x12\x0e\n\x06pbSize\x18\x01 \x02(\x05\x12\x0e\n\x06numBlk\x18\x02 \x02(\x05\x12\r\n\x05index\x18\x03 \x02(\x05\x12\x0f\n\x07\x64\x61tSize\x18\x04 \x02(\x05\"K\n\x13\x42lockCollectionDisk\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x1e\n\ncollection\x18\x02 \x03(\x0b\x32\n.BlockDisk\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\"\x1d\n\rTagCollection\x12\x0c\n\x04tags\x18\x01 \x03(\t\"h\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x12\n\nfilesystem\x18\x02 \x02(\t\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\x12\r\n\x05\x64\x65lta\x18\x04 \x02(\x05\x12\t\n\x01k\x18\x05 \x02(\x05\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"H\n\x04\x43\x65ll\x12\r\n\x05\x63ount\x18\x01 \x02(\x05\x12\x10\n\x08hashprod\x18\x02 \x02(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x02(\t\x12\x11\n\tcellIndex\x18\x04 \x02(\x05\"\x1b\n\x03Ibf\x12\x14\n\x05\x63\x65lls\x18\x01 \x03(\x0b\x32\x05.Cell\" \n\x08LTagPair\x12\t\n\x01k\x18\x01 \x02(\x05\x12\t\n\x01v\x18\x02 \x02(\t\"(\n\x0cLostTagPairs\x12\x18\n\x05pairs\x18\x01 \x03(\x0b\x32\t.LTagPair\"\x82\x01\n\x05Proof\x12\x13\n\x0b\x63ombinedSum\x18\x01 \x02(\t\x12\x13\n\x0b\x63ombinedTag\x18\x02 \x02(\t\x12\x19\n\x0bserverState\x18\x03 \x02(\x0b\x32\x04.Ibf\x12\x13\n\x0blostIndeces\x18\x04 \x03(\x05\x12\x1f\n\x08lostTags\x18\x05 \x01(\x0b\x32\r.LostTagPairs\"\"\n\x04Lost\x12\t\n\x01L\x18\x01 \x03(\x05\x12\x0f\n\x07lossNum\x18\x02 \x01(\x05\"\x16\n\x07LostAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\xa0\x02\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\x12\x13\n\x04lost\x18\x06 \x01(\x0b\x32\x05.Lost\x12\x16\n\x04lack\x18\x07 \x01(\x0b\x32\x08.LostAck\x12\r\n\x05\x63ltId\x18\x08 \x01(\t\"S\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03\x12\x08\n\x04LOSS\x10\x04\x12\x0c\n\x08LOSS_ACK\x10\x05')
 
 
 
@@ -50,8 +50,8 @@ _CLOUDPDRMSG_MSGTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1169,
-  serialized_end=1252,
+  serialized_start=1141,
+  serialized_end=1224,
 )
 
 
@@ -125,34 +125,6 @@ _BLOCKDISK = _descriptor.Descriptor(
 )
 
 
-_BLOCKDISK2 = _descriptor.Descriptor(
-  name='BlockDisk2',
-  full_name='BlockDisk2',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='bits', full_name='BlockDisk2.bits', index=0,
-      number=1, type=8, cpp_type=7, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  extension_ranges=[],
-  serialized_start=112,
-  serialized_end=138,
-)
-
-
 _FILESYSTEM = _descriptor.Descriptor(
   name='Filesystem',
   full_name='Filesystem',
@@ -197,8 +169,8 @@ _FILESYSTEM = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=140,
-  serialized_end=216,
+  serialized_start=112,
+  serialized_end=188,
 )
 
 
@@ -232,8 +204,8 @@ _BLOCKCOLLECTIONDISK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=218,
-  serialized_end=293,
+  serialized_start=190,
+  serialized_end=265,
 )
 
 
@@ -267,8 +239,8 @@ _BLOCK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=295,
-  serialized_end=331,
+  serialized_start=267,
+  serialized_end=303,
 )
 
 
@@ -302,8 +274,8 @@ _BLOCKCOLLECTION = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=333,
-  serialized_end=396,
+  serialized_start=305,
+  serialized_end=368,
 )
 
 
@@ -330,8 +302,8 @@ _TAGCOLLECTION = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=398,
-  serialized_end=427,
+  serialized_start=370,
+  serialized_end=399,
 )
 
 
@@ -386,8 +358,8 @@ _INIT = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=429,
-  serialized_end=533,
+  serialized_start=401,
+  serialized_end=505,
 )
 
 
@@ -414,8 +386,8 @@ _INITACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=535,
-  serialized_end=557,
+  serialized_start=507,
+  serialized_end=529,
 )
 
 
@@ -442,8 +414,8 @@ _CHALLENGE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=559,
-  serialized_end=589,
+  serialized_start=531,
+  serialized_end=561,
 )
 
 
@@ -491,8 +463,8 @@ _CELL = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=591,
-  serialized_end=663,
+  serialized_start=563,
+  serialized_end=635,
 )
 
 
@@ -519,8 +491,8 @@ _IBF = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=665,
-  serialized_end=692,
+  serialized_start=637,
+  serialized_end=664,
 )
 
 
@@ -554,8 +526,8 @@ _LTAGPAIR = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=694,
-  serialized_end=726,
+  serialized_start=666,
+  serialized_end=698,
 )
 
 
@@ -582,8 +554,8 @@ _LOSTTAGPAIRS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=728,
-  serialized_end=768,
+  serialized_start=700,
+  serialized_end=740,
 )
 
 
@@ -638,8 +610,8 @@ _PROOF = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=771,
-  serialized_end=901,
+  serialized_start=743,
+  serialized_end=873,
 )
 
 
@@ -673,8 +645,8 @@ _LOST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=903,
-  serialized_end=937,
+  serialized_start=875,
+  serialized_end=909,
 )
 
 
@@ -701,8 +673,8 @@ _LOSTACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=939,
-  serialized_end=961,
+  serialized_start=911,
+  serialized_end=933,
 )
 
 
@@ -779,8 +751,8 @@ _CLOUDPDRMSG = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=964,
-  serialized_end=1252,
+  serialized_start=936,
+  serialized_end=1224,
 )
 
 _BLOCKCOLLECTIONDISK.fields_by_name['collection'].message_type = _BLOCKDISK
@@ -801,7 +773,6 @@ _CLOUDPDRMSG.fields_by_name['lack'].message_type = _LOSTACK
 _CLOUDPDRMSG_MSGTYPE.containing_type = _CLOUDPDRMSG;
 DESCRIPTOR.message_types_by_name['PublicKey'] = _PUBLICKEY
 DESCRIPTOR.message_types_by_name['BlockDisk'] = _BLOCKDISK
-DESCRIPTOR.message_types_by_name['BlockDisk2'] = _BLOCKDISK2
 DESCRIPTOR.message_types_by_name['Filesystem'] = _FILESYSTEM
 DESCRIPTOR.message_types_by_name['BlockCollectionDisk'] = _BLOCKCOLLECTIONDISK
 DESCRIPTOR.message_types_by_name['Block'] = _BLOCK
@@ -830,12 +801,6 @@ class BlockDisk(_message.Message):
   DESCRIPTOR = _BLOCKDISK
 
   # @@protoc_insertion_point(class_scope:BlockDisk)
-
-class BlockDisk2(_message.Message):
-  __metaclass__ = _reflection.GeneratedProtocolMessageType
-  DESCRIPTOR = _BLOCKDISK2
-
-  # @@protoc_insertion_point(class_scope:BlockDisk2)
 
 class Filesystem(_message.Message):
   __metaclass__ = _reflection.GeneratedProtocolMessageType

@@ -10,9 +10,6 @@ message BlockDisk {
 	required bytes dat=2;
 }
 
-message BlockDisk2 {
-	repeated bool bits=1;
-}
 
 message Filesystem {
 	required int32 pbSize=1;

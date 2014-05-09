@@ -147,7 +147,7 @@ def readFileSystem(fsFilename):
         
         c.ParseFromString(fp.read(fs.pbSize))
         bb = bitarray()
-        bb.frombytes(c.blk)
+        bb.frombytes(c.index)
         print bb[0:32]
         
     fp.close()
@@ -195,9 +195,15 @@ def main():
         et = ExpTimer()
         et.registerSession("writing")
         et.registerTimer("writing", "write")
+        et.registerTimer("writing", "read")
         et.startTimer("writing", "write")
         createWriteFilesystem2Disk(args.numBlocks, args.dataSize, 32, args.fpW)
         et.endTimer("writing", "write")
+        
+        
+        et.startTimer("writing", "read")
+        et.endTimer("writing","read")
+        readFileSystem(args.fpW)
         et.printSessionTimers("writing")
                     
     if args.fpR:
