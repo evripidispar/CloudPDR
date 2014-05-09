@@ -2,15 +2,43 @@ from Crypto import Random
 from Crypto.Random import random 
 from Block import *
 from bitarray import bitarray
+import numpy as np
+
+
+def npArray2bitArray(npArray):
+	bit = bitarray()
+	bit.pack(npArray.tostring())
+	return bit
+
+def createSingleBlock(index, dataSize, pseudoData=None, xrangeObj=None, bits=None):
+	newBlock = Block(index, 0)
+	data = bitarray()
+	if pseudoData == None:
+		data = np.random.rand(dataSize*8) < 0.5
+		#byteData = Random.get_random_bytes(dataSize)
+		#data.frombytes(byteData)
+	else:
+		data = createSinglePseudoRandomData(pseudoData, xrangeObj, bits)
+	
+	newBlock.setRandomBlockData2(data)
+	return newBlock
+
+def createSinglePseudoRandomData(data, xrangeObj, bits):
+	smpl = random.sample(xrangeObj, bits)
+	data[smpl]=~data[smpl]
+# 	for c in smpl:
+# 		if data[c] == True:
+# 			data[c]=False
+# 		else:
+# 			data[c]=True
+# 	return data
+		
+
 
 def blockCreatorMemory(howMany, dataSize):
 	blocks = []
 	for i in xrange(0, howMany):
-		newBlock = Block(i, 0)
-		data = bitarray()
-		byteData = Random.get_random_bytes(dataSize)
-		data.frombytes(byteData)
-		newBlock.setRandomBlockData(data)
+		newBlock = createSingleBlock(i, dataSize)
 		blocks.append(newBlock)
 	return blocks
 	

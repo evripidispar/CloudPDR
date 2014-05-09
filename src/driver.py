@@ -17,8 +17,6 @@ from math import floor
 from math import log
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
-#from bitarray import bitarray
-#from Block import Block
 from ExpTimer import ExpTimer
 
 LOST_BLOCKS = 6
@@ -313,7 +311,7 @@ def main():
     
     cltTimer.startTimer(cltId, "Init-Create")
     initMessage = MessageUtil.constructInitMessage(pubPB, 
-                                                   blocks, 
+                                                   args.blkFp,
                                                    tagCollection,
                                                    cltId,
                                                    args.hashNum,

@@ -1,6 +1,7 @@
 import argparse
-from os import system
 from sys import exit
+from ExpTimer import ExpTimer
+from BlockEngine import createWriteFilesystem2Disk
 def main():
 
     blockSizes = [512, 1024, 2048, 4096, 8192, 16384, 32768]
@@ -36,6 +37,10 @@ def main():
         exit(-1)
     
     
+    et = ExpTimer()
+    et.registerSession("writing")
+    et.registerTimer("writing", "write")
+    prevNum = None
     for bNum in blockNumbers:
         if bNum > args.maxBlock:
             continue
@@ -44,11 +49,14 @@ def main():
             if bSize > args.maxSize:
                 continue
             
+            
             fName = "blocks/blk_%d_blocks_%d_sizeBytes.dat" % (bNum, bSize)
-            cmd = "python BlockEngine.py -n %d -s %d -w %s" %(bNum, bSize, fName)
-            print "Creating file", fName
-            system(cmd)
-            print "# # # # # # # # # # # "
+            et.startTimer("writing", "write")
+            
+            createWriteFilesystem2Disk(bNum, bSize, 32, fName)
+            et.endTimer("writing", "write")
+            print "Blocks:",  bNum, "Size:", bSize,  "Time:", et.timers["writing"]["write"], "sec"
+            
             
 if __name__ == "__main__":
     main()

@@ -5,10 +5,10 @@ from Ibf import Ibf
     @var blks: block collection in protocol buffer format
     @var tags: tag collection in protocol buffer format
 '''
-def constructInitMessage(pub, blks, tags, cltId, k, delta):
+def constructInitMessage(pub, filesystem, tags, cltId, k, delta):
     initMsg = CloudPdrMessages_pb2.Init()
     initMsg.pk.CopyFrom(pub)
-    initMsg.bc.CopyFrom(blks)
+    initMsg.filesystem = filesystem
     initMsg.tc.CopyFrom(tags)
     initMsg.k = k
     initMsg.delta = delta

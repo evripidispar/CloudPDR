@@ -18,7 +18,9 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
         T = map(long, cpdrMsg.init.tc.tags)
         delta = cpdrMsg.init.delta
         k = cpdrMsg.init.k
-        clients[cltName] = ClientSession(N, g, T, delta, k)
+        fs = cpdrMsg.init.filesystem
+        clients[cltName] = ClientSession(N, g, T, delta, k, fs)
+        
     
     blks = BlockEngine.blockCollection2BlockObject(cpdrMsg.init.bc)
     blksBitSize = cpdrMsg.init.bc.blockBitSize

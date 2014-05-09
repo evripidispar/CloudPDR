@@ -4,6 +4,11 @@ import BlockUtil
 import argparse
 import datetime
 from Block import Block
+from bitarray import bitarray
+import struct
+from ExpTimer import ExpTimer
+import copy
+import numpy as np
 
 TEST = False
 
@@ -78,6 +83,72 @@ def blockCollection2BlockObject(blockCollection):
     return b
 
 
+### # # # # # Filesystem functions  ## # # # # # # # # ##  ## 
+
+def createWriteFilesystem2Disk(blkNum, blkSz, indexSize, filename):
+    fs = CloudPdrMessages_pb2.Filesystem()
+    fs.numBlk = blkNum
+    fs.index = indexSize
+    fs.datSize = blkSz*8
+    
+    fp = open(filename, "wb")
+    xrangeObj = None
+    for i in xrange(blkNum):
+        if i == 0:
+            blk = BlockUtil.createSingleBlock(i, blkSz)
+            pseudoData = copy.deepcopy(blk.data2)
+            xrangeObj = xrange(len(pseudoData))
+        else:
+            BlockUtil.createSingleBlock(i, blkSz, pseudoData, xrangeObj, 8)
+            
+        blkPbf = CloudPdrMessages_pb2.BlockDisk()
+        #reshaped = np.reshape(blk.data2, (8,len(blk.data2)/8))
+        
+        blkPbf.blk = (BlockUtil.npArray2bitArray(blk.data2)).tobytes()
+        blkPbf = blkPbf.SerializeToString()
+        if i == 0:
+            fs.pbSize=len(blkPbf)
+            fs = fs.SerializeToString()
+            fsLen = len(fs)
+            fsLen = struct.pack("i",fsLen)
+            fp.write(fsLen)
+            fp.write(fs)
+            
+        fp.write(blkPbf)
+        
+    fp.close()
+    
+    
+def readFileSystem(fsFilename):
+    #DEBUG function
+    fp = open(fsFilename, "rb")
+    fsSize = fp.read(4)
+    fsSize, = struct.unpack("i", fsSize)
+    
+    fs = CloudPdrMessages_pb2.Filesystem()
+    fs.ParseFromString(fp.read(int(fsSize)))
+    
+    print "pbSize", fs.pbSize
+    print "numBlk", fs.numBlk
+    print "index", fs.index
+    print "dataSize", fs.datSize
+    
+    for i in range(fs.numBlk):
+        c = CloudPdrMessages_pb2.BlockDisk()
+        
+        c.ParseFromString(fp.read(fs.pbSize))
+        bb = bitarray()
+        bb.frombytes(c.blk)
+        print bb[0:32]
+        
+    fp.close()
+    
+    
+    
+    
+
+
+
 def main():
 
     p = argparse.ArgumentParser(description='BlockEngine Driver')
@@ -112,24 +183,14 @@ def main():
             print "Please specify data blocks size > 0"
             sys.exit(1)
 
-        start = datetime.datetime.now()
-        blocks = createBlocks(args.numBlocks, args.dataSize)
-        #blkCol = createBlockProtoBufs(blocks, args.dataSize)
-        blkCol = createBlockProtoBufsDisk(blocks, args.dataSize)
-        writeBlockCollectionToFile(args.fpW, blkCol)
-        end = datetime.datetime.now()
-        
-        print "Time passed Creating/Writing: ", end-start
-        
-        if TEST:
-            start = datetime.datetime.now()
-            #blkCol = readBlockCollectionFromFile(args.fpW)
-            blkCol = readBlockCollectionFromDisk(args.fpW)
-            blocks = blockCollectionDisk2BlockObject(blkCol)
-            listBlocksInCollection(blocks)
-            end = datetime.datetime.now()
-            print "Time passed Reading: ", end-start
-            
+        et = ExpTimer()
+        et.registerSession("writing")
+        et.registerTimer("writing", "write")
+        et.startTimer("writing", "write")
+        createWriteFilesystem2Disk(args.numBlocks, args.dataSize, 32, args.fpW)
+        et.endTimer("writing", "write")
+        et.printSessionTimers("writing")
+                    
     if args.fpR:
         start = datetime.datetime.now()
         blkCol = readBlockCollectionFromFile(args.fpR)

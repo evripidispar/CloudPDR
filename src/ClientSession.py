@@ -10,7 +10,7 @@ class ClientSession(object):
     
     BLOCK_INDEX_LEN=32
     
-    def __init__(self, N, g, T, delta, k):
+    def __init__(self, N, g, T, delta, k, fs):
         self.clientKeyN = N
         self.clientKeyG = g
         self.T = T
@@ -20,6 +20,7 @@ class ClientSession(object):
         self.lost=[]
         self.delta = delta
         self.k = k
+        self.filesystem = fs
         
     
     def storeBlocksInMemory(self, blocks, blockBitSize):

@@ -5,11 +5,21 @@ message PublicKey {
 	required string g = 2;
 }
 
-
 message BlockDisk {
 	required bytes blk=1;
 }
 
+message BlockDisk2 {
+	repeated bool bits=1;
+}
+
+message Filesystem {
+	required int32 pbSize=1;
+	required int32 numBlk=2;
+	required int32 index=3;
+	required int32 datSize=4;
+}
+	
 message BlockCollectionDisk {
 	required int32 blockBitSize=1;
 	repeated BlockDisk collection=2;
@@ -36,10 +46,11 @@ message TagCollection {
 
 message Init {
 	required PublicKey pk = 1;
-	required BlockCollection bc = 2;
+	required string filesystem=2;
 	required TagCollection tc = 3;
 	required int32 delta=4;
 	required int32 k=5;
+	
 }
 
 message InitAck {
