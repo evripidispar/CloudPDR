@@ -95,3 +95,6 @@ class Ibf(object):
 			realCell.cellFromProtobuf(c.count, c.hashprod, c.data)
 			newIbf.cells[c.cellIndex] = realCell
 		return newIbf
+	
+	def getCells(self):
+		return self.cells

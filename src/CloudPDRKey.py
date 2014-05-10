@@ -32,6 +32,12 @@ class CloudPDRKey(object):
         
         return self.pubKeySerialized
         
+    def getPublicKeyFields(self):
+        public = {}
+        public["g"] = self.g
+        public["n"] = self.key.n
+        return public
+    
     
     def getSecretKeyFields(self):
         secret = {}

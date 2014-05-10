@@ -22,10 +22,11 @@ import multiprocessing as mp
 from TagGenerator import singleTag
 from TagGenerator import singleW
 import struct
+from PdrManager import PdrManager
 
 
 LOST_BLOCKS = 6
-fileLock = mp.Lock()
+
 W = {}
 Tags = {}
 
@@ -186,46 +187,27 @@ def processClientMessages(incoming, session, cltTimer, lostNum=None):
         print res
 
 
-def workerTask(fsFp, bytesPerWorker, blockPbSz, taskNum, blkSize, u,g,d,n):
-    try:
-        print "WorkerBefore-acq"
-        fileLock.acquire()
-        print bytesPerWorker
-        blockData = fsFp.read(bytesPerWorker)
-        print len(blockData)
-        fileLock.release()
-        print "WorkerBefore-rel"
-    except Exception as inst:
-        print inst
-    
-    wSlice={}
-    tagSlice={}
-    
-    start=0
-    end=0
-    indexKey = None
-    for i in taskNum:
-        blk = BlockEngine.BlockDisk2Block(blockData[start:end], blkSize)
-        if start==0:
-            indexKey = blk.getDecimalIndex()
-            wSlice[indexKey]= []
-            tagSlice[indexKey]= []
-        w = singleTag(blk,u)
-        tag = singleTag(w, blk, g, d, n)
-        wSlice[indexKey].append(w)
-        tagSlice[indexKey].append(tag)
-        
-        start+=blockPbSz
-        end+=blockPbSz
-    return (wSlice, tagSlice)
-        
+def chunks(s, n):
+    for start in xrange(0, len(s), n):
+        yield s[start:start+n]
 
-def keepWTags(wSlice, tagSlice):
-    for k in wSlice.keys():
-        W[k]=wSlice[k]
+def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public):
+    while True:
+        item = inputQueue.get()
+        if item == "END":
+            return
         
-    for k in tagSlice.keys():
-        Tags[k]=tagSlice[k]
+        for blockPBItem in chunks(item, blockProtoBufSz):
+            block = BlockEngine.BlockDisk2Block(blockPBItem, blockDataSz)
+            bIndex = block.getDecimalIndex()
+            print mp.current_process(), "Processing block", bIndex
+            w = singleW(block, secret["u"])
+            tag = singleTag(w, block, public["g"], secret["d"], public["n"])
+            W[bIndex] = w
+            T[bIndex] = tag
+            ibf.insert(block, None, public["n"], public["g"], True)
+            del block
+            
 
 def main():
     
@@ -240,7 +222,6 @@ def main():
     
     p.add_argument('-g', dest="genFile", action="store", default=None,
                  help="static generator file")
-
     
     p.add_argument('-n', dest='n', action='store', type=int,
                    default=1024, help='RSA modulus size')
@@ -254,6 +235,8 @@ def main():
     p.add_argument('--task', dest='task', action='store', type=int, default=100,
                    help='Number of blocks per worker for the W,Tag calculation')
    
+    p.add_argument('-w', dest="workers", action='store', type=int, default=4,
+                  help='Number of worker processes ')
 
     args = p.parse_args()
     if args.hashNum > 10: 
@@ -277,6 +260,7 @@ def main():
     pdrSes.addDataBitSize(args.size)
     
     
+    
     #Read the generator from File
     fp = open(args.genFile, "r")
     g = fp.read()
@@ -287,6 +271,7 @@ def main():
     #Generate key class
     pdrSes.sesKey = CloudPDRKey(args.n, g)
     secret = pdrSes.sesKey.getSecretKeyFields()
+    public = pdrSes.sesKey.getPublicKeyFields()
     pdrSes.addSecret(secret)
     pubPB = pdrSes.sesKey.getProtoBufPubKey()
     
@@ -297,25 +282,48 @@ def main():
     fs = CloudPdrMessages_pb2.Filesystem()
     fs.ParseFromString(fp.read(int(fsSize)))
     
+    ibfLength =  floor(log(fs.numBlk,2)) 
+    ibfLength *= (args.hashNum+1)
+    ibfLength = int(ibfLength)
+    pdrSes.addibfLength (ibfLength)
+    
+    
     
     #fs, fsFp = BlockEngine.getFsDetailsStream(args.blkFp)
     totalBlockBytes = fs.pbSize*fs.numBlk
     bytesPerWorker = (args.task*totalBlockBytes)/ fs.numBlk
-    poolIterations = fs.numBlk / args.task
-    pool = mp.Pool()
     
-    #workerTask(fsFp, bytesPerWorker, blockPbSz, taskNum, blkSize, u,g,d,n):
-       
-    arguments = (fp, bytesPerWorker, 
-                     fs.pbSize, args.task, 
-                     fs.datSize, secret["u"], g, 
-                     secret["d"],pdrSes.sesKey.key.n)
-        
-    for i in xrange(1):
-        pool.apply_async(workerTask, args=arguments ,callback = keepWTags)
-    pool.close()
-    pool.join()
-    print W
+    genericManager = mp.Manager()
+    pdrManager = PdrManager()
+    
+    blockByteChunks = genericManager.Queue(args.workers)
+    W = genericManager.dict()
+    T = genericManager.dict()
+    
+    pdrManager.start()
+    ibf = pdrManager.Ibf(args.hashNum, ibfLength)
+    ibf.zero(fs.datSize)
+    
+    
+    pool = []
+    for i in xrange(args.workers):
+        p = mp.Process(target=workerTask, args=(blockByteChunks,W,T,ibf,fs.pbSize,fs.datSize,secret,public))
+        p.start()
+        pool.append(p)
+    
+    while True:
+        chunk = fp.read(bytesPerWorker)
+        if chunk:
+            blockByteChunks.put(chunk)
+        else:
+            for j in xrange(args.workers):
+                blockByteChunks.put("END")
+            break
+    
+    for p in pool:
+        p.join()
+    
+    
     
 #     # Read blocks from Serialized file
 #     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
