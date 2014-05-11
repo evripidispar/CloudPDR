@@ -56,3 +56,10 @@ def singleTag(w, block, g, d, n):
         wGmodN = pow((wHash*powG),1, n)
         tag = pow(wGmodN, d, n)
         return tag
+
+def tagDict2ProtoBuf(T):
+    tc = TagCollection()
+    for k,v in T.items():
+        tc.index.append(k)
+        tc.tags.append(str(v))
+    return tc

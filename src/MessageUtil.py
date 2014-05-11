@@ -1,15 +1,19 @@
 import CloudPdrMessages_pb2
+from TagGenerator import tagDict2ProtoBuf
 from Ibf import Ibf
 '''
     @var pub: public key in protocol buffer format
     @var blks: block collection in protocol buffer format
     @var tags: tag collection in protocol buffer format
 '''
-def constructInitMessage(pub, filesystem, tags, cltId, k, delta):
+def constructInitMessage(pub, filesystem, T, cltId, k, delta):
     initMsg = CloudPdrMessages_pb2.Init()
     initMsg.pk.CopyFrom(pub)
     initMsg.filesystem = filesystem
-    initMsg.tc.CopyFrom(tags)
+    for i,t in T.items():
+        initMsg.tc.index.append(i)
+        initMsg.tc.tags.append(str(t))
+        
     initMsg.k = k
     initMsg.delta = delta
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.INIT,

@@ -36,7 +36,8 @@ message BlockCollection {
 
 
 message TagCollection {
-	repeated string tags=1;
+	repeated int32 index=1;
+	repeated string tags=2;
 }
 
 

@@ -22,14 +22,14 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
         clients[cltName] = ClientSession(N, g, T, delta, k, fs)
         
     
-    blks = BlockEngine.blockCollection2BlockObject(cpdrMsg.init.bc)
-    blksBitSize = cpdrMsg.init.bc.blockBitSize
-    if storeBlocks == None:
-        clients[cltName].storeBlocksInMemory(blks, blksBitSize)
-    elif storeBlocks == "file":
-        print "TODO: store in file on the server side along with client id"
-    elif storeBlocks == "s3":
-        print "TODO: store the blocks in S3"
+    #blks = BlockEngine.blockCollection2BlockObject(cpdrMsg.init.bc)
+    #blksBitSize = cpdrMsg.init.bc.blockBitSize
+    #if storeBlocks == None:
+    #    clients[cltName].storeBlocksInMemory(blks, blksBitSize)
+    #elif storeBlocks == "file":
+    #    print "TODO: store in file on the server side along with client id"
+    #elif storeBlocks == "s3":
+    #    print "TODO: store the blocks in S3"
     
     #Just ack that you got the message
     outgoing = MessageUtil.constructInitAckMessage()

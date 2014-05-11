@@ -9,7 +9,7 @@ from CloudPDRKey import CloudPDRKey
 from TagGenerator import TagGenerator
 from Crypto.Hash import SHA256
 from datetime import datetime
-import MessageUtil
+import MessageUtil as MU
 import CloudPdrMessages_pb2
 from client import RpcPdrClient
 from PdrSession import PdrSession
@@ -323,19 +323,31 @@ def main():
     for p in pool:
         p.join()
     
+    pdrSes.addState(ibf)
+    pdrSes.W = W
+    log2Blocks = log(fs.numBlk, 2)
+    log2Blocks = floor(log2Blocks)
+    delta = int(log2Blocks)
+    pdrSes.addDelta(delta)
+
+
+
+    initMsg = MU.constructInitMessage(pubPB, args.blkFp,
+                                               T, cltId, args.hashNum, delta)
+
+    clt = RpcPdrClient()    
+    print "Sending Initialization message"
+    inComing = clt.rpc("127.0.0.1", 9090, initMsg) 
+    print "Received Initialization ACK"
+
+#cltTimer.startTimer(cltId, "Init-Create")
+#    cltTimer.endTimer(cltId, "Init-Create")
+#     cltTimer.startTimer(cltId, "Init-InitAck-RTT")
     
+#     cltTimer.endTimer(cltId, "Init-InitAck-RTT")
+     
+      
     
-#     # Read blocks from Serialized file
-#     blocks = BlockEngine.readBlockCollectionFromFile(args.blkFp)
-#     pdrSes.blocks = BlockEngine.blockCollection2BlockObject(blocks)
-#     
-#     
-#     #Get Ibf len based on delta, k and number of blocks
-#     
-#     ibfLength =  floor(log(len(pdrSes.blocks),2)) 
-#     ibfLength *= (args.hashNum+1)
-#     ibfLength = int(ibfLength)
-#     pdrSes.addibfLength (ibfLength)
 #     
 #     
 #     #Register client timers
@@ -357,18 +369,14 @@ def main():
 #     cltTimer.registerTimer(cltId, "Loss-LossAck-RTT")
 #     cltTimer.registerTimer(cltId, "Challenge-Proof-RTT")
 #     
-#     #Create a tag generator
-#     tGen = TagGenerator()
 #     
 #     #Create Wi
 #     cltTimer.startTimer(cltId,"W-Time")
-#     pdrSes.W = tGen.getW(pdrSes.blocks, secret["u"])
 #     cltTimer.endTimer(cltId, "W-Time")
 #     
 #     
 #     #Create Tags
 #     cltTimer.startTimer(cltId, "Tag-Time")
-#     T = tGen.getTags(pdrSes.W, g, pdrSes.blocks, secret["d"], pdrSes.sesKey.key.n)
 #     cltTimer.endTimer(cltId, "Tag-Time")
 #     tagCollection = tGen.createTagProtoBuf(T)
 #    
@@ -378,39 +386,10 @@ def main():
 #  
 #  
 #     #Create the local state
-#     clientIbf = Ibf(args.hashNum, ibfLength)
-#     clientIbf.zero(blocks.blockBitSize)
-#     
-#     cltTimer.startTimer(cltId, "Pop-Clt-Ibf")
-#     for blk in pdrSes.blocks:
-#         clientIbf.insert(blk, None, pdrSes.sesKey.key.n, g, True)
-#     cltTimer.endTimer(cltId, "Pop-Clt-Ibf")
-#  
-#     pdrSes.addState(clientIbf)
-#     
-#  
+# 
 #     #Construct InitMsg
-#     log2Blocks = log(len(pdrSes.blocks), 2)
-#     log2Blocks = floor(log2Blocks)
-#     delta = int(log2Blocks)
-#     pdrSes.addDelta(delta)
 #     
 #     
-#     cltTimer.startTimer(cltId, "Init-Create")
-#     initMessage = MessageUtil.constructInitMessage(pubPB, 
-#                                                    args.blkFp,
-#                                                    tagCollection,
-#                                                    cltId,
-#                                                    args.hashNum,
-#                                                    delta)
-#     cltTimer.endTimer(cltId, "Init-Create")
-#     clt = RpcPdrClient()    
-#     
-#     print "Sending Init..."
-#     
-#     cltTimer.startTimer(cltId, "Init-InitAck-RTT")
-#     inComing = clt.rpc("127.0.0.1", 9090, initMessage)
-#     cltTimer.endTimer(cltId, "Init-InitAck-RTT")
 #     
 #     
 #     outgoing = processClientMessages(inComing, pdrSes, cltTimer, args.lostNum)
