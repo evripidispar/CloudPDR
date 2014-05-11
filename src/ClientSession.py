@@ -11,7 +11,7 @@ import multiprocessing as mp
 from math import floor, log
 import CloudPdrMessages_pb2
 import struct
-import sys
+from PdrManager import PdrManager
 
 # 
 #  index = 0
@@ -37,7 +37,7 @@ import sys
 
 
 
-def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N):
+def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g):
     
     while True:
         item = inputQueue.get()
@@ -47,11 +47,12 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
             block = BE.BlockDisk2Block(blockPbItem, blkDatSz)
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
+                del block
                 continue
             aI = pickPseudoRandomTheta(chlng, block.getStringIndex())
             aI = number.bytes_to_long(aI)
             bI = number.bytes_to_long(block.data.tobytes())
-            
+            ibf.insert(block, chlng, N, g, True)
             #TODO add the ibf insert
             del block
             with lock:
@@ -146,19 +147,24 @@ class ClientSession(object):
         ibfLength =  floor(log(fsMsg.numBlk,2)) 
         ibfLength *= (self.k+1)
         ibfLength = int(ibfLength)
+
+        
     
         totalBlockBytes = fsMsg.numBlk * fsMsg.pbSize
         bytesPerWorker = (self.BLOCKS_PER_WORKER*totalBlockBytes) / fsMsg.numBlk
         
         
         gManager = mp.Manager()
+        pdrManager = PdrManager()
         blockBytesQueue = mp.Queue(self.WORKERS)
         combinedLock = mp.Lock()
         combinedValues = gManager.dict()
         combinedValues["cSum"] = 0L
         combinedValues["cTag"] = 1L
         
-        #inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cSum, cTag, N
+        pdrManager.start()
+        ibf = pdrManager.Ibf(self.k, ibfLength)
+        ibf.zero(fsMsg.datSize)
         
         workerPool = []
         for i in xrange(self.WORKERS):
@@ -166,7 +172,8 @@ class ClientSession(object):
                            args=(blockBytesQueue, fsMsg.pbSize, 
                                  fsMsg.datSize, self.challenge, self.lost,
                                  self.T, combinedLock, 
-                                 combinedValues, self.clientKeyN))
+                                 combinedValues, self.clientKeyN, 
+                                 ibf, self.clientKeyG))
                            
             p.start()
             workerPool.append(p)

@@ -10,6 +10,7 @@ class SharedCounter(object):
     def increment(self):
         with self.lock:
             self.val.value+=1
+            print self.val.value
     
     def decrement(self):
         with self.lock:
