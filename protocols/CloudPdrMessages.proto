@@ -49,7 +49,7 @@ message Init {
 	required TagCollection tc = 3;
 	required int32 delta=4;
 	required int32 k=5;
-	
+	required int64 fsNumBlocks=6;	
 }
 
 message InitAck {

@@ -163,13 +163,15 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
 
 def processClientMessages(incoming, session, cltTimer, lostNum=None):
     
-    cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
+    cpdrMsg = MU.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
-        print "Processing INIT_ACK"
-        cltTimer.startTimer(session.cltId, "LossMessage-Create")
-        outgoingMsg = MessageUtil.constructLossMessage(lostNum, session.cltId)
-        cltTimer.endTimer(session.cltId, "LossMessage-Create")
+        print "Processing INIT-ACK"
+        if cltTimer!=None:
+            cltTimer.startTimer(session.cltId, "LossMessage-Create")
+        outgoingMsg = MU.constructLossMessage(lostNum, session.cltId)
+        if cltTimer != None:
+            cltTimer.endTimer(session.cltId, "LossMessage-Create")
         return outgoingMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
@@ -333,12 +335,18 @@ def main():
 
 
     initMsg = MU.constructInitMessage(pubPB, args.blkFp,
-                                               T, cltId, args.hashNum, delta)
+                                               T, cltId, args.hashNum, delta, fs.numBlk)
 
     clt = RpcPdrClient()    
     print "Sending Initialization message"
-    inComing = clt.rpc("127.0.0.1", 9090, initMsg) 
+    initAck = clt.rpc("127.0.0.1", 9090, initMsg) 
     print "Received Initialization ACK"
+    
+    
+    lostMsg = processClientMessages(initAck, pdrSes, None, args.lostNum)
+    print "Sending Lost Msg"
+    lostAck = clt.rpc("127.0.0.1", 9090, lostMsg)
+    print "Received Lost-Ack message"
 
 #cltTimer.startTimer(cltId, "Init-Create")
 #    cltTimer.endTimer(cltId, "Init-Create")
@@ -392,7 +400,7 @@ def main():
 #     
 #     
 #     
-#     outgoing = processClientMessages(inComing, pdrSes, cltTimer, args.lostNum)
+#     
 #     
 #     
 #     print "Sending Lost message"

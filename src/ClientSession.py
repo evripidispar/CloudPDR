@@ -5,22 +5,32 @@ from Crypto.Random import random
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 from Ibf import Ibf
+import itertools
+import numpy as np
 
 class ClientSession(object):
     
     BLOCK_INDEX_LEN=32
     
-    def __init__(self, N, g, T, delta, k, fs):
+    def __init__(self, N, g, tagMsg, delta, k, fs, blkNum):
         self.clientKeyN = N
         self.clientKeyG = g
-        self.T = T
+        self.T = {}
         self.challenge=None
         self.blocks = None
         self.blkLocalDrive=""
-        self.lost=[]
+        self.lost=None
         self.delta = delta
         self.k = k
         self.filesystem = fs
+        self.fsBlocksNum = blkNum
+        self.populateTags(tagMsg)
+        
+    def populateTags(self, tagMsg):
+        
+        iters = itertools.izip(tagMsg.index,tagMsg.tags)
+        for index,tag in iters:
+            self.T[index]=long(tag)
         
     
     def storeBlocksInMemory(self, blocks, blockBitSize):
@@ -38,21 +48,9 @@ class ClientSession(object):
         
     def addClientChallenge(self, challenge):
         self.challenge = str(challenge)
-    
-    def addLostBlocks(self, lostIndeces):
-        while len(self.lost) > 0:
-            self.lost.pop()
-            
-        for index in lostIndeces:
-            self.lost.append(index)
-    
+     
     def chooseBlocksToLose(self, lossNum):
-        while len(self.lost) > 0:
-            self.lost.pop()
-            
-        for index in random.sample(range(len(self.blocks)), lossNum):
-            self.lost.append(index)
-    
+        self.lost = np.random.random_integers(0, self.fsBlocksNum-1, lossNum)
     
     def findCombinedValues(self):
         index = 0

@@ -1,5 +1,5 @@
 import argparse
-import MessageUtil
+import MessageUtil as MU
 import zmq
 import CloudPdrMessages_pb2
 import BlockEngine
@@ -15,25 +15,14 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
     if cltName not in clients.keys():
         N = long(cpdrMsg.init.pk.n)
         g = long(cpdrMsg.init.pk.g)
-        T = map(long, cpdrMsg.init.tc.tags)
         delta = cpdrMsg.init.delta
         k = cpdrMsg.init.k
         fs = cpdrMsg.init.filesystem
-        clients[cltName] = ClientSession(N, g, T, delta, k, fs)
+        blkNum = cpdrMsg.init.fsNumBlocks
+        clients[cltName] = ClientSession(N, g, cpdrMsg.init.tc, delta, k, fs, blkNum)
         
-    
-    #blks = BlockEngine.blockCollection2BlockObject(cpdrMsg.init.bc)
-    #blksBitSize = cpdrMsg.init.bc.blockBitSize
-    #if storeBlocks == None:
-    #    clients[cltName].storeBlocksInMemory(blks, blksBitSize)
-    #elif storeBlocks == "file":
-    #    print "TODO: store in file on the server side along with client id"
-    #elif storeBlocks == "s3":
-    #    print "TODO: store the blocks in S3"
-    
-    #Just ack that you got the message
-    outgoing = MessageUtil.constructInitAckMessage()
-    return outgoing
+    initAck = MU.constructInitAckMessage()
+    return initAck
 
 def processChallenge(cpdrMsg,serverTimer):
      
@@ -43,7 +32,7 @@ def processChallenge(cpdrMsg,serverTimer):
         (combinedSum, combinedTag, ibf, combinedLostTags)= clients[cpdrMsg.cltId].produceProof(serverTimer, cpdrMsg.cltId) 
         
         serverTimer.startTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
-        outgoing = MessageUtil.constructProofMessage(combinedSum,
+        outgoing = MU.constructProofMessage(combinedSum,
                                                       combinedTag, 
                                                       ibf, clients[cpdrMsg.cltId].lost ,
                                                       combinedLostTags)
@@ -60,14 +49,14 @@ def processLostMessage(cpdrMsg):
         clients[cpdrMsg.cltId].chooseBlocksToLose(lossNum)
     
     #Just generate a loss ack
-    outgoing = MessageUtil.constructLostAckMessage()
-    return outgoing
+    lossAck = MU.constructLostAckMessage()
+    return lossAck
 
 def procMessage(incoming, serverTimer):
     
     print "Processing incoming message..."
     
-    cpdrMsg = MessageUtil.constructCloudPdrMessageNet(incoming)
+    cpdrMsg = MU.constructCloudPdrMessageNet(incoming)
     if cpdrMsg.cltId not in serverTimer.timers.keys():
         serverTimer.registerSession(cpdrMsg.cltId)
         serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProcInit")
