@@ -13,16 +13,6 @@ import CloudPdrMessages_pb2
 import struct
 from PdrManager import PdrManager
 
-#         qSets={}
-#         for lIndex in self.lost:
-#             binLostIndex = ibf.binPadLostIndex(lIndex)
-#             indeces = ibf.getIndices(binLostIndex, True)
-#             
-#             for i in indeces:
-#                 if i not in qSets.keys():
-#                         qSets[i] = []
-#                 qSets[i].append(lIndex)
-
 
 def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets):
     
@@ -137,18 +127,13 @@ class ClientSession(object):
         fsMsg = CloudPdrMessages_pb2.Filesystem()
         fsMsg.ParseFromString(fp.read(int(fsSize)))
         
-        
-        
         ibfLength =  floor(log(fsMsg.numBlk,2)) 
         ibfLength *= (self.k+1)
         ibfLength = int(ibfLength)
 
-        
-    
         totalBlockBytes = fsMsg.numBlk * fsMsg.pbSize
         bytesPerWorker = (self.BLOCKS_PER_WORKER*totalBlockBytes) / fsMsg.numBlk
-        
-        
+                
         gManager = mp.Manager()
         pdrManager = PdrManager()
         blockBytesQueue = mp.Queue(self.WORKERS)
@@ -186,39 +171,22 @@ class ClientSession(object):
         for p in workerPool:
             p.join()
         
-        print "combinedTag", combinedValues["cTag"]
-        print "combinedSum", combinedValues["cSum"]
+        #print "combinedTag", combinedValues["cTag"]
+        #print "combinedSum", combinedValues["cSum"]
+     
+        combinedLostTags = {}
+        for k in qSets.keys():
+            print "Position:",  k
+            val = qSets[k]
+            if k not in combinedLostTags.keys():
+                combinedLostTags[k] = 1
+                 
+            for v in val:
+                print "Indices in Qset", v
+                binV  = ibf.binPadLostIndex(v)
+                aBlk = pickPseudoRandomTheta(self.challenge, binV)
+                aI = number.bytes_to_long(aBlk)
+                lostTag=pow(self.T[v], aI, self.clientKeyN)
+                combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
     
-    
-    
-
-
-# 
-#         serverTimer.startTimer(cltId, "Server-ProofCombinedLostTags")
-#         qSets={}
-#         for lIndex in self.lost:
-#             binLostIndex = ibf.binPadLostIndex(lIndex)
-#             indeces = ibf.getIndices(binLostIndex, True)
-#             
-#             for i in indeces:
-#                 if i not in qSets.keys():
-#                         qSets[i] = []
-#                 qSets[i].append(lIndex)
-#                             
-#         
-#         combinedLostTags = {}
-#         for k in qSets.keys():
-#             print "Position:",  k
-#             val = qSets[k]
-#             if k not in combinedLostTags.keys():
-#                 combinedLostTags[k] = 1
-#                 
-#             for v in val:
-#                 print "Indices in Qset", v
-#                 binV  = ibf.binPadLostIndex(v)
-#                 aBlk = pickPseudoRandomTheta(self.challenge, binV)
-#                 aI = number.bytes_to_long(aBlk)
-#                 lostTag=pow(self.T[v], aI, self.clientKeyN)
-#                 combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
-#         serverTimer.endTimer(cltId, "Server-ProofCombinedLostTags")
-#         return (combinedSum, combinedTag, ibf, combinedLostTags)
+        return (combinedValues["cSum"], combinedValues["cTag"], ibf, combinedLostTags)
