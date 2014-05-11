@@ -21,7 +21,6 @@ class Ibf(object):
 		binLostIndex = pad*'0'+binLostIndex
 		return binLostIndex 
 
-
 	def getIndices(self, block, isIndex=False):
 		indices = []
 		if isIndex == False:

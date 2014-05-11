@@ -13,31 +13,18 @@ import CloudPdrMessages_pb2
 import struct
 from PdrManager import PdrManager
 
-# 
-#  index = 0
-#         combinedSum = 0
-#         combinedTag = 1
-#         fp = open("aIserver.txt", "w")
-#         for blk in self.blocks:
-#             if index in self.lost:
-#                 index+=1
-#                 continue
+#         qSets={}
+#         for lIndex in self.lost:
+#             binLostIndex = ibf.binPadLostIndex(lIndex)
+#             indeces = ibf.getIndices(binLostIndex, True)
 #             
-#             aBlk = pickPseudoRandomTheta(self.challenge, blk.getStringIndex())
-#             aI = number.bytes_to_long(aBlk)
-#             fp.write(str(aI)+"\n")
-#             bI = number.bytes_to_long(blk.data.tobytes())
-#             combinedSum += (aI*bI)
-#             combinedTag *= pow(self.T[index], aI, self.clientKeyN)
-#             combinedTag = pow(combinedTag, 1, self.clientKeyN)
-#             index+=1
-#        
-#         fp.close()
-#         return (combinedSum, combinedTag)
+#             for i in indeces:
+#                 if i not in qSets.keys():
+#                         qSets[i] = []
+#                 qSets[i].append(lIndex)
 
 
-
-def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g):
+def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets):
     
     while True:
         item = inputQueue.get()
@@ -47,6 +34,14 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
             block = BE.BlockDisk2Block(blockPbItem, blkDatSz)
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
+                binBlockIndex = block.getStringIndex()
+                indeces = ibf.getIndices(binBlockIndex, True)
+                for i in indeces:
+                    with lock:
+                        if i not in qSets.keys():
+                            qSets[i]=[]
+                    qSets[i].append(bIndex)
+                    
                 del block
                 continue
             aI = pickPseudoRandomTheta(chlng, block.getStringIndex())
@@ -161,6 +156,7 @@ class ClientSession(object):
         combinedValues = gManager.dict()
         combinedValues["cSum"] = 0L
         combinedValues["cTag"] = 1L
+        qSets = gManager.dict()
         
         pdrManager.start()
         ibf = pdrManager.Ibf(self.k, ibfLength)
@@ -173,7 +169,7 @@ class ClientSession(object):
                                  fsMsg.datSize, self.challenge, self.lost,
                                  self.T, combinedLock, 
                                  combinedValues, self.clientKeyN, 
-                                 ibf, self.clientKeyG))
+                                 ibf, self.clientKeyG, qSets))
                            
             p.start()
             workerPool.append(p)
@@ -195,27 +191,8 @@ class ClientSession(object):
     
     
     
-#         serverTimer.startTimer(cltId, "Server-ProofCombinedValues")
-#         combinedSum, combinedTag = self.findCombinedValues()
-#         serverTimer.endTimer(cltId, "Server-ProofCombinedValues")
-#         ibf = Ibf(self.k, self.ibfLength)
-#         ibf.zero(self.blockBitSize)
-#         
-#         
-#         
-#         index=0
-#         serverTimer.startTimer(cltId, "Server-ProofIbfInsert")
-#         for blk in self.blocks:
-#             if index in self.lost:
-#                 print "Correct", self.lost, index
-#                 index+=1
-#                 continue
-#             ibf.insert(blk, self.challenge,
-#                         self.clientKeyN, 
-#                         self.clientKeyG, True)
-#             index+=1
-#         serverTimer.endTimer(cltId, "Server-ProofIbfInsert")
-# 
+
+
 # 
 #         serverTimer.startTimer(cltId, "Server-ProofCombinedLostTags")
 #         qSets={}
