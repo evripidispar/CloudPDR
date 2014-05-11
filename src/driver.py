@@ -4,7 +4,7 @@ from BlockUtil import *
 from Ibf import *
 #from CloudPDRObj import *
 import CloudPdrFuncs
-import BlockEngine
+import BlockEngine as BE
 from CloudPDRKey import CloudPDRKey
 from TagGenerator import TagGenerator
 from Crypto.Hash import SHA256
@@ -23,6 +23,7 @@ from TagGenerator import singleTag
 from TagGenerator import singleW
 import struct
 from PdrManager import PdrManager
+
 
 
 LOST_BLOCKS = 6
@@ -169,19 +170,21 @@ def processClientMessages(incoming, session, cltTimer, lostNum=None):
         print "Processing INIT-ACK"
         if cltTimer!=None:
             cltTimer.startTimer(session.cltId, "LossMessage-Create")
-        outgoingMsg = MU.constructLossMessage(lostNum, session.cltId)
+        lostMsg = MU.constructLossMessage(lostNum, session.cltId)
         if cltTimer != None:
             cltTimer.endTimer(session.cltId, "LossMessage-Create")
-        return outgoingMsg
+        return lostMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
         print "Processing LOSS_ACK"
         
-        cltTimer.startTimer(session.cltId, "ChallengeMsg-Create")
+        if cltTimer != None:
+            cltTimer.startTimer(session.cltId, "ChallengeMsg-Create")
         session.challenge = session.sesKey.generateChallenge()
-        outgoingMsg = MessageUtil.constructChallengeMessage(session.challenge, session.cltId)
-        cltTimer.endTimer(session.cltId, "ChallengeMsg-Create")
-        return outgoingMsg    
+        challengeMsg = MU.constructChallengeMessage(session.challenge, session.cltId)
+        if cltTimer != None:
+            cltTimer.endTimer(session.cltId, "ChallengeMsg-Create")
+        return challengeMsg    
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
@@ -189,9 +192,7 @@ def processClientMessages(incoming, session, cltTimer, lostNum=None):
         print res
 
 
-def chunks(s, n):
-    for start in xrange(0, len(s), n):
-        yield s[start:start+n]
+
 
 def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public):
     while True:
@@ -199,8 +200,8 @@ def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public):
         if item == "END":
             return
         
-        for blockPBItem in chunks(item, blockProtoBufSz):
-            block = BlockEngine.BlockDisk2Block(blockPBItem, blockDataSz)
+        for blockPBItem in BE.chunks(item, blockProtoBufSz):
+            block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
             bIndex = block.getDecimalIndex()
             print mp.current_process(), "Processing block", bIndex
             w = singleW(block, secret["u"])
@@ -344,9 +345,14 @@ def main():
     
     
     lostMsg = processClientMessages(initAck, pdrSes, None, args.lostNum)
-    print "Sending Lost Msg"
+    print "Sending Lost message"
     lostAck = clt.rpc("127.0.0.1", 9090, lostMsg)
     print "Received Lost-Ack message"
+    
+    
+    challengeMsg = processClientMessages(lostAck, pdrSes, None)
+    print "Sending Challenge message"
+    proofMsg = clt.rpc("127.0.0.1", 9090, challengeMsg)
 
 #cltTimer.startTimer(cltId, "Init-Create")
 #    cltTimer.endTimer(cltId, "Init-Create")
@@ -408,7 +414,7 @@ def main():
 #     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
 #     cltTimer.endTimer(cltId, "Loss-LossAck-RTT")
 #     
-#     outgoing = processClientMessages(incoming, pdrSes, cltTimer)
+#     
 #     
 #     print "Sending Challenge ...."
 #     cltTimer.startTimer(cltId, "Challenge-Proof-RTT")

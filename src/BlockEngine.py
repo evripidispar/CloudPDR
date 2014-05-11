@@ -169,6 +169,10 @@ def BlockDisk2Block(serialized, blkSz):
     return block
 
 
+def chunks(s, n):
+    for start in xrange(0, len(s), n):
+        yield s[start:start+n]
+
 
 def main():
 
