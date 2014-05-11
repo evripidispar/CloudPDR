@@ -11,6 +11,7 @@ import multiprocessing as mp
 from math import floor, log
 import CloudPdrMessages_pb2
 import struct
+import sys
 
 # 
 #  index = 0
@@ -36,7 +37,7 @@ import struct
 
 
 
-def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cSum, cTag, N):
+def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N):
     
     while True:
         item = inputQueue.get()
@@ -50,16 +51,15 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cSum, c
             aI = pickPseudoRandomTheta(chlng, block.getStringIndex())
             aI = number.bytes_to_long(aI)
             bI = number.bytes_to_long(block.data.tobytes())
-            tagI = pow(T[bIndex], aI, N)
+            
             #TODO add the ibf insert
             del block
             with lock:
-                cSum.value += (aI*bI)
-                cTag.value *= tagI
-                cTag = pow(cTag,1,N)
+                cVal["cSum"] += (aI*bI)
+                cVal["cTag"] *= pow(T[bIndex], aI, N)
+                cVal["cTag"] = pow(cVal["cTag"],1,N)
                 
-            
-
+                
 
 
 class ClientSession(object):
@@ -137,8 +137,11 @@ class ClientSession(object):
         
         fp = open(self.filesystem, "rb")
         fsSize = fp.read(4)
-        fsSize = struct.unpack("i", fsSize)
+        fsSize,  = struct.unpack("i", fsSize)
         fsMsg = CloudPdrMessages_pb2.Filesystem()
+        fsMsg.ParseFromString(fp.read(int(fsSize)))
+        
+        
         
         ibfLength =  floor(log(fsMsg.numBlk,2)) 
         ibfLength *= (self.k+1)
@@ -150,14 +153,21 @@ class ClientSession(object):
         
         gManager = mp.Manager()
         blockBytesQueue = mp.Queue(self.WORKERS)
-        combinedSumVal = mp.Value("L", 0)
-        combinedTagVal = mp.Value("L", 1)
         combinedLock = mp.Lock()
+        combinedValues = gManager.dict()
+        combinedValues["cSum"] = 0L
+        combinedValues["cTag"] = 1L
+        
+        #inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cSum, cTag, N
         
         workerPool = []
         for i in xrange(self.WORKERS):
             p = mp.Process(target=proofWorkerTask,
-                           args=())
+                           args=(blockBytesQueue, fsMsg.pbSize, 
+                                 fsMsg.datSize, self.challenge, self.lost,
+                                 self.T, combinedLock, 
+                                 combinedValues, self.clientKeyN))
+                           
             p.start()
             workerPool.append(p)
         
@@ -173,6 +183,8 @@ class ClientSession(object):
         for p in workerPool:
             p.join()
         
+        print "combinedTag", combinedValues["cTag"]
+        print "combinedSum", combinedValues["cSum"]
     
     
     
