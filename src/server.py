@@ -29,17 +29,13 @@ def processChallenge(cpdrMsg,serverTimer):
     if cpdrMsg.cltId in clients.keys():
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
-        (combinedSum, combinedTag, ibf, combinedLostTags)= clients[cpdrMsg.cltId].produceProof(serverTimer, cpdrMsg.cltId) 
+        proofMsg = clients[cpdrMsg.cltId].produceProof(serverTimer, cpdrMsg.cltId)
         
-        serverTimer.startTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
-        outgoing = MU.constructProofMessage(combinedSum,
-                                                      combinedTag, 
-                                                      ibf, clients[cpdrMsg.cltId].lost ,
-                                                      combinedLostTags)
-        serverTimer.endTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
-        
-        serverTimer.printSessionTimers(cpdrMsg.cltId)
-        return outgoing
+    
+        #serverTimer.startTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
+        #serverTimer.endTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
+        #serverTimer.printSessionTimers(cpdrMsg.cltId)
+        return proofMsg
 
 def processLostMessage(cpdrMsg):
     

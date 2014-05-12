@@ -33,6 +33,8 @@ class Ibf(object):
 			indices.append(hashIndexVal % self.m)
 		return indices
 
+	def getCells(self):
+		return self.cells
 
 	def zero(self,  dataBitSize):
 		for cellIndex in xrange(self.m):
@@ -95,5 +97,4 @@ class Ibf(object):
 			newIbf.cells[c.cellIndex] = realCell
 		return newIbf
 	
-	def getCells(self):
-		return self.cells
+	

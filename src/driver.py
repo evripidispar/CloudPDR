@@ -22,7 +22,7 @@ import multiprocessing as mp
 from TagGenerator import singleTag
 from TagGenerator import singleW
 import struct
-from PdrManager import PdrManager
+from PdrManager import IbfManager
 
 
 
@@ -297,7 +297,7 @@ def main():
     bytesPerWorker = (args.task*totalBlockBytes)/ fs.numBlk
     
     genericManager = mp.Manager()
-    pdrManager = PdrManager()
+    pdrManager = IbfManager()
     
     blockByteChunks = genericManager.Queue(args.workers)
     W = genericManager.dict()
@@ -353,7 +353,7 @@ def main():
     challengeMsg = processClientMessages(lostAck, pdrSes, None)
     print "Sending Challenge message"
     proofMsg = clt.rpc("127.0.0.1", 9090, challengeMsg)
-
+    print "Received Proof message"
 #cltTimer.startTimer(cltId, "Init-Create")
 #    cltTimer.endTimer(cltId, "Init-Create")
 #     cltTimer.startTimer(cltId, "Init-InitAck-RTT")

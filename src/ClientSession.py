@@ -1,5 +1,5 @@
 import BlockEngine as BE
-import MessageUtil
+import MessageUtil as MU
 from datetime import datetime
 from Crypto.Random import random
 from CryptoUtil import pickPseudoRandomTheta
@@ -11,7 +11,7 @@ import multiprocessing as mp
 from math import floor, log
 import CloudPdrMessages_pb2
 import struct
-from PdrManager import PdrManager
+from PdrManager import IbfManager
 
 
 def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets):
@@ -25,8 +25,10 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
                 binBlockIndex = block.getStringIndex()
-                indeces = ibf.getIndices(binBlockIndex, True)
-                for i in indeces:
+                print binBlockIndex
+                indices = ibf.getIndices(binBlockIndex, True)
+                print indices
+                for i in indices:
                     with lock:
                         if i not in qSets.keys():
                             qSets[i]=[]
@@ -135,7 +137,7 @@ class ClientSession(object):
         bytesPerWorker = (self.BLOCKS_PER_WORKER*totalBlockBytes) / fsMsg.numBlk
                 
         gManager = mp.Manager()
-        pdrManager = PdrManager()
+        pdrManager = IbfManager()
         blockBytesQueue = mp.Queue(self.WORKERS)
         combinedLock = mp.Lock()
         combinedValues = gManager.dict()
@@ -189,4 +191,13 @@ class ClientSession(object):
                 lostTag=pow(self.T[v], aI, self.clientKeyN)
                 combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
     
-        return (combinedValues["cSum"], combinedValues["cTag"], ibf, combinedLostTags)
+        import time
+        time.sleep(1)
+        ibfCells = ibf.cells()
+        proofMsg = MU.constructProofMessage(combinedValues["cSum"],
+                                            combinedValues["cTag"],
+                                            ibfCells, 
+                                            self.lost ,
+                                            combinedLostTags)
+         
+        return proofMsg

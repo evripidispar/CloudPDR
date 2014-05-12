@@ -6,11 +6,26 @@ class SharedCounter(object):
     def __init__(self):
         self.val = mp.Value('i', 0)
         self.lock = mp.Lock()
+        self.secVal = 0
     
+    def __getstate__(self):
+        odict = self.__dict__.copy()
+        odict['secVal'] = self.val.value
+        del odict['val']
+        del odict['lock']
+        return odict
+    
+    def __setstate__(self, dict):
+        value = dict['secVal']
+        self.__dict__.update(dict)
+        self.val = mp.Value('i', value)
+        self.lock = mp.Lock()
+    
+        
     def increment(self):
         with self.lock:
             self.val.value+=1
-            print self.val.value
+#             print self.val.value
     
     def decrement(self):
         with self.lock:
@@ -24,7 +39,7 @@ class SharedCounter(object):
         with self.lock:
             self.val.value = val
             
-    def decrementIfNotZeor(self):
+    def decrementIfNotZero(self):
         with self.lock:
             if self.val.value < 0:
                 self.val.value+=1

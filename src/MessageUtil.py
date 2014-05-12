@@ -87,11 +87,11 @@ def constructLostAckMessage():
     return cpdrMsg
 
 
-def constructIbfMessage(ibf):
+def constructIbfMessage(ibfCells):
     ibfMsg = CloudPdrMessages_pb2.Ibf()
-    for index, cell in ibf.cells.items():
+    for index, cell in ibfCells.items():
         c = ibfMsg.cells.add()
-        c.count = cell.count
+        c.count = cell.count.getValue()
         c.hashprod = cell.hashProd
         c.data = cell.dataSum.data.to01()
         c.cellIndex = index
@@ -106,12 +106,12 @@ def constructLostTagPairsMessage(combinedLostTags):
         lpair.v = str(v)
     return lostTagsPairMsg
 
-def constructProofMessage(combinedSum, combinedTag, ibf, lostIndeces, combinedLostTags):
+def constructProofMessage(combinedSum, combinedTag, ibfCells, lostIndeces, combinedLostTags):
     proof = CloudPdrMessages_pb2.Proof()
     proof.combinedSum = str(combinedSum)
     proof.combinedTag = str(combinedTag)
     
-    ibfMsg = constructIbfMessage(ibf)
+    ibfMsg = constructIbfMessage(ibfCells)
     proof.serverState.CopyFrom(ibfMsg)
     
     for lIndex in lostIndeces:

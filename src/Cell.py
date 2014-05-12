@@ -2,32 +2,31 @@ from Crypto.Util import number
 from bitarray import bitarray
 from Block import *
 from CryptoUtil import apply_f
-import multiprocessing as mp
 from SharedCounter import SharedCounter
 
 class Cell(object):
 	def __init__(self, id, dataBitSize):
-		#self.count = 0
+# 		self.count = 0
 		self.count = SharedCounter()
 		self.dataSum = Block(id, dataBitSize)
 		self.hashProd = 1
 		self.f = 0
-		self.lock = mp.Lock()
+		self.pickleHackCounter = 0
 
 	def cellFromProtobuf(self, count, hashProd, data):
-		#self.count = count
+# 		self.count = count
 		self.count.setValue(count)
 		self.hashprod = hashProd
 		self.dataSum.data = bitarray(str(data))
 
 	def zeroCell(self):
-		#self.count=0
+# 		self.count=0
 		self.count.setValue(0)
 		self.dataSum.data.setall(False)
 		self.hashProd =  1
 
 	def setCount(self, count):
-		#self.count = count
+# 		self.count = count
 		self.count.setValue(count)
 
 	def setHashProd(self, hashProd):
@@ -37,7 +36,7 @@ class Cell(object):
 		self.dataSum = dataSum
 
 	def getCount(self):
-		#return self.count
+# 		return self.count
 		return self.count.getValue()
 
 	def getHashProd(self):
@@ -49,7 +48,7 @@ class Cell(object):
 
 	def add(self, block, secret, N, g, keepHashProdOne=False):
 		
-		#self.count += 1
+# 		self.count += 1
 		self.count.increment()
 		
 		self.dataSum.addBlockData(block)
@@ -67,11 +66,11 @@ class Cell(object):
 	def remove(self, block, secret, N, g):
 		#TODO
 		#count handling
-		#if (self.count < 0):
-		#	self.count += 1
-		#else:
-		#	self.count -= 1
-		self.count.decrementIfNotZeor()
+# 		if (self.count < 0):
+# 			self.count += 1
+# 		else:
+# 			self.count -= 1
+		self.count.decrementIfNotZero()
 		
 		
 		if block.isZeroDataSum()==False: #TODO
@@ -82,15 +81,15 @@ class Cell(object):
 			self.hashProd = pow(self.hashProd, 1, N)
 
 	def isPure(self):
-		#if self.count == 1:  
-		#	return True
-		#return False
+# 		if self.count == 1:  
+# 			return True
+# 		return False
 		return self.count.isPure()
 
 	def isEmpty(self):
-		#if self.count == 0:
-		#	return True
-		#return False
+# 		if self.count == 0:
+# 			return True
+# 		return False
 		return self.count.isEmpty()
 
 	def subtract(self, otherCell, dataBitSize, N, isHashProdOne=False):
@@ -98,7 +97,7 @@ class Cell(object):
 		diffCell = Cell(0, dataBitSize)
 		
 		#counter
-		#diffCell.count = self.count - otherCell.getCount()
+# 		diffCell.count = self.count - otherCell.getCount()
 		diffCell.count.setValue(self.count.getValue()-otherCell.count.getValue())
 		
 		#datasum
