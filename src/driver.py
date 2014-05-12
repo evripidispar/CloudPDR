@@ -448,17 +448,17 @@ def main():
     print "Received Initialization ACK"
     
     
-    lostMsg = processClientMessages(initAck, pdrSes, None, args.lostNum)
+    lostMsg = processClientMessages(initAck, pdrSes, args.lostNum)
     print "Sending Lost message"
     lostAck = clt.rpc("127.0.0.1", 9090, lostMsg)
     print "Received Lost-Ack message"
     
     
-    challengeMsg = processClientMessages(lostAck, pdrSes, None)
+    challengeMsg = processClientMessages(lostAck, pdrSes)
     print "Sending Challenge message"
     proofMsg = clt.rpc("127.0.0.1", 9090, challengeMsg)
     print "Received Proof message"
-    processClientMessages(proofMsg, pdrSes, None)
+    processClientMessages(proofMsg, pdrSes)
     
 
 

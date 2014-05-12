@@ -30,11 +30,6 @@ def processChallenge(cpdrMsg,serverTimer):
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
         proofMsg = clients[cpdrMsg.cltId].produceProof(serverTimer, cpdrMsg.cltId)
-        
-    
-        #serverTimer.startTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
-        #serverTimer.endTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
-        #serverTimer.printSessionTimers(cpdrMsg.cltId)
         return proofMsg
 
 def processLostMessage(cpdrMsg):

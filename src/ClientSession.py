@@ -12,36 +12,59 @@ from math import floor, log
 import CloudPdrMessages_pb2
 import struct
 from PdrManager import IbfManager, QSetManager
+from ExpTimer import ExpTimer
 
-
-def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets):
+def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets, TT):
+    
+    pName = mp.current_process().name
+    x = ExpTimer()
+    x.registerSession(pName)
+    x.registerTimer(pName, "qSet")
+    x.registerTimer(pName, "cSumKept")
+    x.registerTimer(pName, "cTagKept")
+    x.registerTimer(pName, "ibf")
+    
     
     while True:
         item = inputQueue.get()
         if item == "END":
+            TT[pName+str("_qSet")] = x.getTotalTimer(pName, "qSet")
+            TT[pName+str("_cSumKept")] = x.getTotalTimer(pName, "cTagKept") - x.getTotalTimer(pName, "ibf")
+            TT[pName+str("_cTagKept")] = x.getTotalTimer(pName, "cTagKept") - x.getTotalTimer(pName, "ibf")
+            TT[pName+str("_ibf")] = x.getTotalTimer(pName, "ibf")
+            
             return
         for blockPbItem in BE.chunks(item,blkPbSz):
             block = BE.BlockDisk2Block(blockPbItem, blkDatSz)
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
+                x.startTimer(pName, "qSet")
                 binBlockIndex = block.getStringIndex()
                 indices = ibf.getIndices(binBlockIndex, True)
                 for i in indices:
                     with lock:
                         qSets.addValue(i, bIndex)
-                    
+                
+                x.endTimer(pName, "qSet")    
                 del block
                 continue
+            x.startTimer(pName, "cSumKept")
+            x.startTimer(pName, "cTakKept")
             aI = pickPseudoRandomTheta(chlng, block.getStringIndex())
             aI = number.bytes_to_long(aI)
             bI = number.bytes_to_long(block.data.tobytes())
+            
+            x.startTimer(pName, "ibf")
             ibf.insert(block, chlng, N, g, True)
-            #TODO add the ibf insert
+            x.endTimer(pName, "ibf")
+            
             del block
             with lock:
                 cVal["cSum"] += (aI*bI)
+                x.endTimer(pName,"cSumKept")
                 cVal["cTag"] *= pow(T[bIndex], aI, N)
                 cVal["cTag"] = pow(cVal["cTag"],1,N)
+                x.endTimer(pName,"cTagKept")
                 
                 
 
@@ -92,32 +115,13 @@ class ClientSession(object):
     def chooseBlocksToLose(self, lossNum):
         self.lost = np.random.random_integers(0, self.fsBlocksNum-1, lossNum)
     
-    def findCombinedValues(self):
-        index = 0
-        combinedSum = 0
-        combinedTag = 1
-        fp = open("aIserver.txt", "w")
-        for blk in self.blocks:
-            if index in self.lost:
-                index+=1
-                continue
-            
-            aBlk = pickPseudoRandomTheta(self.challenge, blk.getStringIndex())
-            aI = number.bytes_to_long(aBlk)
-            fp.write(str(aI)+"\n")
-            bI = number.bytes_to_long(blk.data.tobytes())
-            combinedSum += (aI*bI)
-            combinedTag *= pow(self.T[index], aI, self.clientKeyN)
-            combinedTag = pow(combinedTag, 1, self.clientKeyN)
-            index+=1
-       
-        fp.close()
-        return (combinedSum, combinedTag)
-        
-    
     
     def produceProof(self, serverTimer, cltId):
         
+        pName = mp.current_process().name
+        et = ExpTimer()
+        et.registerSession(pName)
+        et.registerTimer(pName, "cmbLost")
         
         fp = open(self.filesystem, "rb")
         fsSize = fp.read(4)
@@ -136,6 +140,7 @@ class ClientSession(object):
         pdrManager = IbfManager()
         qSetManager = QSetManager()
         blockBytesQueue = mp.Queue(self.WORKERS)
+        TT = gManager.dict()
         combinedLock = mp.Lock()
         combinedValues = gManager.dict()
         combinedValues["cSum"] = 0L
@@ -158,7 +163,7 @@ class ClientSession(object):
                                  fsMsg.datSize, self.challenge, self.lost,
                                  self.T, combinedLock, 
                                  combinedValues, self.clientKeyN, 
-                                 ibf, self.clientKeyG, qSets))
+                                 ibf, self.clientKeyG, qSets,TT))
                            
             p.start()
             workerPool.append(p)
@@ -179,6 +184,7 @@ class ClientSession(object):
         #print "combinedSum", combinedValues["cSum"]
      
         qS = qSets.qSets()
+        et.startTimer(pName, "cmbLost")
         combinedLostTags = {}
         for k in qS.keys():
             print "Position:",  k
@@ -195,8 +201,8 @@ class ClientSession(object):
                 lostTag=pow(self.T[v], aI, self.clientKeyN)
                 combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
     
-#         import time
-#         time.sleep(1)
+
+        et.endTimer(pName, "cmbLost")
         ibfCells = ibf.cells()
         proofMsg = MU.constructProofMessage(combinedValues["cSum"],
                                             combinedValues["cTag"],
