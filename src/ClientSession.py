@@ -11,7 +11,7 @@ import multiprocessing as mp
 from math import floor, log
 import CloudPdrMessages_pb2
 import struct
-from PdrManager import IbfManager
+from PdrManager import IbfManager, QSetManager
 
 
 def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets):
@@ -25,14 +25,10 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
                 binBlockIndex = block.getStringIndex()
-                print binBlockIndex
                 indices = ibf.getIndices(binBlockIndex, True)
-                print indices
                 for i in indices:
                     with lock:
-                        if i not in qSets.keys():
-                            qSets[i]=[]
-                    qSets[i].append(bIndex)
+                        qSets.addValue(i, bIndex)
                     
                 del block
                 continue
@@ -138,16 +134,22 @@ class ClientSession(object):
                 
         gManager = mp.Manager()
         pdrManager = IbfManager()
+        qSetManager = QSetManager()
         blockBytesQueue = mp.Queue(self.WORKERS)
         combinedLock = mp.Lock()
         combinedValues = gManager.dict()
         combinedValues["cSum"] = 0L
         combinedValues["cTag"] = 1L
-        qSets = gManager.dict()
+        
         
         pdrManager.start()
+        qSetManager.start()
+        
         ibf = pdrManager.Ibf(self.k, ibfLength)
+        print fsMsg.datSize
         ibf.zero(fsMsg.datSize)
+        
+        qSets = qSetManager.QSet()
         
         workerPool = []
         for i in xrange(self.WORKERS):
@@ -176,10 +178,12 @@ class ClientSession(object):
         #print "combinedTag", combinedValues["cTag"]
         #print "combinedSum", combinedValues["cSum"]
      
+        qS = qSets.qSets()
         combinedLostTags = {}
-        for k in qSets.keys():
+        for k in qS.keys():
             print "Position:",  k
-            val = qSets[k]
+            val = qS[k]
+            
             if k not in combinedLostTags.keys():
                 combinedLostTags[k] = 1
                  
@@ -191,8 +195,8 @@ class ClientSession(object):
                 lostTag=pow(self.T[v], aI, self.clientKeyN)
                 combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
     
-        import time
-        time.sleep(1)
+#         import time
+#         time.sleep(1)
         ibfCells = ibf.cells()
         proofMsg = MU.constructProofMessage(combinedValues["cSum"],
                                             combinedValues["cTag"],

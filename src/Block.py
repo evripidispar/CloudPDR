@@ -1,5 +1,5 @@
 from bitarray import bitarray
-
+import time
 BINDEX_LEN = 32
 
 class Block(object):

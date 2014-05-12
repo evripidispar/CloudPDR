@@ -22,7 +22,8 @@ import multiprocessing as mp
 from TagGenerator import singleTag
 from TagGenerator import singleW
 import struct
-from PdrManager import IbfManager
+from PdrManager import IbfManager, QSetManager
+import copy
 
 
 
@@ -37,83 +38,167 @@ def produceClientId():
     return h.hexdigest()
 
 
+
+
+def subsetAndLessThanDelta(clientMaxBlockId, serverLost, delta):
+    
+    lossLen = len(serverLost)
+    if lossLen >= clientMaxBlockId:
+        return (False, "Fail#1: LostSet from the server is not subset of the client blocks ")
+    
+    for i in serverLost:
+        if i>= 0 and i <= clientMaxBlockId:
+            continue
+    if lossLen > delta:
+        return (False, "FAIL#2: Server has lost more than DELTA blocks")
+    return (True, "")
+
+
+def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public):
+    while True:
+        item = inputQueue.get()
+        if item == "END":
+            return
+        
+        for blockPBItem in BE.chunks(item, blockProtoBufSz):
+            block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
+            bIndex = block.getDecimalIndex()
+#            print mp.current_process(), "Processing block", bIndex
+            w = singleW(block, secret["u"])
+            tag = singleTag(w, block, public["g"], secret["d"], public["n"])
+            W[bIndex] = w
+            T[bIndex] = tag
+            ibf.insert(block, None, public["n"], public["g"], True)
+            del block
+
+
+
+
+def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, comb, lock, qSets, ibf, manager):
+    while True:
+        item = inputQueue.get()
+        if item == "END":
+            return
+        
+        for blockPBItem in BE.chunks(item, blockProtoBufSz):
+            block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
+            bIndex = block.getDecimalIndex()
+            if bIndex in lost:
+                binBlockIndex = block.getStringIndex()
+                indices = ibf.getIndices(binBlockIndex, True)
+                for i in indices:
+                    with lock:
+                        qSets.addValue(i, bIndex)
+                        
+
+                del block
+                continue
+            
+            aI = pickPseudoRandomTheta(chlng, block.getStringIndex())
+            aI = number.bytes_to_long(aI)
+            h = SHA256.new()
+            wI = W[bIndex]
+            h.update(wI)
+            wI = number.bytes_to_long(h.digest())
+            wI = pow(wI, aI, N)
+            with lock:
+                comb["w"] *= wI
+                comb["w"] = pow(comb["w"], 1, N)
+            del block
+
+        
+
 def processServerProof(cpdrProofMsg, session, cltTimer):
     serverLost =  set()
     
-    cltTimer.startTimer(session.cltId, "ProcProof-Clt-SubSet")
-    if len(cpdrProofMsg.proof.lostIndeces) > 0:
-        for lost in cpdrProofMsg.proof.lostIndeces:
-            serverLost.add(lost)
-        
-        blockSet = set(range(len(session.blocks)))
-        if serverLost.issubset(blockSet) == False:
-            del blockSet
-            print "FAIL#1: LostSet from the server is not subset of the blocks in the Client"
-            return False
-        
-        
-        if len(serverLost) > session.delta:
-            print "FAIL#2: Server has lost more than DELTA blocks"
-            return False
+    if cltTimer != None:
+        cltTimer.startTimer(session.cltId, "ProcProof-Clt-SubSet")
     
-    cltTimer.endTimer(session.cltId, "ProcProof-Clt-SubSet")
+    
+    if len(cpdrProofMsg.proof.lostIndeces) > 0:
+        res, reason = subsetAndLessThanDelta(session.fsInfo["blockNum"],
+                                             cpdrProofMsg.proof.lostIndeces,
+                                             session.delta)
+        if res == False:
+            print reason
+            return False
+     
+    if cltTimer != None:
+        cltTimer.endTimer(session.cltId, "ProcProof-Clt-SubSet")
+    
+    
+    if cltTimer != None: 
+        cltTimer.startTimer(session.cltId, "ProcProof-Clt-Te")    
+    
+    servLost = cpdrProofMsg.proof.lostIndeces
     serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
     gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
     serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
     sesSecret = session.sesKey.getSecretKeyFields() 
-     
-    cltTimer.startTimer(session.cltId, "ProcProof-Clt-Te")    
     Te =pow(serCombinedTag, sesSecret["e"], session.sesKey.key.n)
-        
-    index = 0
-    combinedW=1
-    for blk in session.blocks:
-        if index in cpdrProofMsg.proof.lostIndeces:
-            index+=1
-            continue
-        
-        h = SHA256.new()
-        aBlk = pickPseudoRandomTheta(session.challenge, blk.getStringIndex())
-        aI = number.bytes_to_long(aBlk)
-        
-        w = session.W[index]
-        h.update(str(w))
-        wHash = number.bytes_to_long(h.digest())
-        wa= pow(wHash, aI, session.sesKey.key.n)
-        combinedW = pow((combinedW*wa), 1, session.sesKey.key.n)
-        index+=1
-            
-
-    combinedWInv = number.inverse(combinedW, session.sesKey.key.n)  #TODO: Not sure this is true
+    
+#     inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, combW, lock
+    
+    gManager = mp.Manager()
+    combRes = gManager.dict()
+    combRes["w"] = 1
+    
+    qSetManager = QSetManager()
+    qSetManager.start()
+    qSets = qSetManager.QSet()
+    
+    combLock = mp.Lock()
+    bytesPerWorker = mp.Queue(session.fsInfo["workers"])
+    
+    workerPool = []
+    for i in xrange(session.fsInfo["workers"]):
+        p = mp.Process(target=clientWorkerProof,
+                       args=(bytesPerWorker, session.fsInfo["pbSize"],
+                             session.fsInfo["blkSz"], servLost, 
+                             session.challenge, session.W, session.sesKey.key.n,
+                             combRes, combLock, qSets, session.ibf, gManager))
+        p.start()
+        workerPool.append(p)
+    
+    fp = open(session.fsInfo["fsName"], "rb")
+    fp.read(4)
+    fp.read(session.fsInfo["skip"])
+    
+    while True:
+        chunk = fp.read(session.fsInfo["bytesPerWorker"])
+        if chunk:
+            bytesPerWorker.put(chunk)
+        else:
+            for j in xrange(session.fsInfo["workers"]):
+                bytesPerWorker.put("END")
+            break
+    
+    for p in workerPool:
+        p.join()
+    
+ 
+    combinedWInv = number.inverse(combRes["w"], session.sesKey.key.n)  #TODO: Not sure this is true
     RatioCheck1=Te*combinedWInv
     RatioCheck1 = pow(RatioCheck1, 1, session.sesKey.key.n)
-    cltTimer.endTimer(session.cltId, "ProcProof-Clt-Te")
-        
+    if cltTimer != None:
+        cltTimer.endTimer(session.cltId, "ProcProof-Clt-Te")
+         
     if RatioCheck1 != gS:
         print "FAIL#3: The Proof did not pass the first check to go to recover"
         return False
 
     print "# # # # # # # ##  # # # # # # # # # # # # # ##"
     
-    
-    cltTimer.startTimer(session.cltId, "ProcProof-Clt-LostSum")
-    qSets = {}
-    for lIndex in serverLost:
-        binLostIndex = session.ibf.binPadLostIndex(lIndex)
-        indeces = session.ibf.getIndices(binLostIndex, True)
-            
-        for i in indeces:
-            if i not in qSets.keys():
-                qSets[i] = []
-            qSets[i].append(lIndex)
-    
+    if cltTimer != None:
+        cltTimer.startTimer(session.cltId, "ProcProof-Clt-LostSum")
+    qS = qSets.qSets()
     
     lostSum = {}
     for p in cpdrProofMsg.proof.lostTags.pairs:
         lostCombinedTag = long(p.v)
         Lre =pow(lostCombinedTag, sesSecret["e"], session.sesKey.key.n)
         
-        Qi = qSets[p.k]
+        Qi = qS[p.k]
         combinedWL = 1
         for vQi in Qi:
             h = SHA256.new()
@@ -129,33 +214,57 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
         lostSum[p.k] = Lre*combinedWLInv
         lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
     
-    cltTimer.endTimer(session.cltId, "ProcProof-Clt-LostSum")
-       
     
-    cltTimer.startTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf") 
+    
+    if cltTimer != None:
+        cltTimer.endTimer(session.cltId, "ProcProof-Clt-LostSum")
+       
+    if cltTimer != None:
+        cltTimer.startTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf") 
     serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
-                                                 session.dataBitSize)
-    cltTimer.endTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf")
+                                                 session.fsInfo["blkSz"])
+    if cltTimer != None:
+        cltTimer.endTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf")
 
-    cltTimer.startTimer(session.cltId, "ProcProof-SubtractIbf")
-    diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
-                                      session.sesKey.key.n, session.dataBitSize, True)    
-    cltTimer.endTimer(session.cltId, "ProcProof-SubtractIbf")
+    
+    if cltTimer != None:
+        cltTimer.startTimer(session.cltId, "ProcProof-SubtractIbf")
+        
+    localIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
+    
+    lc = copy.deepcopy(session.ibf.cells())
+    localIbf.setCells(lc)
+    
+#     serverIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
+#     sc  = copy.deepcopy(serverStateIbf.cells())
+#     serverIbf.setCells(sc)
+    
+#     diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
+#                                      session.sesKey.key.n, session.dataBitSize, True)
+    diffIbf = localIbf.subtractIbf(serverStateIbf, session.challenge,
+                                    session.sesKey.key.n, session.fsInfo["blkSz"], True)
+    
+    if cltTimer != None:
+        cltTimer.endTimer(session.cltId, "ProcProof-SubtractIbf")
     
     for k in lostSum.keys():
         val=lostSum[k]
         diffIbf.cells[k].setHashProd(val)
+   
     
-    cltTimer.startTimer(session.cltId, "ProcProof-Recover")
+    if cltTimer != None:
+        cltTimer.startTimer(session.cltId, "ProcProof-Recover")
     L=CloudPdrFuncs.recover(diffIbf, serverLost, session.challenge, session.sesKey.key.n, session.g)
-    cltTimer.endTimer(session.cltId, "ProcProof-Recover")
+    
+    if cltTimer != None:
+        cltTimer.endTimer(session.cltId, "ProcProof-Recover")
     
     for k in lostSum.keys():
         print diffIbf.cells[k].hashProd
         
     if L==None:
         print "fail to recover"
-    
+        sys.exit(1)
         
     for blk in L:
         print blk.getDecimalIndex()
@@ -193,24 +302,6 @@ def processClientMessages(incoming, session, cltTimer, lostNum=None):
 
 
 
-
-def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public):
-    while True:
-        item = inputQueue.get()
-        if item == "END":
-            return
-        
-        for blockPBItem in BE.chunks(item, blockProtoBufSz):
-            block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
-            bIndex = block.getDecimalIndex()
-            print mp.current_process(), "Processing block", bIndex
-            w = singleW(block, secret["u"])
-            tag = singleTag(w, block, public["g"], secret["d"], public["n"])
-            W[bIndex] = w
-            T[bIndex] = tag
-            ibf.insert(block, None, public["n"], public["g"], True)
-            del block
-            
 
 def main():
     
@@ -260,7 +351,7 @@ def main():
    
     #Create current session
     pdrSes = PdrSession(cltId)
-    pdrSes.addDataBitSize(args.size)
+    
     
     
     
@@ -295,6 +386,9 @@ def main():
     #fs, fsFp = BlockEngine.getFsDetailsStream(args.blkFp)
     totalBlockBytes = fs.pbSize*fs.numBlk
     bytesPerWorker = (args.task*totalBlockBytes)/ fs.numBlk
+    
+    pdrSes.addFsInfo(fs.numBlk, fs.pbSize, fs.datSize, int(fsSize), 
+                     bytesPerWorker, args.workers, args.blkFp, ibfLength, args.hashNum)
     
     genericManager = mp.Manager()
     pdrManager = IbfManager()
@@ -354,6 +448,8 @@ def main():
     print "Sending Challenge message"
     proofMsg = clt.rpc("127.0.0.1", 9090, challengeMsg)
     print "Received Proof message"
+    processClientMessages(proofMsg, pdrSes, None)
+    
 #cltTimer.startTimer(cltId, "Init-Create")
 #    cltTimer.endTimer(cltId, "Init-Create")
 #     cltTimer.startTimer(cltId, "Init-InitAck-RTT")
@@ -420,7 +516,7 @@ def main():
 #     cltTimer.startTimer(cltId, "Challenge-Proof-RTT")
 #     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
 #     cltTimer.endTimer(cltId, "Challenge-Proof-RTT")
-#     processClientMessages(incoming, pdrSes, cltTimer)
+#     
 #     
 # 
 #     cltTimer.printSessionTimers(cltId)

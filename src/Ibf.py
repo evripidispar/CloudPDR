@@ -14,6 +14,8 @@ class Ibf(object):
 			PJWHash, BKDRHash, SDBMHash, 
 			DJBHash, DEKHash, BPHash, FNVHash, APHash]
 		
+	def setCells(self, cells):
+		self.cells = cells
 
 	def binPadLostIndex(self, lostIndex):
 		binLostIndex = "{0:b}".format(lostIndex)
