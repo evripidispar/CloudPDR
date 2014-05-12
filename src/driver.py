@@ -109,7 +109,7 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
         
 
 def processServerProof(cpdrProofMsg, session, cltTimer):
-    serverLost =  set()
+    
     
     if cltTimer != None:
         cltTimer.startTimer(session.cltId, "ProcProof-Clt-SubSet")
@@ -254,7 +254,7 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
     
     if cltTimer != None:
         cltTimer.startTimer(session.cltId, "ProcProof-Recover")
-    L=CloudPdrFuncs.recover(diffIbf, serverLost, session.challenge, session.sesKey.key.n, session.g)
+    L=CloudPdrFuncs.recover(diffIbf, servLost, session.challenge, session.sesKey.key.n, session.g)
     
     if cltTimer != None:
         cltTimer.endTimer(session.cltId, "ProcProof-Recover")
