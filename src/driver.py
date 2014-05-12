@@ -54,46 +54,71 @@ def subsetAndLessThanDelta(clientMaxBlockId, serverLost, delta):
     return (True, "")
 
 
-def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public):
+def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT):
+    
+    pName = mp.current_process().name
+    x = ExpTimer()
+    x.registerSession(pName)
+    x.registerTimer(pName, "tag")
+    x.registerTimer(pName, "ibf")
+    
     while True:
         item = inputQueue.get()
         if item == "END":
+            TT[pName+str("_tag")] = x.getTotalTimer(pName, "tag")
+            TT[pName+str("_ibf")] = x.getTotalTimer(pName, "ibf")
             return
         
         for blockPBItem in BE.chunks(item, blockProtoBufSz):
             block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
             bIndex = block.getDecimalIndex()
 #            print mp.current_process(), "Processing block", bIndex
+            x.startTimer(pName, "tag")
             w = singleW(block, secret["u"])
             tag = singleTag(w, block, public["g"], secret["d"], public["n"])
+            x.endTimer(pName, "tag")
             W[bIndex] = w
             T[bIndex] = tag
+            
+            x.startTimer(pName, "ibf")
             ibf.insert(block, None, public["n"], public["g"], True)
+            x.endTimer(pName, "ibf")
             del block
 
 
 
 
-def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, comb, lock, qSets, ibf, manager):
+def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, comb, lock, qSets, ibf, manager, TT):
+    
+    pName = mp.current_process().name
+    x = ExpTimer()
+    x.registerSession(pName)
+    x.registerTimer(pName, "cmbW")
+    x.registerTimer(pName, "qSet")
+    
     while True:
         item = inputQueue.get()
         if item == "END":
+            TT[pName+str("_cmbW")] = x.getTotalTimer(pName, "cmbW")
+            TT[pName+str("_qSet")] = x.getTotalTimer(pName, "qSet")
             return
         
         for blockPBItem in BE.chunks(item, blockProtoBufSz):
             block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
+                x.startTimer(pName, "qSet")
                 binBlockIndex = block.getStringIndex()
                 indices = ibf.getIndices(binBlockIndex, True)
                 for i in indices:
                     with lock:
                         qSets.addValue(i, bIndex)
                         
-
+                x.endTimer(pName, "qSet")
                 del block
                 continue
             
+            x.startTimer(pName, "cmbW")
             aI = pickPseudoRandomTheta(chlng, block.getStringIndex())
             aI = number.bytes_to_long(aI)
             h = SHA256.new()
@@ -104,17 +129,19 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
             with lock:
                 comb["w"] *= wI
                 comb["w"] = pow(comb["w"], 1, N)
+            x.endTimer(pName, "cmbW")
             del block
 
-        
+    
 
-def processServerProof(cpdrProofMsg, session, cltTimer):
+def processServerProof(cpdrProofMsg, session):
+    et = ExpTimer()
+    pName = mp.current_process().name
+    et.registerSession(pName)
     
     
-    if cltTimer != None:
-        cltTimer.startTimer(session.cltId, "ProcProof-Clt-SubSet")
-    
-    
+    et.registerTimer(pName, "subset-check")
+    et.startTimer(pName, "subset-check")
     if len(cpdrProofMsg.proof.lostIndeces) > 0:
         res, reason = subsetAndLessThanDelta(session.fsInfo["blockNum"],
                                              cpdrProofMsg.proof.lostIndeces,
@@ -123,25 +150,26 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
             print reason
             return False
      
-    if cltTimer != None:
-        cltTimer.endTimer(session.cltId, "ProcProof-Clt-SubSet")
+    et.endTimer(pName, "subset-check")
     
-    
-    if cltTimer != None: 
-        cltTimer.startTimer(session.cltId, "ProcProof-Clt-Te")    
-    
+    et.registerTimer(pName, "cmbW-start")
+    et.startTimer(pName, "cmbW-start")
+   
     servLost = cpdrProofMsg.proof.lostIndeces
     serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
     gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
     serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
     sesSecret = session.sesKey.getSecretKeyFields() 
     Te =pow(serCombinedTag, sesSecret["e"], session.sesKey.key.n)
+    et.endTimer(pName, "cmbW-start")
     
 #     inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, combW, lock
     
     gManager = mp.Manager()
     combRes = gManager.dict()
+    TT = gManager.dict()
     combRes["w"] = 1
+    
     
     qSetManager = QSetManager()
     qSetManager.start()
@@ -156,7 +184,7 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
                        args=(bytesPerWorker, session.fsInfo["pbSize"],
                              session.fsInfo["blkSz"], servLost, 
                              session.challenge, session.W, session.sesKey.key.n,
-                             combRes, combLock, qSets, session.ibf, gManager))
+                             combRes, combLock, qSets, session.ibf, gManager, TT))
         p.start()
         workerPool.append(p)
     
@@ -176,23 +204,27 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
     for p in workerPool:
         p.join()
     
- 
+   
+    et.registerTimer(pName, "cmbW-last")
+    et.startTimer(pName, "cmbW-last")
     combinedWInv = number.inverse(combRes["w"], session.sesKey.key.n)  #TODO: Not sure this is true
     RatioCheck1=Te*combinedWInv
     RatioCheck1 = pow(RatioCheck1, 1, session.sesKey.key.n)
-    if cltTimer != None:
-        cltTimer.endTimer(session.cltId, "ProcProof-Clt-Te")
+    
          
     if RatioCheck1 != gS:
         print "FAIL#3: The Proof did not pass the first check to go to recover"
         return False
 
+    et.endTimer(pName, "cmbW-last")
+
     print "# # # # # # # ##  # # # # # # # # # # # # # ##"
     
-    if cltTimer != None:
-        cltTimer.startTimer(session.cltId, "ProcProof-Clt-LostSum")
+   
     qS = qSets.qSets()
     
+    et.registerTimer(pName, "lostSum")
+    et.startTimer(pName, "lostSum")
     lostSum = {}
     for p in cpdrProofMsg.proof.lostTags.pairs:
         lostCombinedTag = long(p.v)
@@ -213,51 +245,34 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
         combinedWLInv = number.inverse(combinedWL, session.sesKey.key.n)
         lostSum[p.k] = Lre*combinedWLInv
         lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
+    et.endTimer(pName, "lostSum")
     
     
-    
-    if cltTimer != None:
-        cltTimer.endTimer(session.cltId, "ProcProof-Clt-LostSum")
-       
-    if cltTimer != None:
-        cltTimer.startTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf") 
     serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
                                                  session.fsInfo["blkSz"])
-    if cltTimer != None:
-        cltTimer.endTimer(session.cltId, "ProcProof-CreateIbf-From-ProtoBuf")
-
     
-    if cltTimer != None:
-        cltTimer.startTimer(session.cltId, "ProcProof-SubtractIbf")
-        
+    
     localIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
     
     lc = copy.deepcopy(session.ibf.cells())
     localIbf.setCells(lc)
     
-#     serverIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
-#     sc  = copy.deepcopy(serverStateIbf.cells())
-#     serverIbf.setCells(sc)
-    
-#     diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
-#                                      session.sesKey.key.n, session.dataBitSize, True)
+    et.registerTimer(pName, "subIbf")
+    et.startTimer(pName,"subIbf")
     diffIbf = localIbf.subtractIbf(serverStateIbf, session.challenge,
                                     session.sesKey.key.n, session.fsInfo["blkSz"], True)
-    
-    if cltTimer != None:
-        cltTimer.endTimer(session.cltId, "ProcProof-SubtractIbf")
+    et.endTimer(pName,"subIbf")
     
     for k in lostSum.keys():
         val=lostSum[k]
         diffIbf.cells[k].setHashProd(val)
    
     
-    if cltTimer != None:
-        cltTimer.startTimer(session.cltId, "ProcProof-Recover")
+    et.registerTimer(pName, "recover")
+    et.startTimer(pName, "recover")
     L=CloudPdrFuncs.recover(diffIbf, servLost, session.challenge, session.sesKey.key.n, session.g)
+    et.endTimer(pName, "recover")
     
-    if cltTimer != None:
-        cltTimer.endTimer(session.cltId, "ProcProof-Recover")
     
     for k in lostSum.keys():
         print diffIbf.cells[k].hashProd
@@ -271,33 +286,25 @@ def processServerProof(cpdrProofMsg, session, cltTimer):
       
     return "Exiting Recovery..."
 
-def processClientMessages(incoming, session, cltTimer, lostNum=None):
+def processClientMessages(incoming, session, lostNum=None):
     
     cpdrMsg = MU.constructCloudPdrMessageNet(incoming)
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT_ACK:
         print "Processing INIT-ACK"
-        if cltTimer!=None:
-            cltTimer.startTimer(session.cltId, "LossMessage-Create")
         lostMsg = MU.constructLossMessage(lostNum, session.cltId)
-        if cltTimer != None:
-            cltTimer.endTimer(session.cltId, "LossMessage-Create")
         return lostMsg
         
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS_ACK:
         print "Processing LOSS_ACK"
         
-        if cltTimer != None:
-            cltTimer.startTimer(session.cltId, "ChallengeMsg-Create")
         session.challenge = session.sesKey.generateChallenge()
         challengeMsg = MU.constructChallengeMessage(session.challenge, session.cltId)
-        if cltTimer != None:
-            cltTimer.endTimer(session.cltId, "ChallengeMsg-Create")
         return challengeMsg    
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
-        res = processServerProof(cpdrMsg, session, cltTimer)
+        res = processServerProof(cpdrMsg, session)
         print res
 
 
@@ -396,6 +403,7 @@ def main():
     blockByteChunks = genericManager.Queue(args.workers)
     W = genericManager.dict()
     T = genericManager.dict()
+    TT = genericManager.dict()
     
     pdrManager.start()
     ibf = pdrManager.Ibf(args.hashNum, ibfLength)
@@ -404,7 +412,7 @@ def main():
     
     pool = []
     for i in xrange(args.workers):
-        p = mp.Process(target=workerTask, args=(blockByteChunks,W,T,ibf,fs.pbSize,fs.datSize,secret,public))
+        p = mp.Process(target=workerTask, args=(blockByteChunks,W,T,ibf,fs.pbSize,fs.datSize,secret,public, TT))
         p.start()
         pool.append(p)
     
@@ -419,6 +427,8 @@ def main():
     
     for p in pool:
         p.join()
+    
+    
     
     pdrSes.addState(ibf)
     pdrSes.W = W
@@ -450,77 +460,6 @@ def main():
     print "Received Proof message"
     processClientMessages(proofMsg, pdrSes, None)
     
-#cltTimer.startTimer(cltId, "Init-Create")
-#    cltTimer.endTimer(cltId, "Init-Create")
-#     cltTimer.startTimer(cltId, "Init-InitAck-RTT")
-    
-#     cltTimer.endTimer(cltId, "Init-InitAck-RTT")
-     
-      
-    
-#     
-#     
-#     #Register client timers
-#     cltTimer = ExpTimer()
-#     cltTimer.registerSession(cltId)
-#     cltTimer.registerTimer(cltId, "W-Time")
-#     cltTimer.registerTimer(cltId, "Tag-Time")
-#     cltTimer.registerTimer(cltId, "Pop-Clt-Ibf")
-#     cltTimer.registerTimer(cltId, "Init-Create")
-#     cltTimer.registerTimer(cltId, "Init-InitAck-RTT")
-#     cltTimer.registerTimer(cltId, "LossMessage-Create")
-#     cltTimer.registerTimer(cltId, "ChallengeMsg-Create")
-#     cltTimer.registerTimer(cltId, "ProcProof-Clt-SubSet")
-#     cltTimer.registerTimer(cltId, "ProcProof-Clt-Te")
-#     cltTimer.registerTimer(cltId, "ProcProof-Clt-LostSum")
-#     cltTimer.registerTimer(cltId, "ProcProof-CreateIbf-From-ProtoBuf")
-#     cltTimer.registerTimer(cltId, "ProcProof-Recover")
-#     cltTimer.registerTimer(cltId, "ProcProof-SubtractIbf")
-#     cltTimer.registerTimer(cltId, "Loss-LossAck-RTT")
-#     cltTimer.registerTimer(cltId, "Challenge-Proof-RTT")
-#     
-#     
-#     #Create Wi
-#     cltTimer.startTimer(cltId,"W-Time")
-#     cltTimer.endTimer(cltId, "W-Time")
-#     
-#     
-#     #Create Tags
-#     cltTimer.startTimer(cltId, "Tag-Time")
-#     cltTimer.endTimer(cltId, "Tag-Time")
-#     tagCollection = tGen.createTagProtoBuf(T)
-#    
-#  
-#     cltTimer.printTimer(cltId, "W-Time")  
-#     cltTimer.printTimer(cltId, "Tag-Time")
-#  
-#  
-#     #Create the local state
-# 
-#     #Construct InitMsg
-#     
-#     
-#     
-#     
-#     
-#     
-#     
-#     print "Sending Lost message"
-#     cltTimer.startTimer(cltId, "Loss-LossAck-RTT")
-#     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-#     cltTimer.endTimer(cltId, "Loss-LossAck-RTT")
-#     
-#     
-#     
-#     print "Sending Challenge ...."
-#     cltTimer.startTimer(cltId, "Challenge-Proof-RTT")
-#     incoming = clt.rpc("127.0.0.1", 9090, outgoing)
-#     cltTimer.endTimer(cltId, "Challenge-Proof-RTT")
-#     
-#     
-# 
-#     cltTimer.printSessionTimers(cltId)
-
 
 
 if __name__ == "__main__":
