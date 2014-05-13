@@ -75,7 +75,7 @@ class ClientSession(object):
     BLOCK_INDEX_LEN=32
     BLOCKS_PER_WORKER=200
     
-    def __init__(self, N, g, tagMsg, delta, k, fs, blkNum):
+    def __init__(self, N, g, tagMsg, delta, k, fs, blkNum, runId):
         self.clientKeyN = N
         self.clientKeyG = g
         self.T = {}
@@ -88,6 +88,7 @@ class ClientSession(object):
         self.filesystem = fs
         self.fsBlocksNum = blkNum
         self.populateTags(tagMsg)
+        self.runId = str(runId)
         
     def populateTags(self, tagMsg):
         
@@ -118,7 +119,7 @@ class ClientSession(object):
     
     def produceProof(self, cltId):
         
-        pName = mp.current_process().name
+        pName = self.runId
         et = ExpTimer()
         et.registerSession(pName)
         et.registerTimer(pName, "cmbLost")
@@ -209,5 +210,26 @@ class ClientSession(object):
                                             ibfCells, 
                                             self.lost ,
                                             combinedLostTags)
+
+#         et, TT          
+        run_results = {}
+        for k in TT.keys():
+            key = k[k.index("_")+1:]
+            if key not in run_results.keys():
+                run_results[key] = 0
+            if TT[k] >  run_results[key]:
+                run_results[key] = TT[k]
          
-        return (proofMsg, et, TT)
+    
+        pName = et.timers.keys()[0]
+        for k in et.timers[pName].keys():
+            if 'total' in k:
+                s = k[0:k.index('total')-1]
+                run_results[s] = et.timers[pName][k]
+    
+        fp = open(self.runId+str(".serv"), "a+")
+        for k,v in run_results.items():
+            fp.write(k+"\t"+str(v)+"\n")
+        fp.close()
+    
+        return proofMsg

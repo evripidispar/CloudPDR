@@ -446,7 +446,7 @@ def main():
 
 
     initMsg = MU.constructInitMessage(pubPB, args.blkFp,
-                                               T, cltId, args.hashNum, delta, fs.numBlk)
+                                               T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
 #     ip = '192.168.1.14'
@@ -493,7 +493,7 @@ def main():
             s = k[0:k.index('total')-1]
             run_results[s] = proofSequentialTimer.timers[pName][k]
     
-    fp = open(args.runId, "w")
+    fp = open(args.runId, "a+")
     for k,v in run_results.items():
         fp.write(k+"\t"+str(v)+"\n")
     fp.close()

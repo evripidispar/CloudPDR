@@ -41,15 +41,14 @@ message TagCollection {
 }
 
 
-
-
 message Init {
 	required PublicKey pk = 1;
 	required string filesystem=2;
 	required TagCollection tc = 3;
 	required int32 delta=4;
 	required int32 k=5;
-	required int64 fsNumBlocks=6;	
+	required int64 fsNumBlocks=6;
+	required string runId=7;
 }
 
 message InitAck {

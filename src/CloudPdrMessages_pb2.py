@@ -13,7 +13,7 @@ from google.protobuf import descriptor_pb2
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='protocols/CloudPdrMessages.proto',
   package='',
-  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"\'\n\tBlockDisk\x12\r\n\x05index\x18\x01 \x02(\x0c\x12\x0b\n\x03\x64\x61t\x18\x02 \x02(\x0c\"L\n\nFilesystem\x12\x0e\n\x06pbSize\x18\x01 \x02(\x05\x12\x0e\n\x06numBlk\x18\x02 \x02(\x05\x12\r\n\x05index\x18\x03 \x02(\x05\x12\x0f\n\x07\x64\x61tSize\x18\x04 \x02(\x05\"K\n\x13\x42lockCollectionDisk\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x1e\n\ncollection\x18\x02 \x03(\x0b\x32\n.BlockDisk\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\",\n\rTagCollection\x12\r\n\x05index\x18\x01 \x03(\x05\x12\x0c\n\x04tags\x18\x02 \x03(\t\"}\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x12\n\nfilesystem\x18\x02 \x02(\t\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\x12\r\n\x05\x64\x65lta\x18\x04 \x02(\x05\x12\t\n\x01k\x18\x05 \x02(\x05\x12\x13\n\x0b\x66sNumBlocks\x18\x06 \x02(\x03\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"H\n\x04\x43\x65ll\x12\r\n\x05\x63ount\x18\x01 \x02(\x05\x12\x10\n\x08hashprod\x18\x02 \x02(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x02(\t\x12\x11\n\tcellIndex\x18\x04 \x02(\x05\"\x1b\n\x03Ibf\x12\x14\n\x05\x63\x65lls\x18\x01 \x03(\x0b\x32\x05.Cell\" \n\x08LTagPair\x12\t\n\x01k\x18\x01 \x02(\x05\x12\t\n\x01v\x18\x02 \x02(\t\"(\n\x0cLostTagPairs\x12\x18\n\x05pairs\x18\x01 \x03(\x0b\x32\t.LTagPair\"\x82\x01\n\x05Proof\x12\x13\n\x0b\x63ombinedSum\x18\x01 \x02(\t\x12\x13\n\x0b\x63ombinedTag\x18\x02 \x02(\t\x12\x19\n\x0bserverState\x18\x03 \x02(\x0b\x32\x04.Ibf\x12\x13\n\x0blostIndeces\x18\x04 \x03(\x05\x12\x1f\n\x08lostTags\x18\x05 \x01(\x0b\x32\r.LostTagPairs\"\"\n\x04Lost\x12\t\n\x01L\x18\x01 \x03(\x05\x12\x0f\n\x07lossNum\x18\x02 \x01(\x05\"\x16\n\x07LostAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\xa0\x02\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\x12\x13\n\x04lost\x18\x06 \x01(\x0b\x32\x05.Lost\x12\x16\n\x04lack\x18\x07 \x01(\x0b\x32\x08.LostAck\x12\r\n\x05\x63ltId\x18\x08 \x01(\t\"S\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03\x12\x08\n\x04LOSS\x10\x04\x12\x0c\n\x08LOSS_ACK\x10\x05')
+  serialized_pb='\n protocols/CloudPdrMessages.proto\"!\n\tPublicKey\x12\t\n\x01n\x18\x01 \x02(\t\x12\t\n\x01g\x18\x02 \x02(\t\"\'\n\tBlockDisk\x12\r\n\x05index\x18\x01 \x02(\x0c\x12\x0b\n\x03\x64\x61t\x18\x02 \x02(\x0c\"L\n\nFilesystem\x12\x0e\n\x06pbSize\x18\x01 \x02(\x05\x12\x0e\n\x06numBlk\x18\x02 \x02(\x05\x12\r\n\x05index\x18\x03 \x02(\x05\x12\x0f\n\x07\x64\x61tSize\x18\x04 \x02(\x05\"K\n\x13\x42lockCollectionDisk\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x1e\n\ncollection\x18\x02 \x03(\x0b\x32\n.BlockDisk\"$\n\x05\x42lock\x12\r\n\x05index\x18\x01 \x02(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x02(\x0c\"?\n\x0f\x42lockCollection\x12\x14\n\x0c\x62lockBitSize\x18\x01 \x02(\x05\x12\x16\n\x06\x62locks\x18\x02 \x03(\x0b\x32\x06.Block\",\n\rTagCollection\x12\r\n\x05index\x18\x01 \x03(\x05\x12\x0c\n\x04tags\x18\x02 \x03(\t\"\x8c\x01\n\x04Init\x12\x16\n\x02pk\x18\x01 \x02(\x0b\x32\n.PublicKey\x12\x12\n\nfilesystem\x18\x02 \x02(\t\x12\x1a\n\x02tc\x18\x03 \x02(\x0b\x32\x0e.TagCollection\x12\r\n\x05\x64\x65lta\x18\x04 \x02(\x05\x12\t\n\x01k\x18\x05 \x02(\x05\x12\x13\n\x0b\x66sNumBlocks\x18\x06 \x02(\x03\x12\r\n\x05runId\x18\x07 \x02(\t\"\x16\n\x07InitAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\x1e\n\tChallenge\x12\x11\n\tchallenge\x18\x01 \x02(\t\"H\n\x04\x43\x65ll\x12\r\n\x05\x63ount\x18\x01 \x02(\x05\x12\x10\n\x08hashprod\x18\x02 \x02(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x02(\t\x12\x11\n\tcellIndex\x18\x04 \x02(\x05\"\x1b\n\x03Ibf\x12\x14\n\x05\x63\x65lls\x18\x01 \x03(\x0b\x32\x05.Cell\" \n\x08LTagPair\x12\t\n\x01k\x18\x01 \x02(\x05\x12\t\n\x01v\x18\x02 \x02(\t\"(\n\x0cLostTagPairs\x12\x18\n\x05pairs\x18\x01 \x03(\x0b\x32\t.LTagPair\"\x82\x01\n\x05Proof\x12\x13\n\x0b\x63ombinedSum\x18\x01 \x02(\t\x12\x13\n\x0b\x63ombinedTag\x18\x02 \x02(\t\x12\x19\n\x0bserverState\x18\x03 \x02(\x0b\x32\x04.Ibf\x12\x13\n\x0blostIndeces\x18\x04 \x03(\x05\x12\x1f\n\x08lostTags\x18\x05 \x01(\x0b\x32\r.LostTagPairs\"\"\n\x04Lost\x12\t\n\x01L\x18\x01 \x03(\x05\x12\x0f\n\x07lossNum\x18\x02 \x01(\x05\"\x16\n\x07LostAck\x12\x0b\n\x03\x61\x63k\x18\x01 \x02(\x08\"\xa0\x02\n\x0b\x43loudPdrMsg\x12\"\n\x04type\x18\x01 \x02(\x0e\x32\x14.CloudPdrMsg.msgType\x12\x13\n\x04init\x18\x02 \x01(\x0b\x32\x05.Init\x12\x15\n\x03\x61\x63k\x18\x03 \x01(\x0b\x32\x08.InitAck\x12\x19\n\x05\x63hlng\x18\x04 \x01(\x0b\x32\n.Challenge\x12\x15\n\x05proof\x18\x05 \x01(\x0b\x32\x06.Proof\x12\x13\n\x04lost\x18\x06 \x01(\x0b\x32\x05.Lost\x12\x16\n\x04lack\x18\x07 \x01(\x0b\x32\x08.LostAck\x12\r\n\x05\x63ltId\x18\x08 \x01(\t\"S\n\x07msgType\x12\x08\n\x04INIT\x10\x00\x12\x0c\n\x08INIT_ACK\x10\x01\x12\r\n\tCHALLENGE\x10\x02\x12\t\n\x05PROOF\x10\x03\x12\x08\n\x04LOSS\x10\x04\x12\x0c\n\x08LOSS_ACK\x10\x05')
 
 
 
@@ -50,8 +50,8 @@ _CLOUDPDRMSG_MSGTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=1177,
-  serialized_end=1260,
+  serialized_start=1193,
+  serialized_end=1276,
 )
 
 
@@ -363,6 +363,13 @@ _INIT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='runId', full_name='Init.runId', index=6,
+      number=7, type=9, cpp_type=9, label=2,
+      has_default_value=False, default_value=unicode("", "utf-8"),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -372,8 +379,8 @@ _INIT = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=416,
-  serialized_end=541,
+  serialized_start=417,
+  serialized_end=557,
 )
 
 
@@ -400,8 +407,8 @@ _INITACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=543,
-  serialized_end=565,
+  serialized_start=559,
+  serialized_end=581,
 )
 
 
@@ -428,8 +435,8 @@ _CHALLENGE = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=567,
-  serialized_end=597,
+  serialized_start=583,
+  serialized_end=613,
 )
 
 
@@ -477,8 +484,8 @@ _CELL = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=599,
-  serialized_end=671,
+  serialized_start=615,
+  serialized_end=687,
 )
 
 
@@ -505,8 +512,8 @@ _IBF = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=673,
-  serialized_end=700,
+  serialized_start=689,
+  serialized_end=716,
 )
 
 
@@ -540,8 +547,8 @@ _LTAGPAIR = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=702,
-  serialized_end=734,
+  serialized_start=718,
+  serialized_end=750,
 )
 
 
@@ -568,8 +575,8 @@ _LOSTTAGPAIRS = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=736,
-  serialized_end=776,
+  serialized_start=752,
+  serialized_end=792,
 )
 
 
@@ -624,8 +631,8 @@ _PROOF = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=779,
-  serialized_end=909,
+  serialized_start=795,
+  serialized_end=925,
 )
 
 
@@ -659,8 +666,8 @@ _LOST = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=911,
-  serialized_end=945,
+  serialized_start=927,
+  serialized_end=961,
 )
 
 
@@ -687,8 +694,8 @@ _LOSTACK = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=947,
-  serialized_end=969,
+  serialized_start=963,
+  serialized_end=985,
 )
 
 
@@ -765,8 +772,8 @@ _CLOUDPDRMSG = _descriptor.Descriptor(
   options=None,
   is_extendable=False,
   extension_ranges=[],
-  serialized_start=972,
-  serialized_end=1260,
+  serialized_start=988,
+  serialized_end=1276,
 )
 
 _BLOCKCOLLECTIONDISK.fields_by_name['collection'].message_type = _BLOCKDISK

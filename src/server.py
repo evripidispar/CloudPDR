@@ -20,19 +20,18 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
         k = cpdrMsg.init.k
         fs = cpdrMsg.init.filesystem
         blkNum = cpdrMsg.init.fsNumBlocks
-        clients[cltName] = ClientSession(N, g, cpdrMsg.init.tc, delta, k, fs, blkNum)
+        runId = cpdrMsg.init.runId
+        clients[cltName] = ClientSession(N, g, cpdrMsg.init.tc, delta, k, fs, blkNum, runId)
         
     initAck = MU.constructInitAckMessage()
     return initAck
 
-def processChallenge(cpdrMsg, runId):
+def processChallenge(cpdrMsg):
      
     if cpdrMsg.cltId in clients.keys():
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
-        proofMsg, seqTimer, parallelTimer = clients[cpdrMsg.cltId].produceProof(cpdrMsg.cltId)
-        print seqTimer
-        print parallelTimer
+        proofMsg  = clients[cpdrMsg.cltId].produceProof(cpdrMsg.cltId)
         return proofMsg
 
 def processLostMessage(cpdrMsg):
@@ -46,49 +45,37 @@ def processLostMessage(cpdrMsg):
     lossAck = MU.constructLostAckMessage()
     return lossAck
 
-def procMessage(incoming, serverTimer):
+def procMessage(incoming):
     
     print "Processing incoming message..."
     
     cpdrMsg = MU.constructCloudPdrMessageNet(incoming)
-    if cpdrMsg.cltId not in serverTimer.timers.keys():
-        serverTimer.registerSession(cpdrMsg.cltId)
-        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProcInit")
-        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProcLoss")
-        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofProtoBufConstruct")
-        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofCombinedValues")
-        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofIbfInsert")
-        serverTimer.registerTimer(cpdrMsg.cltId, "Server-ProofCombinedLostTags")
     
     
     if cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.INIT:
-        serverTimer.startTimer(cpdrMsg.cltId, "Server-ProcInit")
         initAck = processInitMessage(cpdrMsg)
-        serverTimer.endTimer(cpdrMsg.cltId, "Server-ProcInit")
         return initAck
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.LOSS:
-        serverTimer.startTimer(cpdrMsg.cltId, "Server-ProcLoss")
         lossAck = processLostMessage(cpdrMsg)
-        serverTimer.endTimer(cpdrMsg.cltId, "Server-ProcLoss")
         return lossAck
     
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.CHALLENGE:
         print "Incoming challenge"
-        proof = processChallenge(cpdrMsg, serverTimer)
+        proof = processChallenge(cpdrMsg)
         return proof
     
     
         
         
-def serve(port, serverTimer):
+def serve(port):
     context = zmq.Context()
     socket = context.socket(zmq.REP)
     socket.bind("tcp://*:"+str(port))
 
     while True:
         msg = socket.recv()
-        outMessage = procMessage(msg, serverTimer)
+        outMessage = procMessage(msg)
         socket.send(outMessage)
 
 def main():
@@ -98,17 +85,10 @@ def main():
     p.add_argument('-p', dest='port', action='store', default=9090,
                    help='CloudPdr server port')
     
-    p.add_argument("-r", dest="runId", action='store', default=None, 
-                   help="Current Run id")
-    
-    
     args = p.parse_args()
-    if args.runId == None:
-        print "Please specify run ID"
-        sys.exit(1)
     
-    serverTimer = ExpTimer()
-    serve(args.port, serverTimer)
+    
+    serve(args.port)
 
 if __name__ == "__main__":
     main()

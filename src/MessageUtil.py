@@ -6,7 +6,7 @@ from Ibf import Ibf
     @var blks: block collection in protocol buffer format
     @var tags: tag collection in protocol buffer format
 '''
-def constructInitMessage(pub, filesystem, T, cltId, k, delta, blocksNum):
+def constructInitMessage(pub, filesystem, T, cltId, k, delta, blocksNum, runId):
     initMsg = CloudPdrMessages_pb2.Init()
     initMsg.pk.CopyFrom(pub)
     initMsg.filesystem = filesystem
@@ -17,6 +17,7 @@ def constructInitMessage(pub, filesystem, T, cltId, k, delta, blocksNum):
     initMsg.k = k
     initMsg.delta = delta
     initMsg.fsNumBlocks = blocksNum
+    initMsg.runId = runId
     cpdrMsg = constructCloudPdrMessage(CloudPdrMessages_pb2.CloudPdrMsg.INIT,
                                        initMsg, None, None, None, cltId)
     cpdrMsg = cpdrMsg.SerializeToString()
