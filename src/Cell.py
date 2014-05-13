@@ -3,6 +3,7 @@ from bitarray import bitarray
 from Block import *
 from CryptoUtil import apply_f
 from SharedCounter import SharedCounter
+import gmpy2
 
 class Cell(object):
 	def __init__(self, id, dataBitSize):
@@ -57,7 +58,7 @@ class Cell(object):
 			f = apply_f(block, N, secret, g)
 			self.f = f
 			self.hashProd *= f
-			self.hashProd = pow(self.hashProd, 1, N)
+			self.hashProd = gmpy2.powmod(self.hashProd, 1, N)
 		else:
 			self.hashProd = 1
 			
@@ -78,7 +79,7 @@ class Cell(object):
 			f = apply_f(block, N, secret, g)
 			fInv = number.inverse(f, N)  #TODO: Not sure this is true
 			self.hashProd *= fInv
-			self.hashProd = pow(self.hashProd, 1, N)
+			self.hashProd = gmpy2.powmod(self.hashProd, 1, N)
 
 	def isPure(self):
 # 		if self.count == 1:  
@@ -111,7 +112,7 @@ class Cell(object):
 		if isHashProdOne == False:
 			otherFInv = number.inverse(otherCell.getHashProd(), N)
 			diffCell.hashProd = otherFInv * self.hashProd
-			diffCell.hashProd = pow(diffCell.hashProd, 1, N) 
+			diffCell.hashProd = gmpy2.powmod(diffCell.hashProd, 1, N) 
 		
 		return diffCell
 

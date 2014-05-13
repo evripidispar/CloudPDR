@@ -13,6 +13,7 @@ import CloudPdrMessages_pb2
 import struct
 from PdrManager import IbfManager, QSetManager
 from ExpTimer import ExpTimer
+import gmpy2
 
 def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets, TT):
     
@@ -62,8 +63,8 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
             with lock:
                 cVal["cSum"] += (aI*bI)
                 x.endTimer(pName,"cSumKept")
-                cVal["cTag"] *= pow(T[bIndex], aI, N)
-                cVal["cTag"] = pow(cVal["cTag"],1,N)
+                cVal["cTag"] *= gmpy2.powmod(T[bIndex], aI, N)
+                cVal["cTag"] = gmpy2.powmod(cVal["cTag"],1,N)
                 x.endTimer(pName,"cTagKept")
                 
                 
@@ -203,8 +204,8 @@ class ClientSession(object):
                 binV  = ibf.binPadLostIndex(v)
                 aBlk = pickPseudoRandomTheta(self.challenge, binV)
                 aI = number.bytes_to_long(aBlk)
-                lostTag=pow(self.T[v], aI, self.clientKeyN)
-                combinedLostTags[k] = pow((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
+                lostTag=gmpy2.powmod(self.T[v], aI, self.clientKeyN)
+                combinedLostTags[k] = gmpy2.powmod((combinedLostTags[k]*lostTag), 1, self.clientKeyN)
     
 
         et.endTimer(pName, "cmbLost")

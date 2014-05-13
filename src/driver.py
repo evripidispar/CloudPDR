@@ -24,7 +24,7 @@ from TagGenerator import singleTag
 from TagGenerator import singleW
 import struct
 from PdrManager import IbfManager, QSetManager
-import copy
+import gmpy2
 
 
 
@@ -126,10 +126,10 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
             wI = W[bIndex]
             h.update(wI)
             wI = number.bytes_to_long(h.digest())
-            wI = pow(wI, aI, N)
+            wI = gmpy2.powmodwI, aI, N)
             with lock:
                 comb["w"] *= wI
-                comb["w"] = pow(comb["w"], 1, N)
+                comb["w"] = gmpy2.powmodcomb["w"], 1, N)
             x.endTimer(pName, "cmbW")
             del block
 
@@ -158,10 +158,10 @@ def processServerProof(cpdrProofMsg, session):
    
     servLost = cpdrProofMsg.proof.lostIndeces
     serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
-    gS = pow(session.g, serCombinedSum, session.sesKey.key.n)
+    gS = gmpy2.powmodsession.g, serCombinedSum, session.sesKey.key.n)
     serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
     sesSecret = session.sesKey.getSecretKeyFields() 
-    Te =pow(serCombinedTag, sesSecret["e"], session.sesKey.key.n)
+    Te =gmpy2.powmodserCombinedTag, sesSecret["e"], session.sesKey.key.n)
     et.endTimer(pName, "cmbW-start")
     
 #     inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, combW, lock
@@ -217,7 +217,7 @@ def processServerProof(cpdrProofMsg, session):
     et.startTimer(pName, "cmbW-last")
     combinedWInv = number.inverse(combRes["w"], session.sesKey.key.n)  #TODO: Not sure this is true
     RatioCheck1=Te*combinedWInv
-    RatioCheck1 = pow(RatioCheck1, 1, session.sesKey.key.n)
+    RatioCheck1 = gmpy2.powmodRatioCheck1, 1, session.sesKey.key.n)
     
          
     if RatioCheck1 != gS:
@@ -236,7 +236,7 @@ def processServerProof(cpdrProofMsg, session):
     lostSum = {}
     for p in cpdrProofMsg.proof.lostTags.pairs:
         lostCombinedTag = long(p.v)
-        Lre =pow(lostCombinedTag, sesSecret["e"], session.sesKey.key.n)
+        Lre =gmpy2.powmodlostCombinedTag, sesSecret["e"], session.sesKey.key.n)
         
         Qi = qS[p.k]
         combinedWL = 1
@@ -247,12 +247,12 @@ def processServerProof(cpdrProofMsg, session):
             wL = session.W[vQi]
             h.update(str(wL))
             wLHash = number.bytes_to_long(h.digest())
-            waL = pow(wLHash, aLI, session.sesKey.key.n)
-            combinedWL = pow((combinedWL*waL), 1, session.sesKey.key.n)
+            waL = gmpy2.powmodwLHash, aLI, session.sesKey.key.n)
+            combinedWL = gmpy2.powmod(combinedWL*waL), 1, session.sesKey.key.n)
         
         combinedWLInv = number.inverse(combinedWL, session.sesKey.key.n)
         lostSum[p.k] = Lre*combinedWLInv
-        lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
+        lostSum[p.k] = gmpy2.powmodlostSum[p.k], 1, session.sesKey.key.n)
     et.endTimer(pName, "lostSum")
     
   #  qSetManager.stop()

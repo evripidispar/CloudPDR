@@ -1,6 +1,6 @@
 from Crypto.Util import number
 from Crypto.Hash import HMAC
-
+import gmpy2
 
 def pickPseudoRandomTheta(secret_key, index):
 	hmac = HMAC.new(secret_key)
@@ -17,4 +17,4 @@ def apply_f(block, N, secret_key, g):
 	bLong = number.bytes_to_long(block.data.tobytes())
 	
 	abExp = aLong*bLong
-	return pow(g, abExp, N)
+	return gmpy2.powmod(g, abExp, N)

@@ -1,6 +1,7 @@
 from Crypto.Util import number
 from Crypto.Hash import SHA256
 from CloudPdrMessages_pb2 import TagCollection
+import gmpy2
 
 class TagGenerator(object):
     '''
@@ -24,13 +25,13 @@ class TagGenerator(object):
         for (w, b) in zip(w_collection, blocks):
             h = SHA256.new()
             bLong =  number.bytes_to_long(b.data.tobytes())
-            powG = pow(g,bLong, n)
+            powG = gmpy2.powmod(g,bLong, n)
             h.update(str(w))
             wHash = number.bytes_to_long(h.digest())
             fp.write(str(wHash)+"\n")
             
-            wGmodN = pow((wHash*powG),1, n)
-            res = pow(wGmodN, d, n)
+            wGmodN = gmpy2.powmod((wHash*powG),1, n)
+            res = gmpy2.powmod(wGmodN, d, n)
             tags.append(res)
         fp.close()
         return tags
@@ -50,11 +51,11 @@ def singleW(block, u):
 def singleTag(w, block, g, d, n):
         h = SHA256.new()
         bLong = number.bytes_to_long(block.data.tobytes())
-        powG = pow(g,bLong,n)
+        powG = gmpy2.powmod(g,bLong,n)
         h.update(str(w))
         wHash = number.bytes_to_long(h.digest())
-        wGmodN = pow((wHash*powG),1, n)
-        tag = pow(wGmodN, d, n)
+        wGmodN = gmpy2.powmod((wHash*powG),1, n)
+        tag = gmpy2.powmod(wGmodN, d, n)
         return tag
 
 def tagDict2ProtoBuf(T):
