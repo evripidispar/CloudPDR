@@ -5,6 +5,7 @@ import CloudPdrMessages_pb2
 import BlockEngine
 from ClientSession import ClientSession
 from ExpTimer import ExpTimer
+import sys
 
 clients = {}
 
@@ -24,12 +25,14 @@ def processInitMessage(cpdrMsg, storeBlocks=None):
     initAck = MU.constructInitAckMessage()
     return initAck
 
-def processChallenge(cpdrMsg,serverTimer):
+def processChallenge(cpdrMsg, runId):
      
     if cpdrMsg.cltId in clients.keys():
         chlng = cpdrMsg.chlng.challenge
         clients[cpdrMsg.cltId].addClientChallenge(chlng)
-        proofMsg = clients[cpdrMsg.cltId].produceProof(serverTimer, cpdrMsg.cltId)
+        proofMsg, seqTimer, parallelTimer = clients[cpdrMsg.cltId].produceProof(cpdrMsg.cltId)
+        print seqTimer
+        print parallelTimer
         return proofMsg
 
 def processLostMessage(cpdrMsg):
@@ -95,8 +98,16 @@ def main():
     p.add_argument('-p', dest='port', action='store', default=9090,
                    help='CloudPdr server port')
     
-    serverTimer = ExpTimer()
+    p.add_argument("-r", dest="runId", action='store', default=None, 
+                   help="Current Run id")
+    
+    
     args = p.parse_args()
+    if args.runId == None:
+        print "Please specify run ID"
+        sys.exit(1)
+    
+    serverTimer = ExpTimer()
     serve(args.port, serverTimer)
 
 if __name__ == "__main__":

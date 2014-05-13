@@ -284,7 +284,8 @@ def processServerProof(cpdrProofMsg, session):
     for blk in L:
         print blk.getDecimalIndex()
       
-    return "Exiting Recovery..."
+    
+    return ("Exiting Recovery...", TT, et)
 
 def processClientMessages(incoming, session, lostNum=None):
     
@@ -305,7 +306,7 @@ def processClientMessages(incoming, session, lostNum=None):
     elif cpdrMsg.type == CloudPdrMessages_pb2.CloudPdrMsg.PROOF:
         print "Received Proof"
         res = processServerProof(cpdrMsg, session)
-        print res
+        return res
 
 
 
@@ -338,7 +339,11 @@ def main():
    
     p.add_argument('-w', dest="workers", action='store', type=int, default=4,
                   help='Number of worker processes ')
-
+    
+   
+    p.add_argument('-r', dest="runId", action='store', help='Current running id')
+   
+   
     args = p.parse_args()
     if args.hashNum > 10: 
         print "Number of hashFunctions should be less than 10"
@@ -352,15 +357,16 @@ def main():
         print 'Please specify a generator file'
         sys.exit(1)
         
+    if args.runId == None:
+        print 'Please specify run ID'
+        sys.exit(1)
+        
     #Generate client id
     cltId = produceClientId()
        
    
     #Create current session
     pdrSes = PdrSession(cltId)
-    
-    
-    
     
     #Read the generator from File
     fp = open(args.genFile, "r")
@@ -442,25 +448,62 @@ def main():
     initMsg = MU.constructInitMessage(pubPB, args.blkFp,
                                                T, cltId, args.hashNum, delta, fs.numBlk)
 
+
+#     ip = '192.168.1.14'
+    ip = "127.0.0.1"
     clt = RpcPdrClient()    
     print "Sending Initialization message"
-    initAck = clt.rpc("127.0.0.1", 9090, initMsg) 
+    initAck = clt.rpc(ip, 9090, initMsg) 
     print "Received Initialization ACK"
     
     
     lostMsg = processClientMessages(initAck, pdrSes, args.lostNum)
     print "Sending Lost message"
-    lostAck = clt.rpc("127.0.0.1", 9090, lostMsg)
+    lostAck = clt.rpc(ip, 9090, lostMsg)
     print "Received Lost-Ack message"
     
     
     challengeMsg = processClientMessages(lostAck, pdrSes)
     print "Sending Challenge message"
-    proofMsg = clt.rpc("127.0.0.1", 9090, challengeMsg)
+    proofMsg = clt.rpc(ip, 9090, challengeMsg)
     print "Received Proof message"
-    processClientMessages(proofMsg, pdrSes)
+    result, proofParallelTimers, proofSequentialTimer  = processClientMessages(proofMsg, pdrSes)
     
-
-
+    
+    
+    run_results = {}
+    
+    for k in TT.keys():
+        key = k[k.index("_")+1:]
+        if key not in run_results.keys():
+            run_results[key] = 0
+        if TT[k] >  run_results[key]:
+            run_results[key] = TT[k]
+        
+    for k in proofParallelTimers.keys():
+        key = k[k.index("_")+1:]
+        if key not in run_results.keys():
+            run_results[key] = 0
+        if proofParallelTimers[k] >  run_results[key]:
+            run_results[key] = proofParallelTimers[k]
+    
+    pName = proofSequentialTimer.timers.keys()[0]
+    for k in proofSequentialTimer.timers[pName].keys():
+        if 'total' in k:
+            s = k[0:k.index('total')-1]
+            run_results[s] = proofSequentialTimer.timers[pName][k]
+    
+    fp = open(args.runId, "w")
+    for k,v in run_results.items():
+        fp.write(k+"\t"+str(v)+"\n")
+    fp.close()
+    
+    
+    
+    
+    
+    
+    
+    
 if __name__ == "__main__":
     main()

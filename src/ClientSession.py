@@ -29,7 +29,7 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
         item = inputQueue.get()
         if item == "END":
             TT[pName+str("_qSet")] = x.getTotalTimer(pName, "qSet")
-            TT[pName+str("_cSumKept")] = x.getTotalTimer(pName, "cTagKept") - x.getTotalTimer(pName, "ibf")
+            TT[pName+str("_cSumKept")] = x.getTotalTimer(pName, "cSumKept") - x.getTotalTimer(pName, "ibf")
             TT[pName+str("_cTagKept")] = x.getTotalTimer(pName, "cTagKept") - x.getTotalTimer(pName, "ibf")
             TT[pName+str("_ibf")] = x.getTotalTimer(pName, "ibf")
             
@@ -49,7 +49,7 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
                 del block
                 continue
             x.startTimer(pName, "cSumKept")
-            x.startTimer(pName, "cTakKept")
+            x.startTimer(pName, "cTagKept")
             aI = pickPseudoRandomTheta(chlng, block.getStringIndex())
             aI = number.bytes_to_long(aI)
             bI = number.bytes_to_long(block.data.tobytes())
@@ -116,7 +116,7 @@ class ClientSession(object):
         self.lost = np.random.random_integers(0, self.fsBlocksNum-1, lossNum)
     
     
-    def produceProof(self, serverTimer, cltId):
+    def produceProof(self, cltId):
         
         pName = mp.current_process().name
         et = ExpTimer()
@@ -210,4 +210,4 @@ class ClientSession(object):
                                             self.lost ,
                                             combinedLostTags)
          
-        return proofMsg
+        return (proofMsg, et, TT)
