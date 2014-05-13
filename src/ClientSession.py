@@ -180,7 +180,7 @@ class ClientSession(object):
         
         for p in workerPool:
             p.join()
-        
+        fp.close()
         #print "combinedTag", combinedValues["cTag"]
         #print "combinedSum", combinedValues["cSum"]
      

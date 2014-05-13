@@ -204,6 +204,7 @@ def processServerProof(cpdrProofMsg, session):
     for p in workerPool:
         p.join()
     
+    fp.close()
    
     et.registerTimer(pName, "cmbW-last")
     et.startTimer(pName, "cmbW-last")
@@ -247,19 +248,20 @@ def processServerProof(cpdrProofMsg, session):
         lostSum[p.k] = pow(lostSum[p.k], 1, session.sesKey.key.n)
     et.endTimer(pName, "lostSum")
     
+  #  qSetManager.stop()
     
     serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
                                                  session.fsInfo["blkSz"])
     
     
-    localIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
+#     localIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
     
-    lc = copy.deepcopy(session.ibf.cells())
-    localIbf.setCells(lc)
+    #lc = copy.deepcopy(session.ibf.cells())
+    #localIbf.setCells(lc)
     
     et.registerTimer(pName, "subIbf")
     et.startTimer(pName,"subIbf")
-    diffIbf = localIbf.subtractIbf(serverStateIbf, session.challenge,
+    diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
                                     session.sesKey.key.n, session.fsInfo["blkSz"], True)
     et.endTimer(pName,"subIbf")
     
@@ -433,8 +435,8 @@ def main():
     
     for p in pool:
         p.join()
-    
-    
+    fp.close()
+#     pdrManager.stop()
     
     pdrSes.addState(ibf)
     pdrSes.W = W
@@ -449,8 +451,8 @@ def main():
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-#     ip = '192.168.1.14'
-    ip = "127.0.0.1"
+    ip = '192.168.1.14'
+#     ip = "127.0.0.1"
     clt = RpcPdrClient()    
     print "Sending Initialization message"
     initAck = clt.rpc(ip, 9090, initMsg) 

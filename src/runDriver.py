@@ -31,15 +31,21 @@ def main():
     w = 4
     k = 5
     
+    runs  = {}
     print "#!/bin/bash"
     for fName,runId in zip(fsFiles,availableFS):
         for r in xrange(args.runsPerFs):
             blocks, size = getRunInfo(fName)
             runName = "runs/"+blocks+"__"+"__"+size+".txt"
             cmd = "python driver.py -b %s -g generator.txt -k %d -n 1024 -w %d --task %d -r %s ;" % (fName, k, w, task, runName)
-#             os.system(cmd)
-            print cmd
-        sys.exit(1)  
+            runs[int(blocks)] = cmd
+            
+    skeys = runs.keys()
+    skeys.sort()
+    for k in skeys:
+        print "echo \"", runs[k], "\""
+        print runs[k]
+        
     
 
 if __name__ == "__main__":
