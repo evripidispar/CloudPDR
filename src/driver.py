@@ -2,6 +2,7 @@ import argparse
 import sys
 from BlockUtil import *
 from Ibf import *
+import zmq
 #from CloudPDRObj import *
 import CloudPdrFuncs
 import BlockEngine as BE
@@ -176,6 +177,7 @@ def processServerProof(cpdrProofMsg, session):
     qSets = qSetManager.QSet()
     
     combLock = mp.Lock()
+    print session.fsInfo["workers"]
     bytesPerWorker = mp.Queue(session.fsInfo["workers"])
     
     workerPool = []
@@ -186,6 +188,7 @@ def processServerProof(cpdrProofMsg, session):
                              session.challenge, session.W, session.sesKey.key.n,
                              combRes, combLock, qSets, session.ibf, gManager, TT))
         p.start()
+        
         workerPool.append(p)
     
     fp = open(session.fsInfo["fsName"], "rb")
@@ -203,6 +206,10 @@ def processServerProof(cpdrProofMsg, session):
     
     for p in workerPool:
         p.join()
+        
+    for p in workerPool:
+        p.terminate()
+    
     
     fp.close()
    
@@ -254,15 +261,16 @@ def processServerProof(cpdrProofMsg, session):
                                                  session.fsInfo["blkSz"])
     
     
-#     localIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
+    localIbf = Ibf(session.fsInfo["k"], session.fsInfo["ibfLength"])
     
-    #lc = copy.deepcopy(session.ibf.cells())
-    #localIbf.setCells(lc)
-    
+    lc = session.ibf.cells()
+    localIbf.setCells(lc)
     et.registerTimer(pName, "subIbf")
     et.startTimer(pName,"subIbf")
-    diffIbf = session.ibf.subtractIbf(serverStateIbf, session.challenge,
+    diffIbf = localIbf.subtractIbf(serverStateIbf, session.challenge,
                                     session.sesKey.key.n, session.fsInfo["blkSz"], True)
+
+#     diffIbf = serverStateIbf
     et.endTimer(pName,"subIbf")
     
     for k in lostSum.keys():
@@ -435,6 +443,11 @@ def main():
     
     for p in pool:
         p.join()
+        
+    for p in pool:
+        p.terminate()
+        
+        
     fp.close()
 #     pdrManager.stop()
     
@@ -451,9 +464,10 @@ def main():
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-    ip = '192.168.1.14'
-#     ip = "127.0.0.1"
-    clt = RpcPdrClient()    
+    #ip = '192.168.1.14'
+    ip = "127.0.0.1"
+    zmqContext =  zmq.Context()
+    clt = RpcPdrClient(zmqContext)    
     print "Sending Initialization message"
     initAck = clt.rpc(ip, 9090, initMsg) 
     print "Received Initialization ACK"
@@ -471,7 +485,7 @@ def main():
     print "Received Proof message"
     result, proofParallelTimers, proofSequentialTimer  = processClientMessages(proofMsg, pdrSes)
     
-    
+    zmqContext.term()
     
     run_results = {}
     

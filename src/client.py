@@ -2,8 +2,8 @@ import zmq
 
 class RpcPdrClient(object):
     
-    def __init__(self):
-        self.context = zmq.Context()
+    def __init__(self, context):
+        self.context = context
     
     def rpc(self, ip, port, msg):
         sock = self.context.socket(zmq.REQ)
@@ -11,6 +11,7 @@ class RpcPdrClient(object):
         sock.send(msg)
         
         inMsg = sock.recv()
+        sock.close()
         return inMsg
         
 
