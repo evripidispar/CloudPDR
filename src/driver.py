@@ -91,6 +91,7 @@ def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT)
 
 def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, comb, lock, qSets, ibf, manager, TT):
     
+    
     pName = mp.current_process().name
     x = ExpTimer()
     x.registerSession(pName)
@@ -213,6 +214,8 @@ def processServerProof(cpdrProofMsg, session):
     
     fp.close()
    
+   
+   
     et.registerTimer(pName, "cmbW-last")
     et.startTimer(pName, "cmbW-last")
     combinedWInv = number.inverse(combRes["w"], session.sesKey.key.n)  #TODO: Not sure this is true
@@ -286,15 +289,18 @@ def processServerProof(cpdrProofMsg, session):
     
     for k in lostSum.keys():
         print diffIbf.cells[k].hashProd
+       
+
         
-    if L==None:
+    if L== None:
+        et.changeTimerLabel(pName, "recover", "recover-fail")
         print "fail to recover"
-        sys.exit(1)
+        return ("Exiting Failed Recovery...", TT, et) 
         
     for blk in L:
         print blk.getDecimalIndex()
       
-    
+
     return ("Exiting Recovery...", TT, et)
 
 def processClientMessages(incoming, session, lostNum=None):
@@ -464,8 +470,8 @@ def main():
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-#     ip = '192.168.1.4'
-    ip = "127.0.0.1"
+    ip = '192.168.1.14'
+    #ip = "127.0.0.1"
     zmqContext =  zmq.Context()
     clt = RpcPdrClient(zmqContext)    
     print "Sending Initialization message"

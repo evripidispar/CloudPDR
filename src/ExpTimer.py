@@ -33,3 +33,8 @@ class ExpTimer(object):
             
     def getTotalTimer(self, sId, tId):
         return self.timers[sId][tId+str("_total")]
+    
+    def changeTimerLabel(self, sId, tId, newTid):
+        self.timers[sId][newTid] = self.timers[sId][tId]
+        self.timers[sId][newTid+str("_total")] = self.timers[sId][tId+str("_total")]
+        del self.timers[sId][tId]
