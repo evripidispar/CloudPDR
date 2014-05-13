@@ -95,27 +95,27 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
     x = ExpTimer()
     x.registerSession(pName)
     x.registerTimer(pName, "cmbW")
-    x.registerTimer(pName, "qSet")
+    x.registerTimer(pName, "qSet_check")
     
     while True:
         item = inputQueue.get()
         if item == "END":
             TT[pName+str("_cmbW")] = x.getTotalTimer(pName, "cmbW")
-            TT[pName+str("_qSet")] = x.getTotalTimer(pName, "qSet")
+            TT[pName+str("_qSet_check")] = x.getTotalTimer(pName, "qSet_check")
             return
         
         for blockPBItem in BE.chunks(item, blockProtoBufSz):
             block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
-                x.startTimer(pName, "qSet")
+                x.startTimer(pName, "qSet_check")
                 binBlockIndex = block.getStringIndex()
                 indices = ibf.getIndices(binBlockIndex, True)
                 for i in indices:
                     with lock:
                         qSets.addValue(i, bIndex)
                         
-                x.endTimer(pName, "qSet")
+                x.endTimer(pName, "qSet_check")
                 del block
                 continue
             
@@ -464,8 +464,8 @@ def main():
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-    #ip = '192.168.1.14'
-    ip = "127.0.0.1"
+    ip = '192.168.1.4'
+    #ip = "127.0.0.1"
     zmqContext =  zmq.Context()
     clt = RpcPdrClient(zmqContext)    
     print "Sending Initialization message"

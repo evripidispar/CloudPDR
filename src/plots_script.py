@@ -6,7 +6,7 @@ matplotlib.use('PDF')
 import matplotlib.pyplot as plt
 
 
-def average_comp(filename, numBlocks, blocksize):
+def average_comp(filename, numBlocks, blocksize, version):
     timesStatsFile = open(filename, "r")
     
     setup=['cmbW','ibf','tag']
@@ -30,7 +30,7 @@ def average_comp(filename, numBlocks, blocksize):
     for k in times_stats.keys():
         average=0.0
         average = sum(times_stats[k]) / (len(times_stats[k]))
-        fp = open("./outputs/"+k+"_blocksize_"+str(blocksize)+".dat", "a+")
+        fp = open("./outputs/"+k+"_blocksize_"+str(blocksize)+"_"+version+".dat", "a+")
         fp.write(str(numBlocks)+"\t"+ str(average)+"\n")
         fp.close()
         
@@ -54,15 +54,15 @@ def average_comp(filename, numBlocks, blocksize):
     timesStatsFile.close()
     
     if (average_setup!=0.0):
-        fp = open("./outputs/setup_blocksize_"+str(blocksize)+".dat", "a+")
+        fp = open("./outputs/setup_blocksize_"+str(blocksize)+"_"+version+".dat", "a+")
         fp.write(str(numBlocks)+"\t"+ str(average_setup)+"\n")
         fp.close()
     if (average_proof_check!=0.0):   
-        fp = open("./outputs/proof_check_blocksize_"+str(blocksize)+".dat", "a+")
+        fp = open("./outputs/proof_check_blocksize_"+str(blocksize)+"_"+version+".dat", "a+")
         fp.write(str(numBlocks)+"\t"+ str(average_proof_check)+"\n")
         fp.close()
     if (average_proof_generation!=0.0):    
-        fp = open("./outputs/proof_generation_blocksize_"+str(blocksize)+".dat", "a+")
+        fp = open("./outputs/proof_generation_blocksize_"+str(blocksize)+"_"+version+".dat", "a+")
         fp.write(str(numBlocks)+"\t"+ str(average_proof_generation)+"\n")
         fp.close()
     return metrics
@@ -192,20 +192,20 @@ def main():
     
     if (int(args.isServer)==0): #client plots
         for nBlk in numBlocksList:  
-            metrics = average_comp("./runs/"+str(nBlk)+"____"+str(args.blkSize)+".txt", nBlk, args.blkSize)     
+            metrics = average_comp("./runs/"+str(nBlk)+"____"+str(args.blkSize)+".txt", nBlk, args.blkSize,'base')     
             for metric in metrics:
-                plotlines('./outputs/'+metric+'_blocksize_'+str(args.blkSize)+'.dat', ['baseline'],'../plots/test_'+metric , xlabel='numBlocks', ylabel='time (in sec)', title= metric)
+                plotlines('./outputs/'+metric+'_blocksize_'+str(args.blkSize)+'_base.dat', ['baseline'],'../plots/test_'+metric , xlabel='numBlocks', ylabel='time (in sec)', title= metric)
     elif(int(args.isServer)==1): #server plots
         for nBlk in numBlocksList:  
-            metrics = average_comp("./runs/"+str(nBlk)+"____"+str(args.blkSize)+".txt.serv", nBlk, args.blkSize)
+            metrics = average_comp("./runs/"+str(nBlk)+"____"+str(args.blkSize)+".txt.serv", nBlk, args.blkSize,'base')
             for metric in metrics:
-                plotlines('./outputs/'+metric+'_blocksize_'+str(args.blkSize)+'.dat', ['one'],'../plots/test_'+metric , xlabel='numBlocks', ylabel='time (in sec)', title= metric)
+                plotlines('./outputs/'+metric+'_blocksize_'+str(args.blkSize)+'_base.dat', ['baseline'],'../plots/test_'+metric , xlabel='numBlocks', ylabel='time (in sec)', title= metric)
     
-    fileList=['./outputs/proof_generation_blocksize_512.dat','./outputs/ibf_serv_blocksize_512.dat']
+        fileList=['./outputs/proof_generation_blocksize_512_base.dat','./outputs/ibf_serv_blocksize_512_base.dat']
     
-    combine_files(fileList, './outputs/test_combined.dat')
+        combine_files(fileList, './outputs/test_combined.dat')
     
-    plotlines('./outputs/test_combined.dat', ['baseline','test'],'../plots/test_combined' , xlabel='numBlocks', ylabel='time (in sec)', title= 'output')
+        plotlines('./outputs/test_combined.dat', ['baseline','test'],'../plots/test_combined' , xlabel='numBlocks', ylabel='time (in sec)', title= 'output')
     
     
 if __name__ == "__main__":

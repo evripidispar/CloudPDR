@@ -19,33 +19,33 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
     pName = mp.current_process().name
     x = ExpTimer()
     x.registerSession(pName)
-    x.registerTimer(pName, "qSet")
+    x.registerTimer(pName, "qSet_proof")
     x.registerTimer(pName, "cSumKept")
     x.registerTimer(pName, "cTagKept")
-    x.registerTimer(pName, "ibf")
+    x.registerTimer(pName, "ibf_serv")
     
     
     while True:
         item = inputQueue.get()
         if item == "END":
-            TT[pName+str("_qSet")] = x.getTotalTimer(pName, "qSet")
-            TT[pName+str("_cSumKept")] = x.getTotalTimer(pName, "cSumKept") - x.getTotalTimer(pName, "ibf")
-            TT[pName+str("_cTagKept")] = x.getTotalTimer(pName, "cTagKept") - x.getTotalTimer(pName, "ibf")
-            TT[pName+str("_ibf")] = x.getTotalTimer(pName, "ibf")
+            TT[pName+str("_qSet_proof")] = x.getTotalTimer(pName, "qSet_proof")
+            TT[pName+str("_cSumKept")] = x.getTotalTimer(pName, "cSumKept") - x.getTotalTimer(pName, "ibf_serv")
+            TT[pName+str("_cTagKept")] = x.getTotalTimer(pName, "cTagKept") - x.getTotalTimer(pName, "ibf_serv")
+            TT[pName+str("_ibf_serv")] = x.getTotalTimer(pName, "ibf_serv")
             
             return
         for blockPbItem in BE.chunks(item,blkPbSz):
             block = BE.BlockDisk2Block(blockPbItem, blkDatSz)
             bIndex = block.getDecimalIndex()
             if bIndex in lost:
-                x.startTimer(pName, "qSet")
+                x.startTimer(pName, "qSet_proof")
                 binBlockIndex = block.getStringIndex()
                 indices = ibf.getIndices(binBlockIndex, True)
                 for i in indices:
                     with lock:
                         qSets.addValue(i, bIndex)
                 
-                x.endTimer(pName, "qSet")    
+                x.endTimer(pName, "qSet_proof")    
                 del block
                 continue
             x.startTimer(pName, "cSumKept")
@@ -54,9 +54,9 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
             aI = number.bytes_to_long(aI)
             bI = number.bytes_to_long(block.data.tobytes())
             
-            x.startTimer(pName, "ibf")
+            x.startTimer(pName, "ibf_serv")
             ibf.insert(block, chlng, N, g, True)
-            x.endTimer(pName, "ibf")
+            x.endTimer(pName, "ibf_serv")
             
             del block
             with lock:
