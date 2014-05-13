@@ -114,6 +114,7 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
                 indices = ibf.getIndices(binBlockIndex, True)
                 for i in indices:
                     with lock:
+                        print i, bIndex
                         qSets.addValue(i, bIndex)
                         
                 x.endTimer(pName, "qSet_check")
@@ -288,7 +289,7 @@ def processServerProof(cpdrProofMsg, session):
     
     
     for k in lostSum.keys():
-        print diffIbf.cells[k].hashProd
+        print type(diffIbf.cells[k].hashprod), diffIbf.cells[k].hashProd
        
 
         

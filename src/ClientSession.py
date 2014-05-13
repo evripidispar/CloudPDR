@@ -47,6 +47,7 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
                 indices = ibf.getIndices(binBlockIndex, True)
                 for i in indices:
                     with lock:
+                        print i, bIndex
                         qSets.addValue(i, bIndex)
                 
                 x.endTimer(pName, "qSet_proof")    
