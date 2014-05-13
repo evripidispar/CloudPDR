@@ -126,10 +126,10 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
             wI = W[bIndex]
             h.update(wI)
             wI = number.bytes_to_long(h.digest())
-            wI = gmpy2.powmodwI, aI, N)
+            wI = gmpy2.powmod(wI, aI, N)
             with lock:
                 comb["w"] *= wI
-                comb["w"] = gmpy2.powmodcomb["w"], 1, N)
+                comb["w"] = gmpy2.powmod(comb["w"], 1, N)
             x.endTimer(pName, "cmbW")
             del block
 
@@ -158,10 +158,10 @@ def processServerProof(cpdrProofMsg, session):
    
     servLost = cpdrProofMsg.proof.lostIndeces
     serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
-    gS = gmpy2.powmodsession.g, serCombinedSum, session.sesKey.key.n)
+    gS = gmpy2.powmod(session.g, serCombinedSum, session.sesKey.key.n)
     serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
     sesSecret = session.sesKey.getSecretKeyFields() 
-    Te =gmpy2.powmodserCombinedTag, sesSecret["e"], session.sesKey.key.n)
+    Te =gmpy2.powmod(serCombinedTag, sesSecret["e"], session.sesKey.key.n)
     et.endTimer(pName, "cmbW-start")
     
 #     inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, N, combW, lock
@@ -217,7 +217,7 @@ def processServerProof(cpdrProofMsg, session):
     et.startTimer(pName, "cmbW-last")
     combinedWInv = number.inverse(combRes["w"], session.sesKey.key.n)  #TODO: Not sure this is true
     RatioCheck1=Te*combinedWInv
-    RatioCheck1 = gmpy2.powmodRatioCheck1, 1, session.sesKey.key.n)
+    RatioCheck1 = gmpy2.powmod(RatioCheck1, 1, session.sesKey.key.n)
     
          
     if RatioCheck1 != gS:
@@ -236,7 +236,7 @@ def processServerProof(cpdrProofMsg, session):
     lostSum = {}
     for p in cpdrProofMsg.proof.lostTags.pairs:
         lostCombinedTag = long(p.v)
-        Lre =gmpy2.powmodlostCombinedTag, sesSecret["e"], session.sesKey.key.n)
+        Lre =gmpy2.powmod(lostCombinedTag, sesSecret["e"], session.sesKey.key.n)
         
         Qi = qS[p.k]
         combinedWL = 1
@@ -247,12 +247,12 @@ def processServerProof(cpdrProofMsg, session):
             wL = session.W[vQi]
             h.update(str(wL))
             wLHash = number.bytes_to_long(h.digest())
-            waL = gmpy2.powmodwLHash, aLI, session.sesKey.key.n)
-            combinedWL = gmpy2.powmod(combinedWL*waL), 1, session.sesKey.key.n)
+            waL = gmpy2.powmod(wLHash, aLI, session.sesKey.key.n)
+            combinedWL = gmpy2.powmod((combinedWL*waL), 1, session.sesKey.key.n)
         
         combinedWLInv = number.inverse(combinedWL, session.sesKey.key.n)
         lostSum[p.k] = Lre*combinedWLInv
-        lostSum[p.k] = gmpy2.powmodlostSum[p.k], 1, session.sesKey.key.n)
+        lostSum[p.k] = gmpy2.powmod(lostSum[p.k], 1, session.sesKey.key.n)
     et.endTimer(pName, "lostSum")
     
   #  qSetManager.stop()
@@ -464,8 +464,8 @@ def main():
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-    ip = '192.168.1.4'
-    #ip = "127.0.0.1"
+#     ip = '192.168.1.4'
+    ip = "127.0.0.1"
     zmqContext =  zmq.Context()
     clt = RpcPdrClient(zmqContext)    
     print "Sending Initialization message"
