@@ -229,7 +229,8 @@ class ClientSession(object):
     
         fp = open(self.runId+str(".serv"), "a+")
         for k,v in run_results.items():
-            fp.write(k+"\t"+str(v)+"\n")
+            #fp.write(k.ljust(20)+"\t"+str(v).ljust(20)+"\n")
+            fp.write(k.ljust(20)+"\t"+str(v).ljust(30)+"\n")
         fp.close()
     
         return proofMsg

@@ -495,7 +495,7 @@ def main():
     
     fp = open(args.runId, "a+")
     for k,v in run_results.items():
-        fp.write(k+"\t"+str(v)+"\n")
+        fp.write(k.ljust(20)+"\t"+str(v).ljust(20)+"\n")
     fp.close()
     
     
