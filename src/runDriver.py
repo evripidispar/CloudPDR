@@ -60,10 +60,11 @@ def main():
         
         for r in xrange(args.runsPerFs):
             
-#             if blocks > 512:
-#                 continue
-#             if int(size) > 512:
-#                 continue
+            if size < 1024:
+                continue
+            
+            if size > 8192:
+                continue
             runName = "runs/"+str(blocks)+"__"+"__"+str(size)+".txt"
             cmd = "python driver.py -b %s -g generator.txt -k %d -n 1024 -w %d --task %d -r %s -l %d;" % (fName, k, w, tasksNum, runName, loss)
             if int(blocks) not in runs.keys():
