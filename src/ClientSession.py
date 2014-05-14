@@ -1,7 +1,7 @@
 import BlockEngine as BE
 import MessageUtil as MU
 from datetime import datetime
-from Crypto.Random import random
+import random
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 from Ibf import Ibf
@@ -118,13 +118,8 @@ class ClientSession(object):
         self.challenge = str(challenge)
      
     def chooseBlocksToLose(self, lossNum):
-        
-        while True:
-            util = set(np.random.random_integers(0, self.fsBlocksNum-1, lossNum))
-            if len(util) == lossNum:
-                break
-        self.lost = [x for x in util]
-    
+        self.lost = random.sample(xrange(self.fsBlocksNum), lossNum)
+     
     def produceProof(self, cltId):
         
         pName = self.runId

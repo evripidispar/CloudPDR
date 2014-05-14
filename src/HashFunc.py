@@ -16,103 +16,56 @@
 #**************************************************************************
 #
 
-def RSHash(key):
-    a    = 378551
-    b    = 63689
-    hash = 0
-    for i in range(len(key)):
-      hash = hash * a + ord(key[i])
-      a = a * b
-    return hash
+from Crypto.Hash import SHA224
+from Crypto.Hash import HMAC
+from Crypto.Hash import MD5
+from Crypto.Hash import MD4
+from Crypto.Hash import RIPEMD
+from Crypto.Hash import SHA256
+from random import choice
+
+from Crypto.Util import number
 
 
-def JSHash(key):
-    hash = 1315423911
-    for i in range(len(key)):
-      hash ^= ((hash << 5) + ord(key[i]) + (hash >> 2))
-    return hash
+def Hash1(key):
+    
+    h = HMAC.new(str(14))
+    h.update(key)
+    v = number.bytes_to_long(h.digest())
+    return v
+    
+def Hash2(key):
+    h = SHA224.new()
+    h.update(key)
+    v = number.bytes_to_long(h.digest())
+    return v
 
 
-def PJWHash(key):
-   BitsInUnsignedInt = 4 * 8
-   ThreeQuarters     = long((BitsInUnsignedInt  * 3) / 4)
-   OneEighth         = long(BitsInUnsignedInt / 8)
-   HighBits          = (0xFFFFFFFF) << (BitsInUnsignedInt - OneEighth)
-   hash              = 0
-   test              = 0
+def Hash3(key):
+    h = MD5.new()
+    h.update(key)
+    v = number.bytes_to_long(h.digest())
+    return v
 
-   for i in range(len(key)):
-     hash = (hash << OneEighth) + ord(key[i])
-     test = hash & HighBits
-     if test != 0:
-       hash = (( hash ^ (test >> ThreeQuarters)) & (~HighBits));
-   return (hash & 0x7FFFFFFF)
+def Hash4(key):
+    h = RIPEMD.new()
+    h.update(key)
+    v = number.bytes_to_long(h.digest())
+    return v    
 
 
-def ELFHash(key):
-    hash = 0
-    x    = 0
-    for i in range(len(key)):
-      hash = (hash << 4) + ord(key[i])
-      x = hash & 0xF0000000
-      if x != 0:
-        hash ^= (x >> 24)
-      hash &= ~x
-    return hash
+def Hash5(key):
+    h = SHA256.new()
+    h.update(key)
+    v = number.bytes_to_long(h.digest())
+    return v   
 
 
-def BKDRHash(key):
-    seed = 131 # 31 131 1313 13131 131313 etc..
-    hash = 0
-    for i in range(len(key)):
-      hash = (hash * seed) + ord(key[i])
-    return hash
+def Hash6(key):
+    h = MD4.new()
+    h.update(key)
+    v = number.bytes_to_long(h.digest())
+    return v
 
-
-def SDBMHash(key):
-    hash = 0
-    for i in range(len(key)):
-      hash = ord(key[i]) + (hash << 6) + (hash << 16) - hash;
-    return hash
-
-
-def DJBHash(key):
-    hash = 5381
-    for i in range(len(key)):
-       hash = ((hash << 5) + hash) + ord(key[i])
-    return hash
-
-
-def DEKHash(key):
-    hash = len(key);
-    for i in range(len(key)):
-      hash = ((hash << 5) ^ (hash >> 27)) ^ ord(key[i])
-    return hash
-
-
-def BPHash(key):
-    hash = 0
-    for i in range(len(key)):
-       hash = hash << 7 ^ ord(key[i])
-    return hash
-
-
-def FNVHash(key):
-    fnv_prime = 0x811C9DC5
-    hash = 0
-    for i in range(len(key)):
-      hash *= fnv_prime
-      hash ^= ord(key[i])
-    return hash
-
-
-def APHash(key):
-    hash = 0xAAAAAAAA
-    for i in range(len(key)):
-      if ((i & 1) == 0):
-        hash ^= ((hash <<  7) ^ ord(key[i]) * (hash >> 3))
-      else:
-        hash ^= (~((hash << 11) + ord(key[i]) ^ (hash >> 5)))
-    return hash
 
 

@@ -55,7 +55,7 @@ def main():
         if blocks > 1000:
             k = 4
         else:
-            k = 5
+            k = 6
         loss = int(math.floor(math.log(blocks)))
         
         for r in xrange(args.runsPerFs):

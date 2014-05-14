@@ -1,4 +1,4 @@
-from HashFunc import *
+from HashFunc import Hash1, Hash2, Hash3, Hash4, Hash5, Hash6
 from Cell import Cell
 
 
@@ -10,9 +10,7 @@ class Ibf(object):
 		self.k = k
 		self.m = m
 		self.cells = {}
-		self.HashFunc = [RSHash, JSHash, 
-			PJWHash, BKDRHash, SDBMHash, 
-			DJBHash, DEKHash, BPHash, FNVHash, APHash]
+		self.HashFunc = [Hash1, Hash2, Hash3, Hash4, Hash5, Hash6]
 		
 	def setCells(self, cells):
 		self.cells = cells
@@ -30,9 +28,12 @@ class Ibf(object):
 		else:
 			blockIndex = block #Cases coming from the proof part of the algorithm
 			
+			
 		for i in range(self.k):
 			hashIndexVal = self.HashFunc[i](blockIndex)
 			indices.append(hashIndexVal % self.m)
+			
+		
 		return indices
 
 	def getCells(self):

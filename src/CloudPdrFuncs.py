@@ -1,21 +1,9 @@
-from HashFunc import RSHash
-from HashFunc import JSHash
-from HashFunc import PJWHash
-from HashFunc import ELFHash
-from HashFunc import BKDRHash
-from HashFunc import SDBMHash
-from HashFunc import DJBHash
-from HashFunc import DEKHash
-from HashFunc import BPHash
-from HashFunc import FNVHash
-from HashFunc import APHash
+from HashFunc import Hash1, Hash2, Hash3, Hash4, Hash5, Hash6
 from Ibf import *
 from Block import *
 import copy
 
-hashFunList = [RSHash, JSHash, 
-			PJWHash, ELFHash, BKDRHash, SDBMHash, 
-			DJBHash, DEKHash, BPHash, FNVHash, APHash]
+hashFunList = [Hash1, Hash2, Hash3, Hash4, Hash5, Hash6]
 
 
 
@@ -31,7 +19,7 @@ def recover(ibfLost, lostIndices, secret, N, g):
 		cIndex = lostPureCells.pop(0)
 		blockIndex =  ibfLost.cells[cIndex].getDataSum().getDecimalIndex()
 		
-		
+		#print "B-Block Index", blockIndex, len(lostIndices), lostIndices
 		if blockIndex not in lostIndices:
 			print "Failed: crazy reason"
 			return None
@@ -42,9 +30,9 @@ def recover(ibfLost, lostIndices, secret, N, g):
 		
 		ibfLost.delete(ibfLost.cells[cIndex].getDataSum(), secret, N, g, cIndex)
 		
-		print "B-Block Index", blockIndex, len(lostIndices), lostIndices
+		
 		lostIndices.remove(blockIndex)
-		print "A-Block Index", blockIndex, len(lostIndices), lostIndices
+		#print "A-Block Index", blockIndex, len(lostIndices), lostIndices
 		
 		lostPureCells = ibfLost.getPureCells()
 		pureCellsNum = len(lostPureCells)
