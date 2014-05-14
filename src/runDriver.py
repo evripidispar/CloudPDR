@@ -28,7 +28,7 @@ def main():
     fsFiles = map(rewriteNames, availableFS)
     
     task = 100
-    w = 4
+    w = 8
     k = 5
     
     runs  = {}
@@ -36,15 +36,21 @@ def main():
     for fName,runId in zip(fsFiles,availableFS):
         for r in xrange(args.runsPerFs):
             blocks, size = getRunInfo(fName)
+            if int(size) > 512:
+                continue
             runName = "runs/"+blocks+"__"+"__"+size+".txt"
             cmd = "python driver.py -b %s -g generator.txt -k %d -n 1024 -w %d --task %d -r %s ;" % (fName, k, w, task, runName)
-            runs[int(blocks)] = cmd
+            if int(blocks) not in runs.keys():
+                runs[int(blocks)] = []
+            runs[int(blocks)].append(cmd)
             
     skeys = runs.keys()
     skeys.sort()
     for k in skeys:
-        print "echo \"", runs[k], "\""
-        print runs[k]
+        
+        for i in runs[k]:
+            print "echo \"", i, "\""
+            print i
         
     
 

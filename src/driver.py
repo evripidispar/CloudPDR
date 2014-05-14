@@ -55,6 +55,7 @@ def subsetAndLessThanDelta(clientMaxBlockId, serverLost, delta):
     return (True, "")
 
 
+
 def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT):
     
     pName = mp.current_process().name
@@ -73,7 +74,6 @@ def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT)
         for blockPBItem in BE.chunks(item, blockProtoBufSz):
             block = BE.BlockDisk2Block(blockPBItem, blockDataSz)
             bIndex = block.getDecimalIndex()
-#            print mp.current_process(), "Processing block", bIndex
             x.startTimer(pName, "tag")
             w = singleW(block, secret["u"])
             tag = singleTag(w, block, public["g"], secret["d"], public["n"])
@@ -136,7 +136,6 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
             del block
 
     
-
 def processServerProof(cpdrProofMsg, session):
     et = ExpTimer()
     pName = mp.current_process().name
@@ -259,8 +258,7 @@ def processServerProof(cpdrProofMsg, session):
         lostSum[p.k] = gmpy2.powmod(lostSum[p.k], 1, session.sesKey.key.n)
     et.endTimer(pName, "lostSum")
     
-  #  qSetManager.stop()
-    
+
     serverStateIbf = session.ibf.generateIbfFromProtobuf(cpdrProofMsg.proof.serverState,
                                                  session.fsInfo["blkSz"])
     
@@ -274,24 +272,17 @@ def processServerProof(cpdrProofMsg, session):
     diffIbf = localIbf.subtractIbf(serverStateIbf, session.challenge,
                                     session.sesKey.key.n, session.fsInfo["blkSz"], True)
 
-#     diffIbf = serverStateIbf
+
     et.endTimer(pName,"subIbf")
     
     for k in lostSum.keys():
-        val=lostSum[k]
-        diffIbf.cells[k].setHashProd(val)
+        diffIbf.cells[k].hashProd = lostSum[k]
    
     
     et.registerTimer(pName, "recover")
     et.startTimer(pName, "recover")
     L=CloudPdrFuncs.recover(diffIbf, servLost, session.challenge, session.sesKey.key.n, session.g)
     et.endTimer(pName, "recover")
-    
-    
-    for k in lostSum.keys():
-        print type(diffIbf.cells[k].hashprod), diffIbf.cells[k].hashProd
-       
-
         
     if L== None:
         et.changeTimerLabel(pName, "recover", "recover-fail")
@@ -456,7 +447,8 @@ def main():
         
         
     fp.close()
-#     pdrManager.stop()
+    sys.exit(1)
+
     
     pdrSes.addState(ibf)
     pdrSes.W = W
