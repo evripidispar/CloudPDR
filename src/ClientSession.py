@@ -118,10 +118,12 @@ class ClientSession(object):
         self.challenge = str(challenge)
      
     def chooseBlocksToLose(self, lossNum):
+        
         while True:
-            self.lost = np.random.random_integers(0, self.fsBlocksNum-1, lossNum)
-            if len(self.lost) == lossNum:
+            util = set(np.random.random_integers(0, self.fsBlocksNum-1, lossNum))
+            if len(util) == lossNum:
                 break
+        self.lost = [x for x in util]
     
     def produceProof(self, cltId):
         
