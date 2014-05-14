@@ -114,7 +114,6 @@ def clientWorkerProof(inputQueue, blockProtoBufSz, blockDataSz, lost, chlng, W, 
                 indices = ibf.getIndices(binBlockIndex, True)
                 for i in indices:
                     with lock:
-                        print i, bIndex
                         qSets.addValue(i, bIndex)
                         
                 x.endTimer(pName, "qSet_check")
@@ -292,7 +291,7 @@ def processServerProof(cpdrProofMsg, session):
     for blk in L:
         print blk.getDecimalIndex()
       
-
+    print "check"
     return ("Exiting Recovery...", TT, et)
 
 def processClientMessages(incoming, session, lostNum=None):
@@ -355,19 +354,19 @@ def main():
     args = p.parse_args()
     if args.hashNum > 10: 
         print "Number of hashFunctions should be less than 10"
-        sys.exit(1)
+        sys.exit(-1)
         
     if args.blkFp == None:
         print 'Please specify a file that stores the block collection'
-        sys.exit(1)
+        sys.exit(-2)
     
     if args.genFile == None:
         print 'Please specify a generator file'
-        sys.exit(1)
+        sys.exit(-3)
         
     if args.runId == None:
         print 'Please specify run ID'
-        sys.exit(1)
+        sys.exit(-4)
         
     #Generate client id
     cltId = produceClientId()
@@ -447,7 +446,7 @@ def main():
         
         
     fp.close()
-    sys.exit(1)
+    
 
     
     pdrSes.addState(ibf)
@@ -463,8 +462,8 @@ def main():
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-    ip = '192.168.1.14'
-    #ip = "127.0.0.1"
+    #ip = '192.168.1.14'
+    ip = "127.0.0.1"
     zmqContext =  zmq.Context()
     clt = RpcPdrClient(zmqContext)    
     print "Sending Initialization message"
