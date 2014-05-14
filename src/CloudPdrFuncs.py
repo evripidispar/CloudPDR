@@ -33,6 +33,7 @@ def recover(ibfLost, lostIndices, secret, N, g):
 		
 		
 		if blockIndex not in lostIndices:
+			print "Failed: crazy reason"
 			return None
 
 
@@ -40,7 +41,10 @@ def recover(ibfLost, lostIndices, secret, N, g):
 		L.append(recoveredBlock)
 		
 		ibfLost.delete(ibfLost.cells[cIndex].getDataSum(), secret, N, g, cIndex)
+		
+		print "B-Block Index", blockIndex, len(lostIndices), lostIndices
 		lostIndices.remove(blockIndex)
+		print "A-Block Index", blockIndex, len(lostIndices), lostIndices
 		
 		lostPureCells = ibfLost.getPureCells()
 		pureCellsNum = len(lostPureCells)
@@ -64,6 +68,7 @@ def recover(ibfLost, lostIndices, secret, N, g):
 					
 		
 	if len(lostIndices) != 0:
+		print lostIndices
 		return None
 	
 	return L

@@ -60,6 +60,8 @@ def main():
         
         for r in xrange(args.runsPerFs):
             
+            if blocks > 512:
+                continue
             if int(size) > 512:
                 continue
             runName = "runs/"+str(blocks)+"__"+"__"+str(size)+".txt"
@@ -73,7 +75,7 @@ def main():
     for k in skeys:
         
         for i in runs[k]:
-            print "echo \"", i, "\""
+          #  print "echo \"", i, "\""
             print i
         
     

@@ -25,7 +25,7 @@ from TagGenerator import singleW
 import struct
 from PdrManager import IbfManager, QSetManager
 import gmpy2
-
+import copy
 
 
 LOST_BLOCKS = 6
@@ -274,9 +274,9 @@ def processServerProof(cpdrProofMsg, session):
 
     et.endTimer(pName,"subIbf")
     
-    for k in lostSum.keys():
-        diffIbf.cells[k].hashProd = lostSum[k]
-   
+    for k in lostSum.keys():  
+        diffIbf.cells[k].hashProd = copy.deepcopy(lostSum[k])
+        assert diffIbf.cells[k].hashProd == lostSum[k]
     
     et.registerTimer(pName, "recover")
     et.startTimer(pName, "recover")
@@ -285,7 +285,7 @@ def processServerProof(cpdrProofMsg, session):
         
     if L== None:
         et.changeTimerLabel(pName, "recover", "recover-fail")
-        print "fail to recover"
+        print "Failed to recover"
         return ("Exiting Failed Recovery...", TT, et) 
         
     for blk in L:
@@ -316,7 +316,12 @@ def processClientMessages(incoming, session, lostNum=None):
         return res
 
 
-
+def getsizeofDictionary(dictionary):
+    size = sys.getsizeof(dictionary)
+    for k,v in dictionary.items():
+        size+=sys.getsizeof(k)
+        size+=sys.getsizeof(v)
+    return size
 
 def main():
     
@@ -456,14 +461,14 @@ def main():
     delta = int(log2Blocks)
     pdrSes.addDelta(delta)
 
-
+    sizeTag = getsizeofDictionary(T)
 
     initMsg = MU.constructInitMessage(pubPB, args.blkFp,
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-    #ip = '192.168.1.14'
-    ip = "127.0.0.1"
+    ip = '192.168.1.14'
+    #ip = "127.0.0.1"
     zmqContext =  zmq.Context()
     clt = RpcPdrClient(zmqContext)    
     print "Sending Initialization message"
@@ -506,6 +511,8 @@ def main():
         if 'total' in k:
             s = k[0:k.index('total')-1]
             run_results[s] = proofSequentialTimer.timers[pName][k]
+    
+    run_results["tag-size"] = sizeTag
     
     fp = open(args.runId, "a+")
     for k,v in run_results.items():

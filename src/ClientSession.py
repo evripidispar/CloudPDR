@@ -118,8 +118,10 @@ class ClientSession(object):
         self.challenge = str(challenge)
      
     def chooseBlocksToLose(self, lossNum):
-        self.lost = np.random.random_integers(0, self.fsBlocksNum-1, lossNum)
-    
+        while True:
+            self.lost = np.random.random_integers(0, self.fsBlocksNum-1, lossNum)
+            if len(self.lost) == lossNum:
+                break
     
     def produceProof(self, cltId):
         
@@ -220,6 +222,7 @@ class ClientSession(object):
 
 #         et, TT          
         run_results = {}
+        run_results['proof-size'] = len(proofMsg)
         for k in TT.keys():
             key = k[k.index("_")+1:]
             if key not in run_results.keys():
@@ -228,6 +231,7 @@ class ClientSession(object):
                 run_results[key] = TT[k]
          
     
+        
         pName = et.timers.keys()[0]
         for k in et.timers[pName].keys():
             if 'total' in k:
