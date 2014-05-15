@@ -175,58 +175,14 @@ def chunks(s, n):
 
 
 def main():
-
-    p = argparse.ArgumentParser(description='BlockEngine Driver')
-
-    p.add_argument('-n', dest='numBlocks', action='store', type=int,
-                   default=2, help='Number of blocks to create')
-    
-    p.add_argument('-s', dest='dataSize', action='store', type=int,
-                   default=64, help='Block data size')
-    
-    p.add_argument('-w', dest='fpW', action='store', default=None,
-                   help='File to write Block collection')
-
+    p = argparse.ArgumentParser(description='Driver')
     p.add_argument('-r', dest='fpR', action='store', default=None,
                    help='File to read Block collection')
 
 
     args = p.parse_args()
-    
+    readFileSystem(args.fpR)
             
-    if args.fpW == None and args.fpR == None:
-        print "Please specfiy a read or write operation"
-        sys.exit(1)
-    
-    if args.fpW != None:
-        
-        if args.numBlocks <= 0:
-            print "Please specify a number of blocks > 0"
-            sys.exit(1)
-
-        if args.dataSize <= 0:
-            print "Please specify data blocks size > 0"
-            sys.exit(1)
-
-        et = ExpTimer()
-        et.registerSession("writing")
-        et.registerTimer("writing", "write")
-        et.registerTimer("writing", "read")
-        et.startTimer("writing", "write")
-        createWriteFilesystem2Disk(args.numBlocks, args.dataSize, 32, args.fpW)
-        et.endTimer("writing", "write")
-        
-        
-        et.startTimer("writing", "read")
-        et.endTimer("writing","read")
-        readFileSystem(args.fpW)
-        et.printSessionTimers("writing")
-                    
-    if args.fpR:
-        start = datetime.datetime.now()
-        blkCol = readBlockCollectionFromFile(args.fpR)
-        listBlocksInCollection(blkCol)
-        end = datetime.datetime.now()
         
 
 if __name__ == "__main__":

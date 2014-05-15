@@ -26,7 +26,7 @@ import struct
 from PdrManager import IbfManager, QSetManager
 import gmpy2
 import copy
-
+import time
 
 LOST_BLOCKS = 6
 
@@ -316,6 +316,32 @@ def processClientMessages(incoming, session, lostNum=None):
         return res
 
 
+
+def saveTagsForLater(TagTimes, Tags, sKey, bNum, bSz):
+    stfl = CloudPdrMessages_pb2.SaveTagsForLater()
+    stfl.n = str(sKey.key.n)
+    stfl.g = str(sKey.g)
+    sec = sKey.getSecretKeyFields()
+    stfl.u=str(sec["u"])
+    stfl.e=str(sec["e"])
+    stfl.d=str(sec["d"])
+    stfl.bNum = bNum
+    bSz = bSz/8
+    stfl.bSz = bSz
+    maxTime = 0
+    for k,v in TagTimes.items():
+        if k.endswith("_tag") and maxTime < v:
+            maxTime = TagTimes[k]
+    stfl.ctime = maxTime
+    for i,t in Tags.items():
+        stfl.index.append(i)
+        stfl.tags.append(str(t))
+    stfl = stfl.SerializeToString()
+    fName = "tags/tags_%s_%s.dat" % (str(bNum),str(bSz))
+    f = open(fName, "w")
+    f.write(stfl)
+    f.close()
+
 def getsizeofDictionary(dictionary):
     size = sys.getsizeof(dictionary)
     for k,v in dictionary.items():
@@ -354,7 +380,7 @@ def main():
     
    
     p.add_argument('-r', dest="runId", action='store', help='Current running id')
-   
+    p.add_argument('--tagmode', dest="tagMode", action='store', help='Tag Mode', type=bool, default=False)
    
     args = p.parse_args()
     if args.hashNum > 10: 
@@ -452,7 +478,9 @@ def main():
         
     fp.close()
     
-
+    if args.tagMode == True:
+        saveTagsForLater(TT, T, pdrSes.sesKey, fs.numBlk, fs.datSize)
+        sys.exit(1)
     
     pdrSes.addState(ibf)
     pdrSes.W = W
