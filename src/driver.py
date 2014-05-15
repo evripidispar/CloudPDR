@@ -56,7 +56,7 @@ def subsetAndLessThanDelta(clientMaxBlockId, serverLost, delta):
 
 
 
-def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT):
+def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT, noTags):
     
     pName = mp.current_process().name
     x = ExpTimer()
@@ -76,10 +76,13 @@ def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT)
             bIndex = block.getDecimalIndex()
             x.startTimer(pName, "tag")
             w = singleW(block, secret["u"])
-            tag = singleTag(w, block, public["g"], secret["d"], public["n"])
-            x.endTimer(pName, "tag")
+            if noTags == False:
+                tag = singleTag(w, block, public["g"], secret["d"], public["n"])
+                x.endTimer(pName, "tag")
+                T[bIndex] = tag
+                
             W[bIndex] = w
-            T[bIndex] = tag
+            
             
             x.startTimer(pName, "ibf")
             ibf.insert(block, None, public["n"], public["g"], True)
@@ -342,6 +345,27 @@ def saveTagsForLater(TagTimes, Tags, sKey, bNum, bSz):
     f.write(stfl)
     f.close()
 
+
+def loadTagsFromDisk(tagFile):
+    storedTags = CloudPdrMessages_pb2.SaveTagsForLater()
+    f = open(tagFile)
+    storedTags.ParseFromString(f.read())
+    f.close()
+    
+    storedKey = {}
+    storedKey["n"] = long(storedTags.n)
+    storedKey["g"] = long(storedTags.g)
+    storedKey["u"] = long(storedTags.u)
+    storedKey["e"] = long(storedTags.e)
+    storedKey["d"] = long(storedTags.d)
+    
+    taggingTime = float(storedTags.ctime)
+    
+    tags = {}
+    for i in storedTags.index:
+        tags[int(i)] = long(storedTags.tags[int(i)])
+    return (tags, storedKey, taggingTime)
+
 def getsizeofDictionary(dictionary):
     size = sys.getsizeof(dictionary)
     for k,v in dictionary.items():
@@ -381,6 +405,8 @@ def main():
    
     p.add_argument('-r', dest="runId", action='store', help='Current running id')
     p.add_argument('--tagmode', dest="tagMode", action='store', help='Tag Mode', type=bool, default=False)
+    p.add_argument('--tagLoad', dest="tagload", action='store', default=None, 
+                   help='load tags/keys from location')
    
     args = p.parse_args()
     if args.hashNum > 10: 
@@ -412,6 +438,22 @@ def main():
     g = long(g)
     fp.close() 
     pdrSes.addG(g)
+    
+    
+    loadedTags = None
+    loadedKey = None
+    loadedTagTime = None
+    doNotComputeTags = False
+    
+    if args.tagload != None:
+        loadedTags, loadedKey, loadedTagTime = loadTagsFromDisk(args.tagload)
+        doNotComputeTags = True
+    #Generate key class
+    pdrSes.sesKey = CloudPDRKey(args.n, g)
+    
+    if loadedKey != None:
+        pdrSes.sesKey.overwriteKeyFields(loadedKey)
+    
     
     #Generate key class
     pdrSes.sesKey = CloudPDRKey(args.n, g)
@@ -477,6 +519,9 @@ def main():
         
         
     fp.close()
+    if doNotComputeTags == True:
+        T =  loadedTags
+     
     
     if args.tagMode == True:
         saveTagsForLater(TT, T, pdrSes.sesKey, fs.numBlk, fs.datSize)
@@ -541,6 +586,8 @@ def main():
             run_results[s] = proofSequentialTimer.timers[pName][k]
     
     run_results["tag-size"] = sizeTag
+    if doNotComputeTags == True:
+        run_results["tag"] = loadedTagTime
     
     fp = open(args.runId, "a+")
     for k,v in run_results.items():

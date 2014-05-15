@@ -46,6 +46,12 @@ class CloudPDRKey(object):
         secret["u"] = self.key.u
         return secret
     
+    def overwriteKeyFields(self, loadedFields):
+        self.g = loadedFields["g"]
+        self.key.n = loadedFields["n"]
+        self.key.u = loadedFields["u"]
+        self.key.d = loadedFields["d"]
+        self.key.e = loadedFields["e"]
     
     def generateChallenge(self):
         challenge = number.getRandomInteger(self.mSize)
