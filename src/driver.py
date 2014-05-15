@@ -449,14 +449,14 @@ def main():
         loadedTags, loadedKey, loadedTagTime = loadTagsFromDisk(args.tagload)
         doNotComputeTags = True
     #Generate key class
-    pdrSes.sesKey = CloudPDRKey(args.n, g)
+    pdrSes.sesKey = CloudPDRKey(args.n, loadedKey["g"])
     
     if loadedKey != None:
         pdrSes.sesKey.overwriteKeyFields(loadedKey)
     
     
     #Generate key class
-    pdrSes.sesKey = CloudPDRKey(args.n, g)
+    #pdrSes.sesKey = CloudPDRKey(args.n, g)
     secret = pdrSes.sesKey.getSecretKeyFields()
     public = pdrSes.sesKey.getPublicKeyFields()
     pdrSes.addSecret(secret)
