@@ -163,18 +163,7 @@ def processServerProof(cpdrProofMsg, session):
     et.startTimer(pName, "cmbW-start")
    
     sesSecret = session.sesKey.getSecretKeyFields() 
-    print "Session.sesKey.sesKey.key.n"
-    print session.sesKey.key.n
-    print "--------"
-    print "Session G"
-    print session.g
-    print "---------"
-    print "SesSecret E"
-    print  sesSecret["e"]
-    print "----------"
-    print "SesSecret U"
-    print  sesSecret["u"]
-    print "-----------"
+    
     
     servLost = cpdrProofMsg.proof.lostIndeces
     serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
