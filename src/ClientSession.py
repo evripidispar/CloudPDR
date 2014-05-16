@@ -14,6 +14,8 @@ import struct
 from PdrManager import IbfManager, QSetManager
 from ExpTimer import ExpTimer
 import gmpy2
+import psutil
+import os
 
 def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N, ibf, g, qSets, TT):
     
@@ -155,7 +157,12 @@ class ClientSession(object):
         qSetManager.start()
         
         ibf = pdrManager.Ibf(self.k, ibfLength)
-        ibf.zero(fsMsg.datSize)
+        try:      
+            ibf.zero(fsMsg.datSize)
+        except OSError as e:
+            p = psutil.Process(os.getpid())
+            p.get_open_files()
+            
         
         qSets = qSetManager.QSet()
         
