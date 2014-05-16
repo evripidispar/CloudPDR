@@ -555,8 +555,8 @@ def main():
                                                T, cltId, args.hashNum, delta, fs.numBlk, args.runId)
 
 
-    #ip = '192.168.1.14'
-    ip = "127.0.0.1"
+    ip = '192.168.1.14'
+    #ip = "127.0.0.1"
     zmqContext =  zmq.Context()
     clt = RpcPdrClient(zmqContext)    
     print "Sending Initialization message"
