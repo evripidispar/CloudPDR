@@ -134,8 +134,7 @@ class ClientSession(object):
         fsMsg = CloudPdrMessages_pb2.Filesystem()
         fsMsg.ParseFromString(fp.read(int(fsSize)))
         
-        ibfLength =  floor(log(fsMsg.numBlk,2)) 
-        ibfLength *= (self.k+1)
+        ibfLength = ((self.k+1)*self.delta)
         ibfLength = int(ibfLength)
 
         totalBlockBytes = fsMsg.numBlk * fsMsg.pbSize

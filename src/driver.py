@@ -478,8 +478,14 @@ def main():
     fs = CloudPdrMessages_pb2.Filesystem()
     fs.ParseFromString(fp.read(int(fsSize)))
     
-    ibfLength =  floor(log(fs.numBlk,2)) 
-    ibfLength *= (args.hashNum+1)
+#     ibfLength =  floor(log(fs.numBlk,2))
+    log2Blocks = log(fs.numBlk, 2)
+    log2Blocks = floor(log2Blocks)
+    delta = int(log2Blocks) 
+    if args.dt == 1:
+        delta = int(floor(sqrt(fs.numBlk))) 
+    
+    ibfLength = ((args.hashNum+1)*delta)
     ibfLength = int(ibfLength)
     pdrSes.addibfLength (ibfLength)
     
@@ -539,11 +545,7 @@ def main():
     
     pdrSes.addState(ibf)
     pdrSes.W = W
-    log2Blocks = log(fs.numBlk, 2)
-    log2Blocks = floor(log2Blocks)
-    delta = int(log2Blocks) 
-    if args.dt == 1:
-        delta = int(floor(sqrt(fs.numBlk)))
+    
         
     pdrSes.addDelta(delta)
 
