@@ -10,13 +10,17 @@ class CloudPDRKey(object):
     to the server
     '''
     
-    def __init__(self, mSize, g):
-        self.key = RSA.generate(mSize)
+    def __init__(self, mSize, g, loadedKey=None):
+        
+        self.key = loadedKey
         self.g = g
         self.pubKeySerialized = None
         self.h = SHA256.new()
         self.mSize = mSize
-            
+    
+    def setKey(self, key):
+        self.key = key        
+    
     
     def getProtoBufPubKey(self):
         pubKey = CloudPdrMessages_pb2.PublicKey()

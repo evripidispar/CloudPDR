@@ -104,7 +104,8 @@ class Cell(object):
 		#datasum
 		diffCell.dataSum.addBlockData(self.getDataSum())
 		diffCell.dataSum.addBlockData(otherCell.getDataSum())
-		
+		if diffCell.count.getValue() == 0 and diffCell.dataSum.isZeroDataSum() == False:
+			print "AWESOME"
 		#dataSum.addBlockData(localDS ^ otherDS)
 		
 		#hashProd

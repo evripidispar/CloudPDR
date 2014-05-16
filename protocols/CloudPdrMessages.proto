@@ -12,17 +12,12 @@ message BlockDisk {
 
 
 message SaveTagsForLater {
-	required string n = 1;
-	required string g = 2;
-	required string u = 3;
-	required string e = 4;
-	required string d = 5;
-	required int32 bNum = 6;
-	required int32 bSz = 7;
-	required double ctime=8;
-	repeated int32 index=9;
-	repeated string tags=10;
-	
+	required string key = 1;
+	required int32 bNum = 2;
+	required int32 bSz = 3;
+	required double ctime=4;
+	repeated int32 index=5;
+	repeated string tags=6;
 }
 
 message Filesystem {

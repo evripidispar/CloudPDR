@@ -7,6 +7,7 @@ import zmq
 import CloudPdrFuncs
 import BlockEngine as BE
 from CloudPDRKey import CloudPDRKey
+from Crypto.PublicKey import  RSA
 from TagGenerator import TagGenerator
 from Crypto.Hash import SHA256
 from datetime import datetime
@@ -15,7 +16,7 @@ import CloudPdrMessages_pb2
 from client import RpcPdrClient
 from PdrSession import PdrSession
 from math import floor
-from math import log
+from math import log, sqrt
 from CryptoUtil import pickPseudoRandomTheta
 from Crypto.Util import number
 from ExpTimer import ExpTimer
@@ -27,6 +28,7 @@ from PdrManager import IbfManager, QSetManager
 import gmpy2
 import copy
 import time
+import cPickle
 
 LOST_BLOCKS = 6
 
@@ -56,7 +58,7 @@ def subsetAndLessThanDelta(clientMaxBlockId, serverLost, delta):
 
 
 
-def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT, noTags):
+def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT, noTags, lock):
     
     pName = mp.current_process().name
     x = ExpTimer()
@@ -85,7 +87,8 @@ def workerTask(inputQueue,W,T,ibf,blockProtoBufSz,blockDataSz,secret,public, TT,
             
             
             x.startTimer(pName, "ibf")
-            ibf.insert(block, None, public["n"], public["g"], True)
+            with lock:
+                ibf.insert(block, None, public["n"], public["g"], True)
             x.endTimer(pName, "ibf")
             del block
 
@@ -159,11 +162,25 @@ def processServerProof(cpdrProofMsg, session):
     et.registerTimer(pName, "cmbW-start")
     et.startTimer(pName, "cmbW-start")
    
+    sesSecret = session.sesKey.getSecretKeyFields() 
+    print "Session.sesKey.sesKey.key.n"
+    print session.sesKey.key.n
+    print "--------"
+    print "Session G"
+    print session.g
+    print "---------"
+    print "SesSecret E"
+    print  sesSecret["e"]
+    print "----------"
+    print "SesSecret U"
+    print  sesSecret["u"]
+    print "-----------"
+    
     servLost = cpdrProofMsg.proof.lostIndeces
     serCombinedSum = long(cpdrProofMsg.proof.combinedSum)
     gS = gmpy2.powmod(session.g, serCombinedSum, session.sesKey.key.n)
     serCombinedTag = long(cpdrProofMsg.proof.combinedTag)
-    sesSecret = session.sesKey.getSecretKeyFields() 
+   
     Te =gmpy2.powmod(serCombinedTag, sesSecret["e"], session.sesKey.key.n)
     et.endTimer(pName, "cmbW-start")
     
@@ -224,7 +241,7 @@ def processServerProof(cpdrProofMsg, session):
     RatioCheck1=Te*combinedWInv
     RatioCheck1 = gmpy2.powmod(RatioCheck1, 1, session.sesKey.key.n)
     
-         
+   
     if RatioCheck1 != gS:
         print "FAIL#3: The Proof did not pass the first check to go to recover"
         return False
@@ -321,13 +338,9 @@ def processClientMessages(incoming, session, lostNum=None):
 
 
 def saveTagsForLater(TagTimes, Tags, sKey, bNum, bSz):
+    
     stfl = CloudPdrMessages_pb2.SaveTagsForLater()
-    stfl.n = str(sKey.key.n)
-    stfl.g = str(sKey.g)
-    sec = sKey.getSecretKeyFields()
-    stfl.u=str(sec["u"])
-    stfl.e=str(sec["e"])
-    stfl.d=str(sec["d"])
+    stfl.key = "toAFile"
     stfl.bNum = bNum
     bSz = bSz/8
     stfl.bSz = bSz
@@ -339,10 +352,16 @@ def saveTagsForLater(TagTimes, Tags, sKey, bNum, bSz):
     for i,t in Tags.items():
         stfl.index.append(i)
         stfl.tags.append(str(t))
+        if i == 0:
+            print t
     stfl = stfl.SerializeToString()
     fName = "tags/tags_%s_%s.dat" % (str(bNum),str(bSz))
     f = open(fName, "w")
     f.write(stfl)
+    f.close()
+    fName = "tags/key_%s_%s.dat" % (str(bNum),str(bSz))
+    f = open(fName, "w")
+    cPickle.dump(sKey, f)
     f.close()
 
 
@@ -352,19 +371,20 @@ def loadTagsFromDisk(tagFile):
     storedTags.ParseFromString(f.read())
     f.close()
     
-    storedKey = {}
-    storedKey["n"] = long(storedTags.n)
-    storedKey["g"] = long(storedTags.g)
-    storedKey["u"] = long(storedTags.u)
-    storedKey["e"] = long(storedTags.e)
-    storedKey["d"] = long(storedTags.d)
-    
+    #storedKey = cPickle.loads(str(storedTags.key))
     taggingTime = float(storedTags.ctime)
     
     tags = {}
     for i in storedTags.index:
-        tags[int(i)] = long(storedTags.tags[int(i)])
+        tags[int(i)] = str(storedTags.tags[int(i)])
+        if i == 0:
+            print tags[i]
+    diskKeyName = tagFile.replace("/tags","/key")
+    f=open(diskKeyName)
+    storedKey = cPickle.load(f)
     return (tags, storedKey, taggingTime)
+    
+
 
 def getsizeofDictionary(dictionary):
     size = sys.getsizeof(dictionary)
@@ -405,8 +425,9 @@ def main():
    
     p.add_argument('-r', dest="runId", action='store', help='Current running id')
     p.add_argument('--tagmode', dest="tagMode", action='store', help='Tag Mode', type=bool, default=False)
-    p.add_argument('--tagLoad', dest="tagload", action='store', default=None, 
+    p.add_argument('--tagload', dest="tagload", action='store', default=None, 
                    help='load tags/keys from location')
+    p.add_argument('--dt', dest="dt", action='store', type=int, default=0, help='Type of delta')
    
     args = p.parse_args()
     if args.hashNum > 10: 
@@ -446,17 +467,16 @@ def main():
     doNotComputeTags = False
     
     if args.tagload != None:
+        print "LOADING"
         loadedTags, loadedKey, loadedTagTime = loadTagsFromDisk(args.tagload)
         doNotComputeTags = True
     #Generate key class
-    pdrSes.sesKey = CloudPDRKey(args.n, loadedKey["g"])
-    
-    if loadedKey != None:
-        pdrSes.sesKey.overwriteKeyFields(loadedKey)
-    
+    if doNotComputeTags == True:
+        pdrSes.sesKey = CloudPDRKey(args.n, g, loadedKey)
+    else:
+        pdrSes.sesKey = CloudPDRKey(args.n, g, RSA.generate(args.n))
     
     #Generate key class
-    #pdrSes.sesKey = CloudPDRKey(args.n, g)
     secret = pdrSes.sesKey.getSecretKeyFields()
     public = pdrSes.sesKey.getPublicKeyFields()
     pdrSes.addSecret(secret)
@@ -485,6 +505,7 @@ def main():
     
     genericManager = mp.Manager()
     pdrManager = IbfManager()
+    InsertLock = mp.Lock()
     
     blockByteChunks = genericManager.Queue(args.workers)
     W = genericManager.dict()
@@ -498,7 +519,7 @@ def main():
     
     pool = []
     for i in xrange(args.workers):
-        p = mp.Process(target=workerTask, args=(blockByteChunks,W,T,ibf,fs.pbSize,fs.datSize,secret,public, TT, doNotComputeTags))
+        p = mp.Process(target=workerTask, args=(blockByteChunks,W,T,ibf,fs.pbSize,fs.datSize,secret,public, TT, doNotComputeTags, InsertLock))
         p.start()
         pool.append(p)
     
@@ -524,14 +545,17 @@ def main():
      
     
     if args.tagMode == True:
-        saveTagsForLater(TT, T, pdrSes.sesKey, fs.numBlk, fs.datSize)
-        sys.exit(1)
+        print "TAGMODE TRUE"
+        saveTagsForLater(TT, T, pdrSes.sesKey.key, fs.numBlk, fs.datSize)
     
     pdrSes.addState(ibf)
     pdrSes.W = W
     log2Blocks = log(fs.numBlk, 2)
     log2Blocks = floor(log2Blocks)
-    delta = int(log2Blocks)
+    delta = int(log2Blocks) 
+    if args.dt == 1:
+        delta = int(floor(sqrt(fs.numBlk)))
+        
     pdrSes.addDelta(delta)
 
     sizeTag = getsizeofDictionary(T)

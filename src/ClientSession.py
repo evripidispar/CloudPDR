@@ -58,18 +58,19 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
             aI = number.bytes_to_long(aI)
             bI = number.bytes_to_long(block.data.tobytes())
             
-            x.startTimer(pName, "ibf_serv")
-            ibf.insert(block, chlng, N, g, True)
-            x.endTimer(pName, "ibf_serv")
+          
             
-            del block
+            
             with lock:
+                x.startTimer(pName, "ibf_serv")
+                ibf.insert(block, chlng, N, g, True)
+                x.endTimer(pName, "ibf_serv")
                 cVal["cSum"] += (aI*bI)
                 x.endTimer(pName,"cSumKept")
                 cVal["cTag"] *= gmpy2.powmod(T[bIndex], aI, N)
                 cVal["cTag"] = gmpy2.powmod(cVal["cTag"],1,N)
                 x.endTimer(pName,"cTagKept")
-                
+            del block    
                 
 
 
