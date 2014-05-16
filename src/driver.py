@@ -483,7 +483,7 @@ def main():
     log2Blocks = floor(log2Blocks)
     delta = int(log2Blocks) 
     if args.dt == 1:
-        delta = int(floor(sqrt(fs.numBlk))) 
+        delta = int(floor(0.5*sqrt(fs.numBlk))) 
     
     ibfLength = ((args.hashNum+1)*delta)
     ibfLength = int(ibfLength)

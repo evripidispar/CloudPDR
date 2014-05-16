@@ -76,9 +76,9 @@ def proofWorkerTask(inputQueue, blkPbSz, blkDatSz, chlng, lost, T, lock, cVal, N
 
 class ClientSession(object):
     
-    WORKERS = 1
+    WORKERS = 4
     BLOCK_INDEX_LEN=32
-    BLOCKS_PER_WORKER=200
+    BLOCKS_PER_WORKER=20
     
     def __init__(self, N, g, tagMsg, delta, k, fs, blkNum, runId):
         self.clientKeyN = N
